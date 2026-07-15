@@ -1,0 +1,8 @@
+{
+  "name": "ladger supply",
+  "description": "A real-time management system for Tikka shops to track raw chicken supplies, supplier payments, auto-calculate item sales prices based on raw chicken rates, manage customer orders, and generate daily sales and expense summary reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

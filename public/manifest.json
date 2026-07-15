@@ -1,0 +1,18 @@
+{
+  "short_name": "Tikka Manager",
+  "name": "Tikka Shop Supplies & Hisab Manager",
+  "description": "Manage raw chicken stock, supplier payments, automatic rates calculation, customer orders, and daily cash flow.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3132/3132693.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#18181b",
+  "theme_color": "#f97316",
+  "display": "standalone",
+  "orientation": "portrait"
+}

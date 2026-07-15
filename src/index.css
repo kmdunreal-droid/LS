@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Space Grotesk", sans-serif;
+  
+  --color-bg: #05050a;
+  --color-surface: #121220;
+  --color-ink: #f8fafc;
+  --color-ink-faint: rgba(248, 250, 252, 0.12);
+  --color-accent: #ff7a1a;
+  --color-emerald-custom: #10b981;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-ink font-sans antialiased selection:bg-accent/30 selection:text-white;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.3) 0px, transparent 65%),
+      radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.3) 0px, transparent 65%),
+      radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.22) 0px, transparent 65%),
+      radial-gradient(at 15% 70%, rgba(249, 115, 22, 0.2) 0px, transparent 55%),
+      radial-gradient(at 85% 60%, rgba(168, 85, 247, 0.2) 0px, transparent 55%);
+    background-attachment: fixed;
+  }
+
+  /* Make default gray card background softer, lighter, and beautiful glass-translucent */
+  .bg-surface {
+    background-color: rgba(30, 30, 48, 0.45) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(248, 250, 252, 0.08);
+  }
+
+  /* Make default borders incredibly subtle and soft */
+  .border-ink-faint, .border-neutral-800, .border-zinc-800, .border-neutral-700 {
+    border-color: rgba(248, 250, 252, 0.08) !important;
+  }
+
+  /* Soften gray text styling to make it clearer and less harsh */
+  .opacity-30 {
+    opacity: 0.55 !important;
+  }
+  .opacity-40 {
+    opacity: 0.65 !important;
+  }
+  .opacity-50 {
+    opacity: 0.75 !important;
+  }
+}
+
+@layer utilities {
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+  .font-display {
+    font-family: var(--font-display);
+  }
+}
+
+/* Custom Colorful Glows & Animations */
+.glow-blue {
+  box-shadow: 0 0 25px -5px rgba(59, 130, 246, 0.25);
+}
+.glow-orange {
+  box-shadow: 0 0 25px -5px rgba(249, 115, 22, 0.25);
+}
+.glow-emerald {
+  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.25);
+}
+.glow-rose {
+  box-shadow: 0 0 25px -5px rgba(244, 63, 94, 0.25);
+}
+.glow-purple {
+  box-shadow: 0 0 25px -5px rgba(168, 85, 247, 0.25);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Customized scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #07070d;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(248, 250, 252, 0.15);
+  border-radius: 9999px;
+  border: 2px solid #07070d;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(249, 115, 22, 0.4);
+}
+

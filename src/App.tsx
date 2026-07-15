@@ -1,0 +1,1070 @@
+import React, { useState, useEffect } from "react";
+import { 
+  getFormulaSettings, 
+  saveFormulaSettings,
+  subscribeSupplyLogs, 
+  addSupplyLog, 
+  deleteSupplyLog,
+  subscribePayments, 
+  addPayment, 
+  deletePayment,
+  subscribeExpenses, 
+  addExpense, 
+  deleteExpense,
+  subscribeOrders, 
+  addOrder, 
+  deleteOrder,
+  updateOrderStatus,
+  subscribeSuppliers,
+  addSupplier,
+  updateSupplier,
+  deleteSupplier,
+  updateSupplyLog,
+  updatePayment,
+  updateExpense,
+  isSupabaseActive,
+  subscribeSyncStatus,
+  SyncStatus
+} from "./db/supabase";
+import { FormulaSettings, SupplyLog, SupplierPayment, Expense, Order, Supplier } from "./types";
+import { DEFAULT_FORMULA_SETTINGS } from "./constants";
+import DashboardTab from "./components/DashboardTab";
+import RateCalculatorTab from "./components/RateCalculatorTab";
+import POSTab from "./components/POSTab";
+import SuppliesTab from "./components/SuppliesTab";
+import PaymentsTab from "./components/PaymentsTab";
+import ExpensesTab from "./components/ExpensesTab";
+import SettingsTab from "./components/SettingsTab";
+import AuthGate, { AuthProvider, useAuth } from "./components/AuthGate";
+import SupplierPortal from "./components/SupplierPortal";
+
+import { 
+  Flame, 
+  LayoutDashboard, 
+  Coins, 
+  ShoppingCart, 
+  Weight, 
+  CreditCard, 
+  Settings, 
+  CheckCircle,
+  Menu,
+  X,
+  LogOut,
+  AlertCircle,
+  Trash2,
+  ArrowLeft,
+  RefreshCw,
+  Wifi,
+  WifiOff,
+  CloudCheck,
+  CloudOff
+} from "lucide-react";
+
+export function AppContent() {
+  const { user, isGuest, isSupplier, logout } = useAuth();
+  const userName = isSupplier ? "Supplier Mode" : (isGuest ? "Guest User" : (user?.displayName || user?.email?.split("@")[0] || "Staff"));
+  const userPhoto = !isSupplier && !isGuest && user?.photoURL ? user.photoURL : null;
+
+  const [activeTab, setActiveTab] = useState<string>("pos");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSupplierPortalActive, setIsSupplierPortalActive] = useState<boolean>(false);
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string>("");
+  const [deleteNotification, setDeleteNotification] = useState<{
+    show: boolean;
+    itemType: string;
+    itemName?: string;
+    amount?: string;
+  } | null>(null);
+
+  // States for DB synced data
+  const [settings, setSettings] = useState<FormulaSettings>(DEFAULT_FORMULA_SETTINGS);
+  const [supplyLogs, setSupplyLogs] = useState<SupplyLog[]>([]);
+  const [payments, setPayments] = useState<SupplierPayment[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+
+  // Indicators
+  const [isDbLive, setIsDbLive] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [dbError, setDbError] = useState<string | null>(null);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+
+  // Initialize data and listeners
+  useEffect(() => {
+    // 1. Load formula settings
+    getFormulaSettings().then((res) => {
+      setSettings(res);
+      setLoading(false);
+    });
+
+    // Check Supabase status
+    setIsDbLive(isSupabaseActive());
+
+    // Sync status listener
+    const unsubscribeSync = subscribeSyncStatus((status) => setSyncStatus(status));
+
+    // 2. Real-time Subscribers
+    const unsubscribeSupplies = subscribeSupplyLogs((logs) => setSupplyLogs(logs));
+    const unsubscribePayments = subscribePayments((p) => setPayments(p));
+    const unsubscribeExpenses = subscribeExpenses((e) => setExpenses(e));
+    const unsubscribeOrders = subscribeOrders((o) => setOrders(o));
+    const unsubscribeSuppliers = subscribeSuppliers((s) => setSuppliers(s));
+
+    return () => {
+      unsubscribeSync();
+      unsubscribeSupplies();
+      unsubscribePayments();
+      unsubscribeExpenses();
+      unsubscribeOrders();
+      unsubscribeSuppliers();
+    };
+  }, []);
+
+  // Sync / Action Handlers
+  const handleSaveSettings = async (newSettings: FormulaSettings) => {
+    try {
+      await saveFormulaSettings(newSettings);
+      setSettings(newSettings);
+      setDbError(null);
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleAddSupplyLog = async (log: Omit<SupplyLog, "id">) => {
+    try {
+      const res = await addSupplyLog(log);
+      setDbError(null);
+      return res;
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleUpdateSupplyLog = async (id: string, log: Partial<SupplyLog>) => {
+    try {
+      await updateSupplyLog(id, log);
+      setDbError(null);
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleDeleteSupplyLog = async (id: string) => {
+    try {
+      const log = supplyLogs.find(l => l.id === id);
+      const detailString = log ? `${log.category || 'Raw Chicken Supply'} (${log.weightKg} kg - Rs. ${log.totalCost.toLocaleString()})` : "Supply Entry";
+      await deleteSupplyLog(id);
+      setDbError(null);
+      setDeleteNotification({
+        show: true,
+        itemType: "Delivery Log / Supply (Mal Bheja)",
+        itemName: detailString,
+        amount: log ? `Rs. ${log.totalCost.toLocaleString()}` : undefined
+      });
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleAddPayment = async (pay: Omit<SupplierPayment, "id">) => {
+    try {
+      const res = await addPayment(pay);
+      setDbError(null);
+      return res;
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleUpdatePayment = async (id: string, payment: Partial<SupplierPayment>) => {
+    try {
+      await updatePayment(id, payment);
+      setDbError(null);
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleDeletePayment = async (id: string) => {
+    try {
+      const pay = payments.find(p => p.id === id);
+      const detailString = pay ? `Payment Entry (${pay.notes || 'No notes'})` : "Payment Entry";
+      await deletePayment(id);
+      setDbError(null);
+      setDeleteNotification({
+        show: true,
+        itemType: "Payment Received (Raqam Mili)",
+        itemName: detailString,
+        amount: pay ? `Rs. ${pay.amountPaid.toLocaleString()}` : undefined
+      });
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleAddExpense = async (exp: Omit<Expense, "id">) => {
+    try {
+      const res = await addExpense(exp);
+      setDbError(null);
+      return res;
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleUpdateExpense = async (id: string, expense: Partial<Expense>) => {
+    try {
+      await updateExpense(id, expense);
+      setDbError(null);
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    try {
+      const exp = expenses.find(e => e.id === id);
+      const detailString = exp ? `${exp.category} (${exp.notes || 'No notes'})` : "Expense Entry";
+      await deleteExpense(id);
+      setDbError(null);
+      setDeleteNotification({
+        show: true,
+        itemType: "Daily Expense (Kharcha)",
+        itemName: detailString,
+        amount: exp ? `Rs. ${exp.amount.toLocaleString()}` : undefined
+      });
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleAddOrder = async (order: Omit<Order, "id">) => {
+    try {
+      const res = await addOrder(order);
+      setDbError(null);
+      return res;
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleDeleteOrder = async (id: string) => {
+    try {
+      const order = orders.find(o => o.id === id);
+      const detailString = order ? `Order #${order.id.slice(0, 5)}... (${order.items.length} items)` : "Order Entry";
+      await deleteOrder(id);
+      setDbError(null);
+      setDeleteNotification({
+        show: true,
+        itemType: "POS Sale Order (Grahak Order)",
+        itemName: detailString,
+        amount: order ? `Rs. ${order.totalAmount.toLocaleString()}` : undefined
+      });
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleUpdateOrderStatus = async (id: string, status: "Paid" | "Unpaid") => {
+    try {
+      await updateOrderStatus(id, status);
+      setDbError(null);
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleAddSupplier = async (supplier: Omit<Supplier, "id">) => {
+    try {
+      const res = await addSupplier(supplier);
+      setDbError(null);
+      return res;
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleUpdateSupplier = async (id: string, supplier: Partial<Supplier>) => {
+    try {
+      await updateSupplier(id, supplier);
+      setDbError(null);
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  const handleDeleteSupplier = async (id: string) => {
+    try {
+      const supp = suppliers.find(s => s.id === id);
+      const detailString = supp ? `${supp.name} (${supp.phone || 'No phone'})` : "Supplier";
+      await deleteSupplier(id);
+      setDbError(null);
+      setDeleteNotification({
+        show: true,
+        itemType: "Supplier Account (Faraham-Kar)",
+        itemName: detailString,
+      });
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
+  // Stats Calculations
+  const todayString = new Date().toISOString().split("T")[0];
+  const todayOrders = orders.filter((o) => o.date === todayString);
+  const todaySales = todayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+
+  const totalSuppliesValue = supplyLogs.reduce((sum, log) => sum + log.totalCost, 0);
+  const totalAmountPaid = payments.reduce((sum, pay) => sum + pay.amountPaid, 0);
+  const outstandingSupplierBalance = totalSuppliesValue - totalAmountPaid;
+
+  const todaySupplies = supplyLogs.filter((s) => s.date === todayString);
+  const todaySuppliesCost = todaySupplies.reduce((sum, s) => sum + s.totalCost, 0);
+  const todayExpenses = expenses.filter((e) => e.date === todayString);
+  const todayExpensesCost = todayExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const todayTotalCosts = todaySuppliesCost + todayExpensesCost;
+  const todayNetProfit = todaySales - todayTotalCosts;
+
+  // Render Page Content depending on active tab
+  const renderTabContent = () => {
+    if (loading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-24 space-y-4">
+          <div className="w-12 h-12 border-4 border-t-orange-500 border-slate-700 rounded-full animate-spin"></div>
+          <span className="text-slate-400 font-bold text-sm">Real-time Data Syncing...</span>
+        </div>
+      );
+    }
+
+    const filteredSupplyLogs = selectedSupplierId === "" || selectedSupplierId === "All"
+      ? supplyLogs
+      : supplyLogs.filter(s => s.supplierId === selectedSupplierId);
+
+    const filteredPayments = selectedSupplierId === "" || selectedSupplierId === "All"
+      ? payments
+      : payments.filter(p => p.supplierId === selectedSupplierId);
+
+    switch (activeTab) {
+      case "dashboard":
+        return (
+          <DashboardTab
+            settings={settings}
+            orders={orders}
+            supplyLogs={supplyLogs}
+            payments={payments}
+            expenses={expenses}
+            suppliers={suppliers}
+            selectedSupplierId={selectedSupplierId}
+            onSupplierSelect={setSelectedSupplierId}
+            onSaveSettings={handleSaveSettings}
+            onNavigateToSales={() => setActiveTab("pos")}
+          />
+        );
+      case "pos":
+        return (
+          <POSTab
+            settings={settings}
+            orders={orders.filter(o => o.date === todayString)}
+            onAddOrder={handleAddOrder}
+            onUpdateStatus={handleUpdateOrderStatus}
+            onDeleteOrder={handleDeleteOrder}
+            onSaveSettings={handleSaveSettings}
+          />
+        );
+      case "calculator":
+        return (
+          <RateCalculatorTab
+            settings={settings}
+            onSaveSettings={handleSaveSettings}
+          />
+        );
+      case "supplies":
+        return (
+          <SuppliesTab
+            settings={settings}
+            supplyLogs={filteredSupplyLogs}
+            suppliers={suppliers}
+            onAddLog={handleAddSupplyLog}
+            onUpdateLog={handleUpdateSupplyLog}
+            onDeleteLog={handleDeleteSupplyLog}
+            onSaveSettings={handleSaveSettings}
+            onNavigateToSales={() => setActiveTab("pos")}
+          />
+        );
+      case "payments":
+        return (
+          <PaymentsTab
+            payments={filteredPayments}
+            supplyLogs={filteredSupplyLogs}
+            suppliers={suppliers}
+            onAddPayment={handleAddPayment}
+            onUpdatePayment={handleUpdatePayment}
+            onDeletePayment={handleDeletePayment}
+          />
+        );
+      case "expenses":
+        return (
+          <ExpensesTab 
+            expenses={expenses}
+            onAddExpense={handleAddExpense}
+            onUpdateExpense={handleUpdateExpense}
+            onDeleteExpense={handleDeleteExpense}
+          />
+        );
+      case "settings":
+        return (
+          <SettingsTab
+            settings={settings}
+            suppliers={suppliers}
+            orders={orders}
+            supplyLogs={supplyLogs}
+            payments={payments}
+            expenses={expenses}
+            onAddSupplier={handleAddSupplier}
+            onUpdateSupplier={handleUpdateSupplier}
+            onDeleteSupplier={handleDeleteSupplier}
+            onSaveSettings={handleSaveSettings}
+            onNavigateToSupplierPortal={() => setIsSupplierPortalActive(true)}
+            onAddExpense={handleAddExpense}
+            onUpdateExpense={handleUpdateExpense}
+            onDeleteExpense={handleDeleteExpense}
+            onNavigateToSales={() => setActiveTab("pos")}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  const navColors: Record<string, {
+    activeClass: string;
+    inactiveClass: string;
+    iconColor: string;
+    activeText: string;
+    mobileActiveBg: string;
+    mobileRing: string;
+    mobileIconClass: string;
+  }> = {
+    dashboard: {
+      activeClass: "bg-gradient-to-r from-blue-500 to-indigo-600 text-bg shadow-lg shadow-blue-500/25 ring-2 ring-blue-500/20 scale-[1.06] font-bold opacity-100",
+      inactiveClass: "text-ink/60 hover:text-blue-400 hover:bg-blue-500/10 hover:scale-103 opacity-70 hover:opacity-100",
+      iconColor: "text-blue-400",
+      activeText: "text-blue-500",
+      mobileActiveBg: "bg-blue-500/15 text-blue-500",
+      mobileRing: "ring-1 ring-blue-500/20",
+      mobileIconClass: "text-blue-500 stroke-[2.5px] scale-110",
+    },
+    supplies: {
+      activeClass: "bg-gradient-to-r from-orange-500 to-amber-500 text-bg shadow-lg shadow-orange-500/25 ring-2 ring-orange-500/20 scale-[1.06] font-bold opacity-100",
+      inactiveClass: "text-ink/60 hover:text-orange-400 hover:bg-orange-500/10 hover:scale-103 opacity-70 hover:opacity-100",
+      iconColor: "text-orange-400",
+      activeText: "text-orange-500",
+      mobileActiveBg: "bg-orange-500/15 text-orange-500",
+      mobileRing: "ring-1 ring-orange-500/20",
+      mobileIconClass: "text-orange-500 stroke-[2.5px] scale-110",
+    },
+    payments: {
+      activeClass: "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 ring-2 ring-emerald-500/20 scale-[1.06] font-bold opacity-100",
+      inactiveClass: "text-ink/60 hover:text-emerald-400 hover:bg-emerald-500/10 hover:scale-103 opacity-70 hover:opacity-100",
+      iconColor: "text-emerald-400",
+      activeText: "text-emerald-500",
+      mobileActiveBg: "bg-emerald-500/15 text-emerald-500",
+      mobileRing: "ring-1 ring-emerald-500/20",
+      mobileIconClass: "text-emerald-500 stroke-[2.5px] scale-110",
+    },
+    pos: {
+      activeClass: "bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/25 ring-2 ring-rose-500/20 scale-[1.06] font-bold opacity-100",
+      inactiveClass: "text-ink/60 hover:text-rose-400 hover:bg-rose-500/10 hover:scale-103 opacity-70 hover:opacity-100",
+      iconColor: "text-rose-400",
+      activeText: "text-rose-500",
+      mobileActiveBg: "bg-rose-500/15 text-rose-500",
+      mobileRing: "ring-1 ring-rose-500/20",
+      mobileIconClass: "text-rose-500 stroke-[2.5px] scale-110",
+    },
+    expenses: {
+      activeClass: "bg-gradient-to-r from-yellow-500 to-orange-600 text-white shadow-lg shadow-yellow-500/25 ring-2 ring-yellow-500/20 scale-[1.06] font-bold opacity-100",
+      inactiveClass: "text-ink/60 hover:text-yellow-400 hover:bg-yellow-500/10 hover:scale-103 opacity-70 hover:opacity-100",
+      iconColor: "text-yellow-400",
+      activeText: "text-yellow-500",
+      mobileActiveBg: "bg-yellow-500/15 text-yellow-500",
+      mobileRing: "ring-1 ring-yellow-500/20",
+      mobileIconClass: "text-yellow-500 stroke-[2.5px] scale-110",
+    },
+    settings: {
+      activeClass: "bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white shadow-lg shadow-purple-500/25 ring-2 ring-purple-500/20 scale-[1.06] font-bold opacity-100",
+      inactiveClass: "text-ink/60 hover:text-purple-400 hover:bg-purple-500/10 hover:scale-103 opacity-70 hover:opacity-100",
+      iconColor: "text-purple-400",
+      activeText: "text-purple-500",
+      mobileActiveBg: "bg-purple-500/15 text-purple-500",
+      mobileRing: "ring-1 ring-purple-500/20",
+      mobileIconClass: "text-purple-500 stroke-[2.5px] scale-110",
+    },
+    calculator: {
+      activeClass: "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 ring-2 ring-emerald-500/20 scale-[1.06] font-bold opacity-100",
+      inactiveClass: "text-ink/60 hover:text-emerald-400 hover:bg-emerald-500/10 hover:scale-103 opacity-70 hover:opacity-100",
+      iconColor: "text-emerald-400",
+      activeText: "text-emerald-500",
+      mobileActiveBg: "bg-emerald-500/15 text-emerald-500",
+      mobileRing: "ring-1 ring-emerald-500/20",
+      mobileIconClass: "text-emerald-500 stroke-[2.5px] scale-110",
+    }
+  };
+
+  const navItems = [
+    { id: "pos", label: "POS / سیلز اسکرین", icon: ShoppingCart },
+    { id: "dashboard", label: "Dashboard / اوورویو", icon: LayoutDashboard },
+    { id: "supplies", label: "Inventory / اسٹاک", icon: Weight },
+    { id: "expenses", label: "Daily Expenses / خرچہ", icon: Coins },
+    { id: "payments", label: "Supplier Ledger / لیجر", icon: CreditCard },
+    { id: "settings", label: "Settings / سیٹنگز", icon: Settings },
+  ];
+
+  if (deleteNotification && deleteNotification.show) {
+    return (
+      <div className="fixed inset-0 bg-bg z-[9999] flex flex-col items-center justify-center p-6 md:p-12 overflow-y-auto animate-fade-in text-ink font-sans">
+        {/* Abstract design element background */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.08)_0%,transparent_70%)] pointer-events-none" />
+        <div className="absolute top-10 left-10 hidden md:block font-mono text-[9px] text-ink/30 uppercase tracking-[0.2em]">
+          Akbar Tikka Shop Manager &bull; Secure Protocol
+        </div>
+        
+        <div className="max-w-md w-full text-center space-y-12 relative z-10">
+          {/* Animated Glowing Trash/Check icon */}
+          <div className="flex justify-center">
+            <div className="relative">
+              <div className="absolute inset-0 bg-red-500/20 rounded-full blur-xl scale-125 animate-pulse" />
+              <div className="relative p-8 bg-red-500/10 border border-red-500/30 text-red-500 rounded-2xl shadow-xl shadow-red-500/10">
+                <Trash2 className="w-12 h-12 stroke-[2px] animate-bounce" />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <span className="inline-block font-mono text-[10px] font-bold text-red-500 uppercase tracking-[0.25em] bg-red-500/10 border border-red-500/20 px-3.5 py-1.5 rounded-full">
+              Deleted / خارج کر دیا گیا
+            </span>
+            <h1 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-tight text-ink">
+              Purged From System
+            </h1>
+            <p className="font-mono text-[10px] text-ink/50 uppercase tracking-wider">
+              آئٹم کامیابی کے ساتھ سسٹم سے ڈیلیٹ کر دیا گیا ہے
+            </p>
+          </div>
+
+          {/* Details Table */}
+          <div className="bg-surface border border-ink-faint rounded-2xl p-6 text-left space-y-5 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 rounded-full blur-2xl -mr-8 -mt-8" />
+            
+            <div className="space-y-1.5 border-b border-ink-faint pb-4">
+              <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Entry Type</span>
+              <span className="block font-sans text-base font-bold text-ink">{deleteNotification.itemType}</span>
+            </div>
+
+            <div className="space-y-1.5 border-b border-ink-faint pb-4">
+              <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Description / Details</span>
+              <span className="block font-mono text-[11px] text-ink/80 leading-relaxed break-words">{deleteNotification.itemName}</span>
+            </div>
+
+            {deleteNotification.amount && (
+              <div className="space-y-1.5 border-b border-ink-faint pb-4">
+                <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Purged Value</span>
+                <span className="block font-mono text-xl font-bold text-red-400 tracking-tighter">{deleteNotification.amount}</span>
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Action Timestamp</span>
+              <span className="block font-mono text-[10px] text-ink/50 uppercase tracking-widest">
+                {new Date().toLocaleTimeString()} &bull; {new Date().toLocaleDateString()}
+              </span>
+            </div>
+          </div>
+
+          {/* Return Button */}
+          <button
+            onClick={() => setDeleteNotification(null)}
+            className="w-full bg-gradient-to-r from-red-500 to-rose-600 text-bg font-mono font-bold py-4.5 rounded-xl text-xs uppercase tracking-[0.2em] shadow-lg shadow-red-500/20 hover:brightness-110 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Dismiss & Return / واپس جائیں
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isSupplier || isSupplierPortalActive) {
+    return (
+      <SupplierPortal
+        settings={settings}
+        supplyLogs={supplyLogs}
+        suppliers={suppliers}
+        payments={payments}
+        onAddLog={handleAddSupplyLog}
+        onUpdateLog={handleUpdateSupplyLog}
+        onDeleteLog={handleDeleteSupplyLog}
+        onAddPayment={handleAddPayment}
+        onUpdatePayment={handleUpdatePayment}
+        onDeletePayment={handleDeletePayment}
+        onExit={async () => {
+          if (isSupplier) {
+            localStorage.setItem("tikka_auth_pref_tab", "supplier");
+            await logout();
+          } else {
+            setIsSupplierPortalActive(false);
+          }
+        }}
+        isLockedOnly={isSupplier}
+      />
+    );
+  }
+
+  return (
+    <div id="app-container" className="min-h-screen bg-bg text-ink flex flex-col font-sans pb-20 md:pb-0">
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-[100] bg-bg/95 backdrop-blur-xl animate-fade-in flex flex-col">
+          <div className="flex items-center justify-between p-6 border-b border-indigo-500/15">
+            <div className="flex flex-col">
+              <span className="font-display text-2xl uppercase tracking-tight bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 bg-clip-text text-transparent font-black leading-none">
+                Akbar Tikka
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-widest text-pink-400/80 font-bold">System Menu</span>
+            </div>
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-3 bg-surface border border-ink-faint rounded-2xl text-ink active:scale-90 transition-transform"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-8">
+            <div className="space-y-3">
+              <span className="block font-mono text-[10px] font-bold text-indigo-400 uppercase tracking-[0.2em] mb-4">Core Management</span>
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                const colors = navColors[item.id];
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all active:scale-[0.98] ${
+                      isActive 
+                        ? `${colors?.mobileActiveBg || 'bg-accent/20'} ${colors?.mobileRing || 'border-accent/50'} font-bold` 
+                        : "bg-surface/50 border-ink-faint opacity-70"
+                    }`}
+                  >
+                    <div className={`p-3 rounded-xl ${isActive ? (colors?.mobileActiveBg || 'bg-accent/20') : 'bg-bg'}`}>
+                      <Icon className={`w-6 h-6 ${isActive ? (colors?.mobileIconClass || 'text-accent') : 'text-ink/40'}`} />
+                    </div>
+                    <span className="font-mono text-sm uppercase tracking-wider">{item.label}</span>
+                    {isActive && <CheckCircle className="w-4 h-4 ml-auto text-emerald-500" />}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="pt-6 border-t border-indigo-500/10">
+              <button 
+                onClick={() => {
+                  logout();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 font-mono text-sm uppercase tracking-widest"
+              >
+                <div className="p-3 bg-red-500/20 rounded-xl">
+                  <LogOut className="w-6 h-6" />
+                </div>
+                Logout / لاگ آؤٹ
+              </button>
+            </div>
+          </div>
+
+          <div className="p-6 bg-surface/30 border-t border-indigo-500/10">
+             <div className="flex items-center gap-4 p-4 bg-indigo-950/20 rounded-2xl">
+                <div className="w-10 h-10 rounded-full border-2 border-pink-500 overflow-hidden shrink-0 shadow-lg">
+                  {userPhoto ? (
+                    <img src={userPhoto} alt={userName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold text-sm">
+                       {userName.charAt(0)}
+                    </div>
+                  )}
+                </div>
+                <div className="user-info min-w-0">
+                  <span className="block text-sm font-black truncate text-white">{userName}</span>
+                  <span className="block text-[10px] text-pink-400 font-bold uppercase tracking-widest leading-tight">Administrator</span>
+                </div>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Top Brand Bar */}
+      <div className="md:hidden bg-bg border-b border-indigo-500/15 py-4 px-6 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md bg-bg/80">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="p-2.5 bg-surface border border-ink-faint rounded-xl text-ink active:scale-90 transition-all hover:bg-indigo-500/10"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+          <div className="flex flex-col">
+            <span className="font-display text-xl uppercase tracking-tight bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 bg-clip-text text-transparent font-black leading-none">
+              Akbar Tikka
+            </span>
+            <span className="font-mono text-[8px] uppercase tracking-widest text-pink-400/80 font-bold">Manager</span>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          {/* Mobile Sync Indicator */}
+          <div className="flex flex-col items-end mr-1">
+             {syncStatus === 'syncing' ? (
+                <RefreshCw className="w-2.5 h-2.5 text-blue-400 animate-spin" />
+             ) : syncStatus === 'success' ? (
+                <CloudCheck className="w-2.5 h-2.5 text-emerald-400" />
+             ) : syncStatus === 'error' ? (
+                <CloudOff className="w-2.5 h-2.5 text-red-400" />
+             ) : (
+                <Wifi className={`w-2.5 h-2.5 ${isDbLive ? "text-emerald-500" : "text-amber-500"} opacity-40`} />
+             )}
+          </div>
+
+          {activeTab === "pos" && (
+            <div className="flex flex-col items-end">
+              <span className="font-mono text-[7px] uppercase text-indigo-400/40 font-bold leading-none mb-0.5">Today Sale</span>
+              <span className="font-mono text-[10px] font-black text-indigo-300 leading-none">Rs. {todaySales.toLocaleString()}</span>
+            </div>
+          )}
+          <button 
+            onClick={() => setActiveTab("pos")}
+            className={`p-2.5 rounded-xl border transition-all ${
+              activeTab === "pos" 
+                ? "bg-rose-500/20 border-rose-500/50 text-rose-300" 
+                : "border-rose-500/30 bg-rose-500/10 text-rose-400"
+            }`}
+          >
+            <ShoppingCart className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 flex overflow-hidden">
+        {/* Side Navigation - Wide & Branded */}
+        <aside className="hidden md:flex w-[260px] flex-col py-8 px-6 bg-gradient-to-b from-surface/95 via-[#0c0c18] to-surface/95 border-r border-indigo-500/15 shrink-0 z-50 overflow-y-auto">
+          <div className="brand flex flex-col gap-2 mb-10">
+            <span className="brand-name font-display text-2xl leading-[0.9] uppercase tracking-[-0.04em] bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 bg-clip-text text-transparent filter drop-shadow-[0_2px_10px_rgba(236,72,153,0.3)] font-black">
+              Akbar Tikka
+            </span>
+            <span className="brand-meta font-mono text-[10px] uppercase tracking-[0.15em] text-pink-400/80 font-bold">Supplies & Cash Manager</span>
+          </div>
+          
+          <nav className="flex flex-col gap-2.5 flex-1">
+            <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-purple-400 font-bold mb-2">System Controls</div>
+            
+            <button
+              onClick={() => setActiveTab("pos")}
+              className={`flex items-center gap-3 px-4.5 py-4 rounded-xl font-mono text-sm transition-all duration-300 transform cursor-pointer text-left group overflow-hidden relative ${
+                activeTab === "pos" 
+                  ? "bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-xl shadow-rose-500/30 scale-[1.05] font-bold" 
+                  : "bg-rose-500/10 border border-rose-500/20 text-rose-300 hover:bg-rose-500/20 hover:scale-[1.02]"
+              }`}
+            >
+              <div className={`absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none ${activeTab === 'pos' ? 'animate-pulse' : ''}`} />
+              <ShoppingCart className={`w-5 h-5 transition-transform duration-300 ${activeTab === 'pos' ? 'scale-110 stroke-[2.5px]' : 'text-rose-400'}`} />
+              <div className="flex flex-col">
+                <span className="font-bold tracking-tight">POS / سیلز اسکرین</span>
+                <span className="text-[9px] opacity-60 uppercase tracking-widest font-black leading-none mt-0.5">Quick Sales Center</span>
+              </div>
+            </button>
+
+            <div className="h-px bg-indigo-500/10 my-1" />
+
+            {(settings.sidebarNavItems?.length ? settings.sidebarNavItems : ["dashboard", "supplies", "expenses", "payments", "calculator"]).map((id) => {
+              const item = navItems.find(n => n.id === id);
+              if (!item || item.id === 'pos') return null;
+              
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              const colors = navColors[item.id] || {
+                activeClass: "bg-accent text-bg font-bold opacity-100",
+                inactiveClass: "opacity-60 hover:opacity-100 hover:bg-ink-faint"
+              };
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`flex items-center gap-3 px-4.5 py-3 rounded-xl font-mono text-xs transition-all duration-300 transform cursor-pointer text-left ${
+                    isActive ? colors.activeClass : colors.inactiveClass
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 transition-transform duration-300 ${isActive ? 'scale-110 stroke-[2.5px]' : ''}`} />
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="mt-auto pt-8 border-t border-indigo-500/10 space-y-6">
+            <div className="p-4 bg-indigo-950/20 border border-indigo-500/10 rounded-xl text-[11px] opacity-90 text-indigo-200">
+              <div className="font-mono text-[10px] uppercase tracking-widest text-indigo-400 font-bold mb-1">🔥 App Update</div>
+              Active cloud database with real-time syncing is online.
+            </div>
+
+            <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-950/40 to-pink-950/20 border border-purple-500/15 rounded-xl">
+              <div className="w-8 h-8 rounded-full border-2 border-pink-500 overflow-hidden shrink-0 shadow-[0_0_10px_rgba(236,72,153,0.4)]">
+                {userPhoto ? (
+                  <img src={userPhoto} alt={userName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold text-xs">
+                     {userName.charAt(0)}
+                  </div>
+                )}
+              </div>
+              <div className="user-info min-w-0">
+                <span className="block text-xs font-black truncate leading-tight text-white">{userName}</span>
+                <span className="block text-[10px] text-pink-400 font-bold uppercase tracking-widest truncate leading-tight">System Owner</span>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setActiveTab('settings')}
+              className={`flex items-center gap-3 px-4 py-2.5 w-full font-mono text-[10px] uppercase tracking-widest transition-all duration-300 transform cursor-pointer ${
+                activeTab === 'settings' 
+                  ? "text-purple-400 scale-105 font-bold" 
+                  : "opacity-50 hover:opacity-100 hover:text-purple-400"
+              }`}
+            >
+              <Settings className={`w-4 h-4 transition-transform duration-300 ${activeTab === 'settings' ? 'scale-110 stroke-[2.5px] rotate-45' : ''}`} />
+              Settings
+            </button>
+          </div>
+        </aside>
+
+        <div className="flex-1 flex flex-col min-w-0 bg-bg overflow-hidden">
+          {/* Header */}
+          <header className="hidden md:flex bg-bg border-b border-ink-faint py-6 px-12 items-center justify-between z-40">
+            <div className="flex gap-12">
+              {activeTab === "pos" && (
+                <button 
+                  onClick={() => setActiveTab("pos")}
+                  className="flex flex-col group cursor-pointer hover:bg-rose-500/5 px-4 py-2 -ml-4 rounded-xl transition-all"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.12em] opacity-50 group-hover:text-rose-400 group-hover:opacity-100 transition-colors">Today's Sales</span>
+                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <span className="font-mono text-lg font-bold group-hover:text-rose-300 transition-colors">Rs. {todaySales.toLocaleString()}</span>
+                </button>
+              )}
+              <div className="flex flex-col">
+                <span className="font-mono text-[10px] uppercase tracking-[0.12em] opacity-50 mb-1">Status</span>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${isDbLive ? "bg-emerald-custom" : "bg-accent"}`}></span>
+                  <span className={`font-mono text-[11px] font-bold uppercase tracking-widest ${isDbLive ? "text-emerald-custom" : "text-accent"}`}>
+                    {isDbLive ? "Supabase Live" : "Local Mode"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Sync Status Indicator */}
+              <div className="flex flex-col border-l border-ink-faint pl-12">
+                <span className="font-mono text-[10px] uppercase tracking-[0.12em] opacity-50 mb-1">Cloud Sync</span>
+                <div className="flex items-center gap-2">
+                  {syncStatus === 'syncing' ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 text-blue-400 animate-spin" />
+                      <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-blue-400">Syncing...</span>
+                    </>
+                  ) : syncStatus === 'success' ? (
+                    <>
+                      <CheckCircle className="w-3 h-3 text-emerald-400" />
+                      <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-emerald-400">Synced</span>
+                    </>
+                  ) : syncStatus === 'error' ? (
+                    <>
+                      <CloudOff className="w-3 h-3 text-red-400" />
+                      <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-red-400">Sync Error</span>
+                    </>
+                  ) : (
+                    <>
+                      {isDbLive ? (
+                        <Wifi className="w-3 h-3 text-indigo-400 opacity-60" />
+                      ) : (
+                        <WifiOff className="w-3 h-3 text-amber-400 opacity-60" />
+                      )}
+                      <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-indigo-400 opacity-60">
+                        {isDbLive ? "Connected" : "Offline"}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                id="logout-button-header"
+                onClick={logout}
+                className="font-mono text-[10px] uppercase tracking-[0.15em] opacity-50 hover:opacity-100 transition-all flex items-center gap-2 px-4 py-2 border border-ink-faint rounded-xl hover:bg-ink-faint cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                Logout
+              </button>
+            </div>
+          </header>
+
+          {/* Content View Area */}
+          <main className="flex-1 overflow-y-auto w-full mx-auto p-3 md:p-6">
+            {dbError && (
+              <div id="db-error-banner" className="bg-surface border border-accent/20 rounded p-6 md:p-10 text-ink flex flex-col md:flex-row gap-6 md:gap-10 items-start shadow-2xl mb-8 md:mb-12 animate-fade-in relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl -mr-16 -mt-16" />
+                
+                <div className="p-4 bg-accent/5 text-accent rounded border border-accent/20 shrink-0 mt-0.5">
+                  <AlertCircle className="w-8 h-8" />
+                </div>
+                
+                <div className="space-y-6 md:space-y-8 flex-1 relative z-10">
+                  <div className="space-y-1">
+                    <h3 className="font-display text-xl uppercase tracking-tighter text-accent">
+                      Supabase Connection Issue
+                    </h3>
+                    <p className="font-mono text-[10px] uppercase tracking-widest opacity-40">
+                      Your database configuration is incomplete. Persistence is currently disabled.
+                    </p>
+                  </div>
+
+                  <div className="bg-bg border border-ink-faint rounded p-4 font-mono text-[11px] text-accent/80 overflow-x-auto select-all max-h-32">
+                    {dbError}
+                  </div>
+
+                  <div className="bg-bg border border-ink-faint rounded p-6 md:p-8 space-y-4 md:space-y-6">
+                    <p className="font-mono font-bold text-accent uppercase tracking-widest text-[10px]">
+                      Required Environment Variables
+                    </p>
+                    
+                    <ul className="space-y-4 font-mono text-[11px] opacity-60">
+                      <li className="flex gap-4">
+                        <span className="w-5 h-5 rounded border border-accent text-accent flex items-center justify-center text-[10px] shrink-0 font-bold">1</span>
+                        <span><b>VITE_SUPABASE_URL</b>: Your Supabase Project URL.</span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="w-5 h-5 rounded border border-accent text-accent flex items-center justify-center text-[10px] shrink-0 font-bold">2</span>
+                        <span><b>VITE_SUPABASE_ANON_KEY</b>: Your Supabase Anonymous Key.</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setDbError(null)}
+                  className="absolute top-4 right-4 p-2 text-ink/20 hover:text-ink transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+
+            {renderTabContent()}
+          </main>
+        </div>
+      </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#060611]/95 border-t border-indigo-500/15 flex justify-around items-center p-2 z-40 shadow-[0_-8px_30px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+        {(settings.mobileNavItems?.length ? settings.mobileNavItems : ["dashboard", "pos", "payments", "supplies"]).map((id) => {
+          const item = navItems.find(n => n.id === id);
+          if (!item) return null;
+          
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          
+          const activeBtnStyles: Record<string, string> = {
+            dashboard: "bg-blue-500/15 border-blue-500/45 text-blue-300",
+            supplies: "bg-orange-500/15 border-orange-500/45 text-orange-300",
+            pos: "bg-rose-500/15 border-rose-500/45 text-rose-300 glow-rose",
+            payments: "bg-emerald-500/15 border-emerald-500/45 text-emerald-300",
+            expenses: "bg-yellow-500/15 border-yellow-500/45 text-yellow-300",
+            settings: "bg-purple-500/15 border-purple-500/45 text-purple-300",
+          };
+
+          const shortLabels: Record<string, string> = {
+            dashboard: "Home",
+            pos: "POS",
+            expenses: "Kharcha",
+            supplies: "Inventory",
+            payments: "Ledger",
+            settings: "Settings"
+          };
+
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex flex-col items-center justify-center gap-1.5 py-2 px-1 rounded-xl border transition-all duration-300 cursor-pointer select-none active:scale-[0.92] flex-1 min-w-0 ${
+                isActive 
+                  ? `${activeBtnStyles[item.id] || "border-accent text-accent"} font-bold scale-[1.03] shadow-lg` 
+                  : "bg-[#111122]/35 border-ink-faint text-ink/50"
+              }`}
+            >
+              <Icon className={`w-5 h-5 transition-all ${isActive ? 'stroke-[2.5px] scale-110' : 'opacity-75'}`} />
+              <span className="text-[9px] font-mono font-black uppercase tracking-wider truncate w-full text-center">
+                {shortLabels[item.id] || item.label}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AuthGate>
+        <AppContent />
+      </AuthGate>
+    </AuthProvider>
+  );
+}
