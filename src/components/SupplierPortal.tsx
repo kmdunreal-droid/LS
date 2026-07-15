@@ -139,13 +139,8 @@ export default function SupplierPortal({
     } else {
       setIsNewCategory(false);
       setCategory(selectedCat);
-      setSupplyRate(getEstimatedRateForCategory(selectedCat).toString());
     }
   };
-
-  React.useEffect(() => {
-    setSupplyRate(getEstimatedRateForCategory(category).toString());
-  }, [settings.baseRawRate, category]);
 
   const [pinInput, setPinInput] = useState("");
   const [showPinModal, setShowPinModal] = useState(false);
