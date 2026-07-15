@@ -22,6 +22,7 @@ import {
   updateSupplyLog,
   updatePayment,
   updateExpense,
+  resetAllData,
   isSupabaseActive,
   subscribeSyncStatus,
   SyncStatus
@@ -343,6 +344,17 @@ export function AppContent() {
     }
   };
 
+  const handleResetAllData = async () => {
+    try {
+      await resetAllData();
+      setDbError(null);
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
   // Stats Calculations
   const todayString = new Date().toISOString().split("T")[0];
   const todayOrders = orders.filter((o) => o.date === todayString);
@@ -463,6 +475,7 @@ export function AppContent() {
             onUpdateExpense={handleUpdateExpense}
             onDeleteExpense={handleDeleteExpense}
             onNavigateToSales={() => setActiveTab("pos")}
+            onResetAllData={handleResetAllData}
           />
         );
       default:

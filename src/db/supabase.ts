@@ -856,6 +856,35 @@ export async function deleteSupplier(id: string): Promise<void> {
   }
 }
 
+// 7. Reset All Data (keeps formula_settings and suppliers)
+export async function resetAllData(): Promise<void> {
+  const tables = ['supply_logs', 'supplier_payments', 'expenses', 'orders'];
+
+  // 1. Clear local storage
+  saveLocalData(LOCAL_STORAGE_KEYS.SUPPLY_LOGS, []);
+  saveLocalData(LOCAL_STORAGE_KEYS.PAYMENTS, []);
+  saveLocalData(LOCAL_STORAGE_KEYS.EXPENSES, []);
+  saveLocalData(LOCAL_STORAGE_KEYS.ORDERS, []);
+  notifyDataSubscribers('supply_logs', []);
+  notifyDataSubscribers('payments', []);
+  notifyDataSubscribers('expenses', []);
+  notifyDataSubscribers('orders', []);
+
+  setSyncStatus('syncing');
+
+  try {
+    for (const table of tables) {
+      const { error } = await supabase.from(table).delete().neq('id', 'none');
+      if (error) throw error;
+    }
+    setSyncStatus('success');
+  } catch (e) {
+    console.error("Supabase resetAllData failed", e);
+    setSyncStatus('error');
+    throw e;
+  }
+}
+
 // Indicators
 export function isSupabaseActive(): boolean {
   return !!supabase;

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { evaluate } from "mathjs";
 import { FormulaSettings, SupplyLog, Supplier, SupplierPayment } from "../types";
 import { 
   Weight, 
@@ -95,24 +96,39 @@ export default function SupplierPortal({
       "Leg / Thigh",
       "Wings",
       "Wings V",
-      ...Object.values(settings.items || {}).map((it) => it.name),
+      ...Object.values(settings.items || {})
+        .filter(it => it.name && it.name.trim() !== "")
+        .map(it => it.name),
       ...supplyLogs.map((log) => log.category).filter(Boolean),
     ])
   );
 
   const getEstimatedRateForCategory = (cat: string) => {
     const base = settings.baseRawRate;
+    const formulaItem = Object.values(settings.items || {}).find(
+      (it) => it.name.toLowerCase() === cat.toLowerCase()
+    );
+    if (formulaItem) {
+      if (formulaItem.expression) {
+        try {
+          const cleanExpression = formulaItem.expression.toLowerCase().replace(/supply/g, base.toString());
+          const result = evaluate(cleanExpression);
+          return Math.round(Number(result));
+        } catch (err) {
+          console.error("Evaluation error in SupplierPortal:", err);
+        }
+      }
+      if (formulaItem.multiplier !== undefined) {
+        return Math.round(base * formulaItem.multiplier + (formulaItem.markup || 0));
+      }
+    }
     switch (cat) {
       case "Whole Chicken": return base;
-      case "Chest / Boneless": return Math.round(base * (settings.items.boneless?.multiplier || 1.4));
-      case "Leg / Thigh": return Math.round(base * (settings.items.leg?.multiplier || 1.1));
-      case "Wings": return Math.round(base * (settings.items.wings?.multiplier || 0.8));
-      case "Wings V": return Math.round(base * (settings.items.wingsV?.multiplier || 0.85));
-      default:
-        const formulaItem = Object.values(settings.items || {}).find(
-          (it) => it.name.toLowerCase() === cat.toLowerCase()
-        );
-        return formulaItem ? Math.round(base * formulaItem.multiplier) : base;
+      case "Chest / Boneless": return Math.round(base * 1.4);
+      case "Leg / Thigh": return Math.round(base * 1.1);
+      case "Wings": return Math.round(base * 0.8);
+      case "Wings V": return Math.round(base * 0.85);
+      default: return base;
     }
   };
 
@@ -408,7 +424,10 @@ export default function SupplierPortal({
                     <div className="space-y-2">
                       <label className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Category</label>
                       <select value={isNewCategory ? "__CUSTOM_CAT__" : category} onChange={(e) => handleCategoryChange(e.target.value)} className="w-full bg-surface border border-ink-faint px-4 py-3 text-xs cursor-pointer appearance-none uppercase font-mono font-bold tracking-tight rounded outline-none focus:ring-1 focus:ring-accent">
-                        {uniqueCategories.map((cat) => <option key={cat} value={cat} className="bg-surface">{cat.toUpperCase()}</option>)}
+                        {uniqueCategories.map((cat) => {
+                          const estimatedRate = getEstimatedRateForCategory(cat);
+                          return <option key={cat} value={cat} className="bg-surface">{cat.toUpperCase()} (RS. {estimatedRate}/KG)</option>;
+                        })}
                         <option value="__CUSTOM_CAT__" className="text-accent bg-surface">+ ADD_CUSTOM_CLASS</option>
                       </select>
                       {isNewCategory && <input type="text" required placeholder="Enter Category..." value={customCategoryName} onChange={(e) => { setCustomCategoryName(e.target.value); setCategory(e.target.value); }} className="w-full bg-accent/5 border border-accent/20 px-4 py-3 text-xs text-accent font-mono font-bold uppercase mt-2 rounded outline-none focus:ring-1 focus:ring-accent" />}
@@ -451,14 +470,18 @@ export default function SupplierPortal({
 
             {/* Right Column: Deliveries Ledger */}
             <div className="lg:col-span-7 space-y-12 animate-fade-in">
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-3 gap-8">
                 <div className="bg-surface border border-ink-faint p-8 space-y-4 rounded-lg">
                   <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Daily Total Weight</span>
-                  <span className="block font-mono text-4xl font-bold tracking-tighter">{totalTodayWeight.toLocaleString()} <span className="text-sm opacity-30 uppercase">KG</span></span>
+                  <span className="block font-mono text-[26px] font-bold tracking-tighter">{totalTodayWeight.toLocaleString()} <span className="text-sm opacity-30 uppercase">KG</span></span>
                 </div>
                 <div className="bg-surface border border-ink-faint p-8 space-y-4 rounded-lg">
                   <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Daily Total Value</span>
-                  <span className="block font-mono text-4xl font-bold text-accent tracking-tighter">Rs. {totalTodayCost.toLocaleString()}</span>
+                  <span className="block font-mono text-[26px] font-bold text-accent tracking-tighter">Rs. {totalTodayCost.toLocaleString()}</span>
+                </div>
+                <div className="bg-surface border border-ink-faint p-8 space-y-4 rounded-lg">
+                  <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Avg Rate / Kg</span>
+                  <span className="block font-mono text-[26px] font-bold text-emerald-400 tracking-tighter">Rs. {totalTodayWeight > 0 ? Math.round(totalTodayCost / totalTodayWeight).toLocaleString() : "0"} <span className="text-sm opacity-30 uppercase">/KG</span></span>
                 </div>
               </div>
 

@@ -23,6 +23,7 @@ interface SettingsTabProps {
   onUpdateExpense: (id: string, expense: Partial<Expense>) => Promise<void>;
   onDeleteExpense: (id: string) => Promise<void>;
   onNavigateToSales?: () => void;
+  onResetAllData: () => Promise<void>;
 }
 
 export default function SettingsTab({ 
@@ -40,7 +41,8 @@ export default function SettingsTab({
   onAddExpense,
   onUpdateExpense,
   onDeleteExpense,
-  onNavigateToSales
+  onNavigateToSales,
+  onResetAllData
 }: SettingsTabProps) {
   const [shopName, setShopName] = useState<string>(settings.shopName || "ZEESHAN TIKKA");
   const [supplierUsername, setSupplierUsername] = useState<string>(settings.supplierUsername || "zeeshan");
@@ -60,6 +62,9 @@ export default function SettingsTab({
   
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showResetSection, setShowResetSection] = useState(false);
+  const [resetPasswordInput, setResetPasswordInput] = useState("");
+  const [resetting, setResetting] = useState(false);
   const [message, setMessage] = useState("");
 
   const [newSupplierName, setNewSupplierName] = useState("");
@@ -671,6 +676,63 @@ export default function SettingsTab({
             </div>
           </div>
         </form>
+
+        {/* Danger Zone: Reset Database */}
+        <div className="border border-red-500/20 rounded-lg overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowResetSection(!showResetSection)}
+            className="w-full flex items-center justify-between p-4 md:p-6 bg-red-950/20 hover:bg-red-950/30 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-4 h-4 text-red-400" />
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-red-400">Danger Zone</span>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-red-400/60 transition-transform ${showResetSection ? 'rotate-180' : ''}`} />
+          </button>
+          {showResetSection && (
+            <div className="p-4 md:p-6 space-y-4 border-t border-red-500/20">
+              <p className="font-mono text-[10px] text-red-300/60 uppercase tracking-wider leading-relaxed">
+                This will permanently delete all supply logs, payments, expenses, and orders. Formula settings and suppliers will be preserved. This action cannot be undone.
+              </p>
+              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                <input
+                  type="password"
+                  value={resetPasswordInput}
+                  onChange={(e) => setResetPasswordInput(e.target.value)}
+                  placeholder="ENTER OWNER PASSWORD TO CONFIRM"
+                  className="flex-1 w-full bg-surface border border-red-500/30 px-4 py-3 font-mono text-[10px] uppercase tracking-widest rounded outline-none focus:ring-1 focus:ring-red-500"
+                />
+                <button
+                  type="button"
+                  disabled={resetting || !resetPasswordInput.trim()}
+                  onClick={async () => {
+                    const ownerPass = settings.supplierPassword || "786";
+                    if (resetPasswordInput.trim() !== ownerPass) {
+                      alert("Incorrect password. Use the owner password from Settings.");
+                      return;
+                    }
+                    if (!confirm("Are you sure you want to delete ALL data? This cannot be undone!")) return;
+                    setResetting(true);
+                    try {
+                      await onResetAllData();
+                      alert("All data has been reset successfully.");
+                      setResetPasswordInput("");
+                      setShowResetSection(false);
+                    } catch (err) {
+                      alert("Failed to reset data. Check console for details.");
+                    } finally {
+                      setResetting(false);
+                    }
+                  }}
+                  className="shrink-0 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded font-mono text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-30"
+                >
+                  {resetting ? "DELETING..." : "DELETE ALL DATA"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Supplier List Section */}
         <div className="space-y-8 md:space-y-12">
