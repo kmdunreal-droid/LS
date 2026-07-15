@@ -56,9 +56,13 @@ export default function SettingsTab({
   const [mobileNavItems, setMobileNavItems] = useState<string[]>(
     settings.mobileNavItems?.length ? settings.mobileNavItems : ["dashboard", "pos", "payments", "supplies"]
   );
-  const [sidebarNavItems, setSidebarNavItems] = useState<string[]>(
-    settings.sidebarNavItems?.length ? settings.sidebarNavItems : ["dashboard", "supplies", "expenses", "payments", "settings"]
-  );
+  const [sidebarNavItems, setSidebarNavItems] = useState<string[]>(() => {
+    const saved = settings.sidebarNavItems;
+    if (saved?.length) {
+      return saved.includes("pos") ? saved : ["pos", ...saved];
+    }
+    return ["dashboard", "pos", "supplies", "expenses", "payments", "settings"];
+  });
   
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -484,6 +488,7 @@ export default function SettingsTab({
                   {sidebarNavItems.map((id, index) => {
                     const item = [
                       { id: "dashboard", label: "Dashboard" },
+                      { id: "pos", label: "POS / Sales" },
                       { id: "supplies", label: "Inventory" },
                       { id: "expenses", label: "Expenses" },
                       { id: "payments", label: "Ledger" },

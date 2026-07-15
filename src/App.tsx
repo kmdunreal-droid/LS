@@ -668,6 +668,7 @@ export function AppContent() {
         onAddPayment={handleAddPayment}
         onUpdatePayment={handleUpdatePayment}
         onDeletePayment={handleDeletePayment}
+        onSaveSettings={handleSaveSettings}
         onExit={async () => {
           if (isSupplier) {
             localStorage.setItem("tikka_auth_pref_tab", "supplier");
@@ -830,27 +831,9 @@ export function AppContent() {
           <nav className="flex flex-col gap-2.5 flex-1">
             <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-purple-400 font-bold mb-2">System Controls</div>
             
-            <button
-              onClick={() => setActiveTab("pos")}
-              className={`flex items-center gap-3 px-4.5 py-4 rounded-xl font-mono text-sm transition-all duration-300 transform cursor-pointer text-left group overflow-hidden relative ${
-                activeTab === "pos" 
-                  ? "bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-xl shadow-rose-500/30 scale-[1.05] font-bold" 
-                  : "bg-rose-500/10 border border-rose-500/20 text-rose-300 hover:bg-rose-500/20 hover:scale-[1.02]"
-              }`}
-            >
-              <div className={`absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none ${activeTab === 'pos' ? 'animate-pulse' : ''}`} />
-              <ShoppingCart className={`w-5 h-5 transition-transform duration-300 ${activeTab === 'pos' ? 'scale-110 stroke-[2.5px]' : 'text-rose-400'}`} />
-              <div className="flex flex-col">
-                <span className="font-bold tracking-tight">POS / سیلز اسکرین</span>
-                <span className="text-[9px] opacity-60 uppercase tracking-widest font-black leading-none mt-0.5">Quick Sales Center</span>
-              </div>
-            </button>
-
-            <div className="h-px bg-indigo-500/10 my-1" />
-
-            {(settings.sidebarNavItems?.length ? settings.sidebarNavItems : ["dashboard", "supplies", "expenses", "payments", "calculator"]).map((id) => {
+            {(settings.sidebarNavItems?.length ? (settings.sidebarNavItems.includes("pos") ? settings.sidebarNavItems : ["pos", ...settings.sidebarNavItems]) : ["dashboard", "pos", "supplies", "expenses", "payments", "calculator"]).map((id) => {
               const item = navItems.find(n => n.id === id);
-              if (!item || item.id === 'pos') return null;
+              if (!item) return null;
               
               const Icon = item.icon;
               const isActive = activeTab === item.id;

@@ -3,9 +3,7 @@ import { evaluate } from "mathjs";
 import { FormulaSettings, SupplyLog, Supplier, SupplierPayment } from "../types";
 import { 
   Weight, 
-  Calendar, 
   Unlock, 
-  Plus, 
   CheckCircle, 
   LogOut,
   X,
@@ -25,6 +23,7 @@ interface SupplierPortalProps {
   onAddPayment: (payment: Omit<SupplierPayment, "id">) => Promise<string>;
   onUpdatePayment: (id: string, payment: Partial<SupplierPayment>) => Promise<void>;
   onDeletePayment: (id: string) => Promise<void>;
+  onSaveSettings?: (settings: FormulaSettings) => Promise<void>;
   onExit: () => void;
   isLockedOnly?: boolean;
 }
@@ -40,6 +39,7 @@ export default function SupplierPortal({
   onAddPayment,
   onUpdatePayment,
   onDeletePayment,
+  onSaveSettings,
   onExit,
   isLockedOnly = false
 }: SupplierPortalProps) {
@@ -52,6 +52,7 @@ export default function SupplierPortal({
   const [weightKg, setWeightKg] = useState<string>("");
   const [category, setCategory] = useState<string>("Whole Chicken");
   const [supplyRate, setSupplyRate] = useState<string>(settings.baseRawRate.toString());
+  const [proposedRate, setProposedRate] = useState<string>(settings.baseRawRate.toString());
   const [supplierName, setSupplierName] = useState(currentSupplier ? currentSupplier.name : "Zeeshan Broiler");
   const [isOtherSupplier, setIsOtherSupplier] = useState(false);
   const [otherSupplierName, setOtherSupplierName] = useState("");
@@ -364,6 +365,45 @@ export default function SupplierPortal({
         </div>
       </header>
 
+      {/* Supplier Rate Input - applies everywhere */}
+      <div className="max-w-7xl mx-auto w-full px-4 md:px-12 pt-4 md:pt-6">
+        <div className="bg-surface border border-ink-faint border-l-4 border-l-accent p-4 md:p-6 rounded-lg">
+          <div className="flex items-center gap-4 mb-4">
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50 shrink-0">Set Raw Chicken Rate</span>
+            <span className="font-mono text-[9px] opacity-30">(ye rate har jagah apply hoga)</span>
+            <div className="h-px bg-ink-faint flex-1" />
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+            <div className="flex-1 w-full space-y-2">
+              <label className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">
+                Raw Chicken Rate Per Kg
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-mono text-sm opacity-30">Rs.</span>
+                <input
+                  type="number"
+                  value={proposedRate}
+                  onChange={async (e) => {
+                    const val = e.target.value;
+                    setProposedRate(val);
+                    setSupplyRate(val);
+                    if (onSaveSettings && val) {
+                      const num = parseFloat(val);
+                      if (!isNaN(num) && num > 0) {
+                        await onSaveSettings({ ...settings, baseRawRate: num });
+                      }
+                    }
+                  }}
+                  className="w-full bg-bg border border-ink-faint px-12 py-3 md:py-4 text-xl md:text-2xl font-mono font-bold text-accent focus:ring-1 focus:ring-accent outline-none rounded"
+                  placeholder={settings.baseRawRate.toString()}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 p-4 md:p-12 flex-1">
         {activeTab === "deliveries" ? (
           <>
@@ -438,15 +478,9 @@ export default function SupplierPortal({
                       {isNewCategory && <input type="text" required placeholder="Enter Category..." value={customCategoryName} onChange={(e) => { setCustomCategoryName(e.target.value); setCategory(e.target.value); }} className="w-full bg-accent/5 border border-accent/20 px-4 py-3 text-xs text-accent font-mono font-bold uppercase mt-2 rounded outline-none focus:ring-1 focus:ring-accent" />}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-8">
-                      <div className="space-y-2">
-                        <label className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Weight (KG)</label>
-                        <input type="number" step="0.01" min="0.1" required value={weightKg} onChange={(e) => setWeightKg(e.target.value)} className="w-full bg-surface border border-ink-faint px-4 py-4 text-2xl font-mono font-bold focus:ring-1 focus:ring-accent outline-none rounded" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Unit Rate (PKR)</label>
-                        <input type="number" min="1" required value={supplyRate} onChange={(e) => setSupplyRate(e.target.value)} className="w-full bg-surface border border-ink-faint px-4 py-4 text-2xl font-mono font-bold text-accent focus:ring-1 focus:ring-accent outline-none rounded" />
-                      </div>
+                    <div className="space-y-2">
+                      <label className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Weight (KG)</label>
+                      <input type="number" step="0.01" min="0.1" required value={weightKg} onChange={(e) => setWeightKg(e.target.value)} className="w-full bg-surface border border-ink-faint px-4 py-4 text-2xl font-mono font-bold focus:ring-1 focus:ring-accent outline-none rounded" />
                     </div>
 
                     <div className="space-y-2">
