@@ -51,18 +51,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
       setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        setUser(session.user);
-        setIsGuest(false);
-        setIsSupplier(false);
-      } else {
-        setUser(null);
+    }).catch((err) => {
+      console.warn("Auth session check failed (Supabase may not be configured):", err);
+      const savedGuest = localStorage.getItem("tikka_auth_guest") === "true";
+      if (savedGuest) {
+        setIsGuest(true);
       }
       setLoading(false);
     });
+
+    let subscription: any = { unsubscribe: () => {} };
+    try {
+      const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session) {
+          setUser(session.user);
+          setIsGuest(false);
+          setIsSupplier(false);
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      });
+      if (sub) subscription = sub;
+    } catch (err) {
+      console.warn("Auth state listener failed:", err);
+    }
 
     return () => subscription.unsubscribe();
   }, []);
