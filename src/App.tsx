@@ -159,6 +159,9 @@ export function AppContent() {
   };
 
   const handleDeleteSupplyLog = async (id: string) => {
+    const ownerPass = settings.supplierPassword || "786";
+    const entered = prompt("Enter owner password to confirm deletion:");
+    if (!entered || entered !== ownerPass) return;
     try {
       const log = supplyLogs.find(l => l.id === id);
       const detailString = log ? `${log.category || 'Raw Chicken Supply'} (${log.weightKg} kg - Rs. ${log.totalCost.toLocaleString()})` : "Supply Entry";
@@ -201,6 +204,9 @@ export function AppContent() {
   };
 
   const handleDeletePayment = async (id: string) => {
+    const ownerPass = settings.supplierPassword || "786";
+    const entered = prompt("Enter owner password to confirm deletion:");
+    if (!entered || entered !== ownerPass) return;
     try {
       const pay = payments.find(p => p.id === id);
       const detailString = pay ? `Payment Entry (${pay.notes || 'No notes'})` : "Payment Entry";
@@ -243,6 +249,9 @@ export function AppContent() {
   };
 
   const handleDeleteExpense = async (id: string) => {
+    const ownerPass = settings.supplierPassword || "786";
+    const entered = prompt("Enter owner password to confirm deletion:");
+    if (!entered || entered !== ownerPass) return;
     try {
       const exp = expenses.find(e => e.id === id);
       const detailString = exp ? `${exp.category} (${exp.notes || 'No notes'})` : "Expense Entry";
@@ -274,6 +283,9 @@ export function AppContent() {
   };
 
   const handleDeleteOrder = async (id: string) => {
+    const ownerPass = settings.supplierPassword || "786";
+    const entered = prompt("Enter owner password to confirm deletion:");
+    if (!entered || entered !== ownerPass) return;
     try {
       const order = orders.find(o => o.id === id);
       const detailString = order ? `Order #${order.id.slice(0, 5)}... (${order.items.length} items)` : "Order Entry";
@@ -327,9 +339,12 @@ export function AppContent() {
   };
 
   const handleDeleteSupplier = async (id: string) => {
+    const ownerPass = settings.supplierPassword || "786";
+    const entered = prompt("Enter owner password to confirm deletion:");
+    if (!entered || entered !== ownerPass) return;
     try {
       const supp = suppliers.find(s => s.id === id);
-      const detailString = supp ? `${supp.name} (${supp.phone || 'No phone'})` : "Supplier";
+      const detailString = supp ? `${supp.name}` : "Supplier";
       await deleteSupplier(id);
       setDbError(null);
       setDeleteNotification({
