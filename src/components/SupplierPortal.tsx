@@ -356,46 +356,60 @@ export default function SupplierPortal({
         </div>
       </header>
 
-      {/* Supplier Rate Editor - matches owner portal UI */}
+      {/* Supplier Rate Editor with Date - matches owner portal UI */}
       <div className="max-w-7xl mx-auto w-full px-4 md:px-12 pt-4 md:pt-6">
-        <div className="bg-surface border border-ink-faint border-l-4 border-l-accent p-4 md:p-5 flex flex-col gap-4 rounded-lg">
-          <div>
-            <span className="font-mono text-[10px] uppercase tracking-[0.12em] opacity-50">Active Pricing</span>
-            <h3 className="font-display text-base uppercase tracking-tight mt-1">Daily Rate</h3>
-          </div>
-
-          <form onSubmit={async (e) => {
-            e.preventDefault();
-            const num = parseFloat(proposedRate);
-            if (!isNaN(num) && num > 0 && onSaveSettings) {
-              setIsUpdatingRate(true);
-              try {
-                await onSaveSettings({ ...settings, baseRawRate: num });
-                setSupplyRate(proposedRate);
-              } finally {
-                setIsUpdatingRate(false);
-              }
-            }
-          }} className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-mono text-sm opacity-30">Rs.</span>
-              <input
-                type="number"
-                value={proposedRate}
-                onChange={(e) => setProposedRate(e.target.value)}
-                className="w-full bg-bg border border-ink-faint rounded px-12 py-3 md:py-4 font-mono text-xl md:text-2xl focus:ring-1 focus:ring-accent outline-none transition-all"
-                placeholder={settings.baseRawRate.toString()}
-              />
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
+          <div className="md:col-span-8 bg-surface border border-ink-faint border-l-4 border-l-accent p-4 md:p-5 flex flex-col gap-4 rounded-lg">
+            <div>
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] opacity-50">Active Pricing</span>
+              <h3 className="font-display text-base uppercase tracking-tight mt-1">Daily Rate</h3>
             </div>
 
-            <button
-              type="submit"
-              disabled={isUpdatingRate || parseFloat(proposedRate) === settings.baseRawRate}
-              className="px-8 py-3 sm:py-0 bg-accent text-bg font-mono font-bold uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 cursor-pointer"
-            >
-              {isUpdatingRate ? "Syncing..." : "Update Rate"}
-            </button>
-          </form>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const num = parseFloat(proposedRate);
+              if (!isNaN(num) && num > 0 && onSaveSettings) {
+                setIsUpdatingRate(true);
+                try {
+                  await onSaveSettings({ ...settings, baseRawRate: num });
+                  setSupplyRate(proposedRate);
+                } finally {
+                  setIsUpdatingRate(false);
+                }
+              }
+            }} className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-mono text-sm opacity-30">Rs.</span>
+                <input
+                  type="number"
+                  value={proposedRate}
+                  onChange={(e) => setProposedRate(e.target.value)}
+                  className="w-full bg-bg border border-ink-faint rounded px-12 py-3 md:py-4 font-mono text-xl md:text-2xl focus:ring-1 focus:ring-accent outline-none transition-all"
+                  placeholder={settings.baseRawRate.toString()}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isUpdatingRate || parseFloat(proposedRate) === settings.baseRawRate}
+                className="px-8 py-3 sm:py-0 bg-accent text-bg font-mono font-bold uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 cursor-pointer"
+              >
+                {isUpdatingRate ? "Syncing..." : "Update Rate"}
+              </button>
+            </form>
+          </div>
+
+          <div className="md:col-span-4 bg-surface border border-ink-faint p-4 md:p-5 flex flex-col gap-3 rounded-lg justify-between">
+            <div>
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] opacity-50">Report Date</span>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full bg-transparent text-ink font-mono font-bold text-sm border border-ink-faint rounded px-3 py-2 mt-2 focus:ring-1 focus:ring-accent outline-none"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
