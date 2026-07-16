@@ -237,6 +237,18 @@ export default function SettingsTab({
           </div>
         </button>
 
+        <button 
+          onClick={() => { setShowFormulaForm(!showFormulaForm); setShowSupplierForm(false); setShowHistoryForm(false); setShowExpensesForm(false); }}
+          className={`flex flex-col items-center justify-center gap-2 md:gap-4 p-2.5 md:p-6 bg-surface border transition-all cursor-pointer group rounded ${showFormulaForm ? "border-accent" : "border-ink-faint hover:border-ink-faint/40"}`}
+        >
+          <div className={`p-2 md:p-3 rounded transition-colors ${showFormulaForm ? "bg-accent text-bg" : "bg-bg text-accent group-hover:bg-accent group-hover:text-bg"}`}>
+            <Layers className="w-4 h-4 md:w-5 md:h-5" />
+          </div>
+          <div className="text-center space-y-0.5 md:space-y-1">
+            <span className="block font-mono text-[6px] md:text-[8px] font-bold uppercase tracking-[0.2em] opacity-35 text-accent">Categories</span>
+            <span className="block font-display text-[8px] md:text-sm uppercase tracking-widest truncate w-full px-0.5">Stock Items</span>
+          </div>
+        </button>
 
       </div>
 
@@ -440,6 +452,8 @@ export default function SettingsTab({
                   </div>
                 </div>
               )}
+
+
             </div>
           </div>
 

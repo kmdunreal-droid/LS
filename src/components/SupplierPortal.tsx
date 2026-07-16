@@ -8,7 +8,10 @@ import {
   LogOut,
   X,
   RefreshCw,
-  CreditCard
+  CreditCard,
+  LayoutDashboard,
+  Settings,
+  Flame
 } from "lucide-react";
 import { useAuth } from "./AuthGate";
 
@@ -54,11 +57,30 @@ export default function SupplierPortal({
   const [supplyRate, setSupplyRate] = useState<string>(settings.baseRawRate.toString());
   const [proposedRate, setProposedRate] = useState<string>(settings.baseRawRate.toString());
   const [isUpdatingRate, setIsUpdatingRate] = useState(false);
+  const [rateSuccessMsg, setRateSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
     setProposedRate(settings.baseRawRate.toString());
     setSupplyRate(settings.baseRawRate.toString());
   }, [settings.baseRawRate]);
+
+  const handleUpdateGlobalRate = async () => {
+    const num = parseFloat(proposedRate);
+    if (isNaN(num) || num <= 0 || !onSaveSettings) return;
+    if (num === settings.baseRawRate) return;
+    setIsUpdatingRate(true);
+    try {
+      await onSaveSettings({ ...settings, baseRawRate: num });
+      setSupplyRate(proposedRate);
+      setRateSuccessMsg("✓ Rate updated");
+      setTimeout(() => setRateSuccessMsg(null), 3000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUpdatingRate(false);
+    }
+  };
+
   const [supplierName, setSupplierName] = useState(currentSupplier ? currentSupplier.name : "Zeeshan Broiler");
   const [isOtherSupplier, setIsOtherSupplier] = useState(false);
   const [otherSupplierName, setOtherSupplierName] = useState("");
@@ -86,7 +108,7 @@ export default function SupplierPortal({
   const [editNotes, setEditNotes] = useState("");
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<"deliveries" | "payments">("deliveries");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "deliveries" | "payments" | "settings">("dashboard");
 
   // Payment states
   const [payAmount, setPayAmount] = useState<string>("");
@@ -297,122 +319,168 @@ export default function SupplierPortal({
   const todayPayments = relevantPayments.filter((p) => p.date === date);
   const totalTodayPayments = todayPayments.reduce((sum, p) => sum + p.amountPaid, 0);
 
+  // Dashboard calculations
+  const totalSupplied = relevantLogs.reduce((sum, l) => sum + l.totalCost, 0);
+  const totalPaid = relevantPayments.reduce((sum, p) => sum + p.amountPaid, 0);
+  const balance = totalSupplied - totalPaid;
+
+  const navItems = [
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "deliveries", label: "Deliveries", icon: Weight },
+    { id: "payments", label: "Payments", icon: CreditCard },
+    { id: "settings", label: "Settings", icon: Settings },
+  ] as const;
+
   return (
-    <div id="supplier-portal-root" className="min-h-screen bg-bg text-ink flex flex-col font-sans selection:bg-accent selection:text-bg pb-16 md:pb-0">
-      <header className="bg-surface border-b border-ink-faint px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-6">
-          <div className="p-3 bg-accent text-bg shadow-xl shadow-accent/20 rounded">
-            <Weight className="w-6 h-6" />
-          </div>
-          <div className="space-y-0.5">
-            <h1 className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50 leading-none">Supplier</h1>
-            <p className="font-display text-2xl uppercase tracking-tight leading-tight">Portal</p>
-          </div>
+    <div id="supplier-portal-root" className="min-h-screen bg-bg text-ink flex font-sans selection:bg-accent selection:text-bg pb-16 md:pb-0">
 
-        </div>
-
-        {/* Top Navbar Style Navigation Tabs - Hidden on mobile, shown on desktop */}
-        <div className="hidden md:flex bg-bg/80 backdrop-blur-md border border-ink-faint p-1.5 rounded-xl gap-2.5 items-center shadow-inner">
-          <button
-            onClick={() => setActiveTab("deliveries")}
-            className={`flex items-center gap-2.5 px-6 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all duration-300 transform cursor-pointer ${
-              activeTab === "deliveries"
-                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-bg shadow-lg shadow-orange-500/30 scale-[1.1] ring-2 ring-orange-500/20"
-                : "text-orange-400/80 hover:text-orange-400 hover:bg-orange-500/10 hover:scale-105"
-            }`}
-          >
-            📦 Deliveries (Mal Bheja)
-          </button>
-          <button
-            onClick={() => setActiveTab("payments")}
-            className={`flex items-center gap-2.5 px-6 py-2.5 font-mono text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all duration-300 transform cursor-pointer ${
-              activeTab === "payments"
-                ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 scale-[1.1] ring-2 ring-emerald-500/20"
-                : "text-emerald-400/80 hover:text-emerald-400 hover:bg-emerald-500/10 hover:scale-105"
-            }`}
-          >
-            💰 Payments Received (Raqam)
-          </button>
-        </div>
-
-      </header>
-
-      {/* Logout button - fixed top-right */}
-      <div className="fixed top-4 right-4 z-50">
-        {isSupplier ? (
-          <button onClick={onExit} className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent bg-surface border border-accent/30 px-4 py-2 rounded-lg hover:bg-accent/10 transition-all flex items-center gap-2 shadow-lg">
-            <LogOut className="w-3.5 h-3.5" /> Logout
-          </button>
-        ) : isLockedOnly ? (
-          <button onClick={() => setShowPinModal(true)} className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent bg-surface border border-accent/30 px-4 py-2 rounded-lg hover:bg-accent/10 transition-all flex items-center gap-2 shadow-lg">
-            <Unlock className="w-3.5 h-3.5" /> Admin Unlock
-          </button>
-        ) : (
-          <button onClick={onExit} className="font-mono text-[10px] font-bold uppercase tracking-widest opacity-50 hover:opacity-100 bg-surface border border-ink-faint px-4 py-2 rounded-lg transition-all flex items-center gap-2 shadow-lg">
-            <X className="w-3.5 h-3.5" /> Exit
-          </button>
-        )}
-      </div>
-
-      {/* Supplier Rate Editor with Date - matches owner portal UI */}
-      <div className="max-w-7xl mx-auto w-full px-4 md:px-12 pt-4 md:pt-6">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
-          <div className="md:col-span-8 bg-surface border border-ink-faint border-l-4 border-l-accent p-4 md:p-5 flex flex-col gap-4 rounded-lg">
-            <div>
-              <span className="font-mono text-[10px] uppercase tracking-[0.12em] opacity-50">Active Pricing</span>
-              <h3 className="font-display text-base uppercase tracking-tight mt-1">Daily Rate</h3>
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex flex-col w-56 bg-surface border-r border-ink-faint shrink-0">
+        <div className="p-5 border-b border-ink-faint">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-accent text-bg shadow-lg shadow-accent/20 rounded-lg">
+              <Weight className="w-5 h-5" />
             </div>
+            <div className="space-y-0.5">
+              <span className="font-mono text-[8px] uppercase tracking-[0.2em] opacity-40 leading-none block">Supplier</span>
+              <span className="font-display text-sm uppercase tracking-tight leading-tight block">Portal</span>
+            </div>
+          </div>
+        </div>
 
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              const num = parseFloat(proposedRate);
-              if (!isNaN(num) && num > 0 && onSaveSettings) {
-                setIsUpdatingRate(true);
-                try {
-                  await onSaveSettings({ ...settings, baseRawRate: num });
-                  setSupplyRate(proposedRate);
-                } finally {
-                  setIsUpdatingRate(false);
-                }
-              }
-            }} className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-mono text-sm opacity-30">Rs.</span>
+        <nav className="flex-1 p-3 space-y-1">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-mono text-[10px] font-bold uppercase tracking-widest transition-all duration-200 cursor-pointer ${
+                activeTab === item.id
+                  ? item.id === "dashboard" ? "bg-violet-500/15 text-violet-300 shadow-sm"
+                    : item.id === "deliveries" ? "bg-orange-500/15 text-orange-300 shadow-sm"
+                    : item.id === "payments" ? "bg-emerald-500/15 text-emerald-300 shadow-sm"
+                    : "bg-accent/15 text-accent shadow-sm"
+                  : "text-ink/40 hover:text-ink/70 hover:bg-ink-faint/10"
+              }`}
+            >
+              <item.icon className={`w-4 h-4 ${
+                activeTab === item.id ? "opacity-100" : "opacity-40"
+              }`} />
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="p-3 border-t border-ink-faint">
+          {isSupplier ? (
+            <button onClick={onExit} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-mono text-[10px] font-bold uppercase tracking-widest text-rose-400/60 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer">
+              <LogOut className="w-4 h-4" /> Logout
+            </button>
+          ) : isLockedOnly ? (
+            <button onClick={() => setShowPinModal(true)} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-mono text-[10px] font-bold uppercase tracking-widest text-accent/60 hover:text-accent hover:bg-accent/10 transition-all cursor-pointer">
+              <Unlock className="w-4 h-4" /> Admin Unlock
+            </button>
+          ) : (
+            <button onClick={onExit} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-mono text-[10px] font-bold uppercase tracking-widest text-ink/40 hover:text-ink/70 hover:bg-ink-faint/10 transition-all cursor-pointer">
+              <X className="w-4 h-4" /> Exit
+            </button>
+          )}
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-h-screen">
+
+        {/* Rate Editor Bar */}
+        <div className="bg-bg/50 border-b border-ink-faint px-4 md:px-8 py-3">
+          <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-orange-500/10 text-orange-400 rounded-lg">
+                <Flame className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="font-mono text-[9px] uppercase tracking-widest text-orange-300 font-bold">Daily Rate</span>
+                <p className="font-mono text-[8px] text-orange-400/60">Update today's chicken rate</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 flex-wrap justify-center">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-bold text-orange-400/60">Rs.</span>
                 <input
                   type="number"
                   value={proposedRate}
                   onChange={(e) => setProposedRate(e.target.value)}
-                  className="w-full bg-bg border border-ink-faint rounded px-12 py-3 md:py-4 font-mono text-xl md:text-2xl focus:ring-1 focus:ring-accent outline-none transition-all"
-                  placeholder={settings.baseRawRate.toString()}
+                  className="w-24 bg-transparent border-b-2 border-orange-500/30 text-xl font-display font-black text-orange-400 text-center focus:outline-none focus:border-orange-400 transition-all py-0.5"
+                  placeholder="000"
                 />
               </div>
-
               <button
-                type="submit"
+                onClick={handleUpdateGlobalRate}
                 disabled={isUpdatingRate || parseFloat(proposedRate) === settings.baseRawRate}
-                className="px-8 py-3 sm:py-0 bg-accent text-bg font-mono font-bold uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 cursor-pointer"
+                className="font-mono text-[9px] font-bold uppercase tracking-widest px-4 py-2 border border-orange-500/30 bg-orange-500/10 text-orange-300 rounded-lg hover:bg-orange-500 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg"
               >
-                {isUpdatingRate ? "Syncing..." : "Update Rate"}
+                {isUpdatingRate ? "Updating..." : "Update Rate"}
               </button>
-            </form>
-          </div>
-
-          <div className="md:col-span-4 bg-surface border border-ink-faint p-4 md:p-5 flex flex-col gap-3 rounded-lg justify-between">
-            <div>
-              <span className="font-mono text-[10px] uppercase tracking-[0.12em] opacity-50">Report Date</span>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-transparent text-ink font-mono font-bold text-sm border border-ink-faint rounded px-3 py-2 mt-2 focus:ring-1 focus:ring-accent outline-none"
-              />
             </div>
+            {rateSuccessMsg && (
+              <span className="font-mono text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-emerald-400 animate-fade-in">{rateSuccessMsg}</span>
+            )}
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 p-4 md:p-12 flex-1">
-        {activeTab === "deliveries" ? (
+        <div className="flex-1 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 p-4 md:p-8">
+        {activeTab === "dashboard" ? (
+          <>
+            <div className="lg:col-span-12 animate-fade-in">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-gradient-to-br from-violet-950/50 via-purple-950/20 to-fuchsia-900/30 border border-violet-500/35 p-6 md:p-8 flex flex-col justify-between rounded-2xl shadow-[0_8px_30px_rgba(139,92,246,0.12)] hover:border-violet-400/50 transition-all duration-300 glow-purple">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[8px] font-bold uppercase tracking-[0.2em] text-violet-300">Total Supplied (Raqam)</span>
+                    <Weight className="w-4 h-4 text-violet-400" />
+                  </div>
+                  <div className="space-y-1 mt-4">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-mono text-[9px] font-bold text-violet-400/60 uppercase">Rs.</span>
+                      <span className="font-display text-3xl md:text-4xl font-black text-violet-100 tracking-tight">{totalSupplied.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-emerald-950/50 via-teal-950/20 to-green-900/30 border border-emerald-500/35 p-6 md:p-8 flex flex-col justify-between rounded-2xl shadow-[0_8px_30px_rgba(16,185,129,0.12)] hover:border-emerald-400/50 transition-all duration-300 glow-emerald">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[8px] font-bold uppercase tracking-[0.2em] text-emerald-300">Total Paid (Ada Shuda)</span>
+                    <CreditCard className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div className="space-y-1 mt-4">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-mono text-[9px] font-bold text-emerald-400/60 uppercase">Rs.</span>
+                      <span className="font-display text-3xl md:text-4xl font-black text-emerald-100 tracking-tight">{totalPaid.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className={`bg-gradient-to-br p-6 md:p-8 flex flex-col justify-between rounded-2xl shadow-[0_8px_30px_rgba(249,115,22,0.12)] transition-all duration-300 ${
+                  balance > 0
+                    ? "from-orange-950/50 via-amber-950/20 to-orange-900/30 border border-orange-500/35 hover:border-orange-400/50 glow-orange"
+                    : "from-teal-950/50 via-cyan-950/20 to-emerald-900/30 border border-teal-500/35 hover:border-teal-400/50 glow-emerald"
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`font-mono text-[8px] font-bold uppercase tracking-[0.2em] ${balance > 0 ? "text-orange-300" : "text-teal-300"}`}>Balance (Baki)</span>
+                    {balance > 0 ? <Weight className="w-4 h-4 text-orange-400" /> : <CheckCircle className="w-4 h-4 text-teal-400" />}
+                  </div>
+                  <div className="space-y-1 mt-4">
+                    <div className="flex items-baseline gap-2">
+                      <span className={`font-mono text-[9px] font-bold uppercase ${balance > 0 ? "text-orange-400/60" : "text-teal-400/60"}`}>Rs.</span>
+                      <span className={`font-display text-3xl md:text-4xl font-black tracking-tight ${balance > 0 ? "text-orange-100" : "text-teal-100"}`}>
+                        {Math.abs(balance).toLocaleString()}
+                      </span>
+                      <span className={`font-mono text-[8px] font-bold uppercase ${balance > 0 ? "text-orange-400/60" : "text-teal-400/60"}`}>
+                        {balance >= 0 ? "Receivable" : "Excess"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : activeTab === "deliveries" ? (
           <>
             {/* Left Column: Deliveries Form */}
             <div className="lg:col-span-5 space-y-8 md:space-y-12 animate-fade-in">
@@ -475,6 +543,33 @@ export default function SupplierPortal({
 
                     <div className="space-y-2">
                       <label className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Category</label>
+                      <div className="grid grid-cols-2 gap-1.5 mb-3">
+                        {uniqueCategories.map((cat) => {
+                          const estimatedRate = getEstimatedRateForCategory(cat);
+                          const isSelected = category === cat;
+                          const colorIdx = uniqueCategories.indexOf(cat) % 5;
+                          const cardThemes = [
+                            { bg: "from-teal-950/60 to-emerald-950/40", border: "border-teal-500/30", selected: "border-teal-400 ring-2 ring-teal-400/30", text: "text-teal-300" },
+                            { bg: "from-blue-950/60 to-indigo-950/40", border: "border-blue-500/30", selected: "border-blue-400 ring-2 ring-blue-400/30", text: "text-blue-300" },
+                            { bg: "from-purple-950/60 to-fuchsia-950/40", border: "border-purple-500/30", selected: "border-purple-400 ring-2 ring-purple-400/30", text: "text-purple-300" },
+                            { bg: "from-amber-950/60 to-orange-950/40", border: "border-amber-500/30", selected: "border-amber-400 ring-2 ring-amber-400/30", text: "text-amber-300" },
+                            { bg: "from-rose-950/60 to-pink-950/40", border: "border-rose-500/30", selected: "border-rose-400 ring-2 ring-rose-400/30", text: "text-rose-300" },
+                          ];
+                          const ct = cardThemes[colorIdx];
+                          return (
+                            <button key={cat} type="button" onClick={() => setCategory(cat)}
+                              className={`bg-gradient-to-br ${ct.bg} border ${isSelected ? ct.selected : ct.border} p-2 rounded-lg text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] cursor-pointer ${isSelected ? "scale-[1.02]" : "opacity-70 hover:opacity-100"}`}>
+                              <span className={`font-mono text-[6px] font-bold uppercase tracking-widest block ${ct.text}`}>{cat.toUpperCase()}</span>
+                              <span className="font-mono text-[8px] font-black text-white leading-none">Rs.{estimatedRate}<span className="text-[6px] font-normal opacity-50">/KG</span></span>
+                            </button>
+                          );
+                        })}
+                        <button type="button" onClick={() => setIsNewCategory(true)}
+                          className="bg-bg/40 border border-dashed border-ink-faint p-2 rounded-lg text-center transition-all hover:border-accent/40 hover:bg-accent/5 cursor-pointer flex flex-col items-center justify-center">
+                          <span className="font-mono text-[14px] font-bold text-accent/60 leading-none">+</span>
+                          <span className="font-mono text-[6px] font-bold uppercase tracking-widest text-accent/40">New</span>
+                        </button>
+                      </div>
                       <select value={isNewCategory ? "__CUSTOM_CAT__" : category} onChange={(e) => handleCategoryChange(e.target.value)} className="w-full bg-surface border border-ink-faint px-4 py-3 text-xs cursor-pointer appearance-none uppercase font-mono font-bold tracking-tight rounded outline-none focus:ring-1 focus:ring-accent">
                         {uniqueCategories.map((cat) => {
                           const estimatedRate = getEstimatedRateForCategory(cat);
@@ -593,7 +688,7 @@ export default function SupplierPortal({
               </div>
             </div>
           </>
-        ) : (
+        ) : activeTab === "payments" ? (
           <>
             {/* Left Column: Payments Form */}
             <div className="lg:col-span-5 space-y-8 md:space-y-12 animate-fade-in">
@@ -739,7 +834,30 @@ export default function SupplierPortal({
               </div>
             </div>
           </>
-        )}
+        ) : activeTab === "settings" ? (
+          <div className="lg:col-span-12 animate-fade-in">
+            <div className="bg-surface border border-ink-faint p-6 md:p-8 rounded-2xl space-y-6">
+              <div className="flex items-center gap-4">
+                <Settings className="w-5 h-5 text-accent" />
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50">Supplier Settings</span>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest block mb-1">Supplier Name</span>
+                  <span className="font-display text-lg uppercase text-ink">{currentSupplier?.name || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest block mb-1">Username</span>
+                  <span className="font-mono text-sm text-ink/70">{settings.supplierUsername || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest block mb-1">Current Rate</span>
+                  <span className="font-display text-2xl text-accent">Rs. {settings.baseRawRate} / KG</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* Footer */}
@@ -753,9 +871,27 @@ export default function SupplierPortal({
           </div>
         </div>
       </footer>
+      </div>
 
       {/* Mobile Bottom Navigation Bar for Supplier Portal */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-ink-faint grid grid-cols-2 py-3 z-40 shadow-[0_-8px_20px_rgba(0,0,0,0.3)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-ink-faint grid grid-cols-3 py-3 z-40 shadow-[0_-8px_20px_rgba(0,0,0,0.3)]">
+        <button
+          onClick={() => setActiveTab("dashboard")}
+          className={`flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-300 transform ${
+            activeTab === "dashboard" 
+              ? "text-purple-500 scale-112 font-bold opacity-100" 
+              : "text-ink/40 hover:text-purple-400 hover:scale-105"
+          }`}
+        >
+          <div className={`p-2.5 rounded-xl transition-all duration-300 ${
+            activeTab === 'dashboard' 
+              ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-md shadow-purple-500/20 ring-2 ring-purple-500/20' 
+              : 'bg-purple-500/5 text-purple-400/60 hover:bg-purple-500/10'
+          }`}>
+            <LayoutDashboard className={`w-5 h-5 transition-transform ${activeTab === 'dashboard' ? 'stroke-[2.5px] scale-110' : ''}`} />
+          </div>
+          <span className={`text-[9px] font-mono font-bold uppercase tracking-widest ${activeTab === 'dashboard' ? 'text-purple-500' : 'text-ink/50'}`}>Dashboard</span>
+        </button>
         <button
           onClick={() => setActiveTab("deliveries")}
           className={`flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-300 transform ${
