@@ -53,6 +53,7 @@ export default function SupplierPortal({
   const [category, setCategory] = useState<string>("Whole Chicken");
   const [supplyRate, setSupplyRate] = useState<string>(settings.baseRawRate.toString());
   const [proposedRate, setProposedRate] = useState<string>(settings.baseRawRate.toString());
+  const [isUpdatingRate, setIsUpdatingRate] = useState(false);
   const [supplierName, setSupplierName] = useState(currentSupplier ? currentSupplier.name : "Zeeshan Broiler");
   const [isOtherSupplier, setIsOtherSupplier] = useState(false);
   const [otherSupplierName, setOtherSupplierName] = useState("");
@@ -355,42 +356,46 @@ export default function SupplierPortal({
         </div>
       </header>
 
-      {/* Supplier Rate Input - applies everywhere */}
+      {/* Supplier Rate Editor - matches owner portal UI */}
       <div className="max-w-7xl mx-auto w-full px-4 md:px-12 pt-4 md:pt-6">
-        <div className="bg-surface border border-ink-faint border-l-4 border-l-accent p-4 md:p-6 rounded-lg">
-          <div className="flex items-center gap-4 mb-4">
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50 shrink-0">Set Raw Chicken Rate</span>
-            <span className="font-mono text-[9px] opacity-30">(ye rate har jagah apply hoga)</span>
-            <div className="h-px bg-ink-faint flex-1" />
+        <div className="bg-surface border border-ink-faint border-l-4 border-l-accent p-4 md:p-5 flex flex-col gap-4 rounded-lg">
+          <div>
+            <span className="font-mono text-[10px] uppercase tracking-[0.12em] opacity-50">Active Pricing</span>
+            <h3 className="font-display text-base uppercase tracking-tight mt-1">Daily Rate</h3>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-            <div className="flex-1 w-full space-y-2">
-              <label className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">
-                Raw Chicken Rate Per Kg
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-mono text-sm opacity-30">Rs.</span>
-                <input
-                  type="number"
-                  value={proposedRate}
-                  onChange={async (e) => {
-                    const val = e.target.value;
-                    setProposedRate(val);
-                    setSupplyRate(val);
-                    if (onSaveSettings && val) {
-                      const num = parseFloat(val);
-                      if (!isNaN(num) && num > 0) {
-                        await onSaveSettings({ ...settings, baseRawRate: num });
-                      }
-                    }
-                  }}
-                  className="w-full bg-bg border border-ink-faint px-12 py-3 md:py-4 text-xl md:text-2xl font-mono font-bold text-accent focus:ring-1 focus:ring-accent outline-none rounded"
-                  placeholder={settings.baseRawRate.toString()}
-                />
-              </div>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            const num = parseFloat(proposedRate);
+            if (!isNaN(num) && num > 0 && onSaveSettings) {
+              setIsUpdatingRate(true);
+              try {
+                await onSaveSettings({ ...settings, baseRawRate: num });
+                setSupplyRate(proposedRate);
+              } finally {
+                setIsUpdatingRate(false);
+              }
+            }
+          }} className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-mono text-sm opacity-30">Rs.</span>
+              <input
+                type="number"
+                value={proposedRate}
+                onChange={(e) => setProposedRate(e.target.value)}
+                className="w-full bg-bg border border-ink-faint rounded px-12 py-3 md:py-4 font-mono text-xl md:text-2xl focus:ring-1 focus:ring-accent outline-none transition-all"
+                placeholder={settings.baseRawRate.toString()}
+              />
             </div>
-          </div>
+
+            <button
+              type="submit"
+              disabled={isUpdatingRate || parseFloat(proposedRate) === settings.baseRawRate}
+              className="px-8 py-3 sm:py-0 bg-accent text-bg font-mono font-bold uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 cursor-pointer"
+            >
+              {isUpdatingRate ? "Syncing..." : "Update Rate"}
+            </button>
+          </form>
         </div>
       </div>
 
