@@ -66,7 +66,7 @@ export function AppContent() {
   const userName = isSupplier ? "Supplier Mode" : (isGuest ? "Guest User" : (user?.displayName || user?.email?.split("@")[0] || "Staff"));
   const userPhoto = !isSupplier && !isGuest && user?.photoURL ? user.photoURL : null;
 
-  const [activeTab, setActiveTab] = useState<string>("pos");
+  const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSupplierPortalActive, setIsSupplierPortalActive] = useState<boolean>(false);
   const [selectedSupplierId, setSelectedSupplierId] = useState<string>("");

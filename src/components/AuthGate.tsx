@@ -3,7 +3,7 @@ import { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { getFormulaSettings, subscribeSuppliers } from "../db/supabase";
 import { Supplier } from "../types";
-import { Flame, Mail, Lock, LogIn, ChevronRight, AlertCircle, Chrome, Globe, KeyRound, Weight, User as UserIcon, CheckCircle } from "lucide-react";
+import { Flame, Mail, Lock, LogIn, AlertCircle, KeyRound, Weight, User as UserIcon, CheckCircle } from "lucide-react";
 
 interface AuthContextType {
   user: User | null;
@@ -182,7 +182,7 @@ export function useAuth() {
 }
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
-  const { user, loading, isGuest, isSupplier, isDbLive, signInWithGoogle, loginWithEmail, registerWithEmail, resetPassword, enterAsGuest, enterAsSupplier } = useAuth();
+  const { user, loading, isGuest, isSupplier, loginWithEmail, registerWithEmail, resetPassword, enterAsSupplier } = useAuth();
   
   const [tab, setTab] = useState<"login" | "signup" | "forgot" | "supplier">(() => {
     return (localStorage.getItem("tikka_auth_pref_tab") as any) || "login";
@@ -219,11 +219,6 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  // States to handle unauthorized-domain errors gracefully and display instructions
-  const [showDomainHelp, setShowDomainHelp] = useState(false);
-  const [currentHostname, setCurrentHostname] = useState("");
-  const [copied, setCopied] = useState(false);
 
   if (loading) {
     return (
@@ -322,35 +317,6 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setSubmitting(true);
-    setErrorMsg("");
-    setShowDomainHelp(false);
-    try {
-      await signInWithGoogle();
-    } catch (err: any) {
-      console.error("Sign-in error details:", err);
-      const isUnauthorized = err.code === "auth/unauthorized-domain" || 
-        (err.message && err.message.toLowerCase().includes("unauthorized-domain")) ||
-        (err.message && err.message.toLowerCase().includes("auth/unauthorized"));
-      
-      const isProviderNotEnabled = err.message?.includes("provider is not enabled") || 
-                                  err.msg?.includes("provider is not enabled");
-      
-      if (isUnauthorized) {
-        setCurrentHostname(window.location.hostname);
-        setShowDomainHelp(true);
-        setErrorMsg("This domain is not authorized in your Firebase project.");
-      } else if (isProviderNotEnabled) {
-        setErrorMsg("Google login is not enabled in your Supabase project. Go to Authentication -> Providers -> Google in your Supabase Dashboard and enable it with your Client ID and Secret.");
-      } else {
-        setErrorMsg(err.message || "Google login was blocked or failed. You can use Email/Password.");
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-bg flex flex-col items-center justify-center p-4 font-sans text-ink relative overflow-hidden">
       
@@ -386,42 +352,6 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
           <div className="bg-emerald-custom/5 border border-emerald-custom/30 text-emerald-custom p-4 rounded text-xs flex items-start gap-3">
             <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <p className="font-mono font-bold uppercase tracking-wider">{successMsg}</p>
-          </div>
-        )}
-
-        {showDomainHelp && (
-          <div className="bg-accent/5 border border-accent/30 text-accent p-6 rounded text-xs space-y-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <h4 className="font-mono font-bold uppercase tracking-wider text-accent">Authorized Domain Required</h4>
-                <p className="font-mono text-[10px] opacity-60 mt-0.5 leading-relaxed">
-                  Your current domain is not allowed in the Firebase project settings.
-                </p>
-              </div>
-            </div>
-            
-            <div className="space-y-3 bg-bg/50 p-4 rounded border border-ink-faint font-mono text-[10px] leading-relaxed opacity-80">
-              <p>1. Open Firebase Console</p>
-              <p>2. Go to Authentication &gt; Settings</p>
-              <p>3. Add this hostname to Authorized domains:</p>
-              <div className="bg-bg px-3 py-2 rounded border border-ink-faint text-ink font-mono text-xs select-all my-2">
-                {currentHostname}
-              </div>
-              <p>4. Save and refresh this page.</p>
-            </div>
-            
-            <button 
-              type="button" 
-              onClick={() => {
-                navigator.clipboard.writeText(currentHostname);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              }}
-              className="w-full bg-accent text-bg py-2 rounded font-mono font-bold text-[10px] uppercase tracking-widest transition-all"
-            >
-              {copied ? "Copied!" : "Copy Hostname"}
-            </button>
           </div>
         )}
 
@@ -724,58 +654,24 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
           </form>
         )}
 
-        {/* Third Party Login (Google Popup) */}
-        {isDbLive && tab !== "forgot" && tab !== "supplier" && (
-          <div className="space-y-4 pt-4 border-t border-ink-faint">
-            <div className="relative flex items-center">
-              <div className="flex-grow border-t border-ink-faint"></div>
-              <span className="flex-shrink mx-4 font-mono text-[8px] opacity-20 font-bold uppercase tracking-widest">Authentication Proxy</span>
-              <div className="flex-grow border-t border-ink-faint"></div>
+        {/* Supplier Portal Access */}
+        {tab !== "supplier" && tab !== "forgot" && (
+          <div className="space-y-4 pt-4 border-t border-ink-faint text-center">
+            <div className="bg-bg/50 p-4 rounded border border-ink-faint">
+              <span className="font-mono text-[8px] opacity-30 block mb-3 font-bold uppercase tracking-widest">
+                Are you a supplier?
+              </span>
+              <button
+                type="button"
+                onClick={() => { setTab("supplier"); setErrorMsg(""); setSuccessMsg(""); setSupplierUsernameInput(""); setSupplierPasswordInput(""); }}
+                className="w-full bg-accent/5 text-accent border border-accent/20 py-3 rounded font-mono font-bold text-[10px] uppercase tracking-widest hover:bg-accent/10 transition-all flex items-center justify-center gap-2"
+              >
+                <Weight className="w-3.5 h-3.5" />
+                Supplier Portal Access
+              </button>
             </div>
-
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={submitting}
-              className="w-full bg-bg border border-ink-faint hover:border-accent text-ink/80 py-3 rounded font-mono font-bold text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-3"
-            >
-              <Chrome className="w-4 h-4 text-accent" />
-              Sign In with Google
-            </button>
           </div>
         )}
-
-        {/* Guest Mode & Supplier Portal Option */}
-        <div className="space-y-4 pt-4 border-t border-ink-faint text-center">
-          <div className="bg-bg/50 p-4 rounded border border-ink-faint">
-            <span className="font-mono text-[8px] opacity-30 block mb-3 font-bold uppercase tracking-widest">
-              Limited Offline Mode
-            </span>
-            <button
-              type="button"
-              onClick={enterAsGuest}
-              className="w-full bg-accent/5 text-accent border border-accent/20 py-3 rounded font-mono font-bold text-[10px] uppercase tracking-widest hover:bg-accent/10 transition-all flex items-center justify-center gap-2"
-            >
-              <Globe className="w-3.5 h-3.5" />
-              Guest Entry (Local Storage)
-            </button>
-            {tab !== "supplier" && (
-              <div className="flex items-center justify-between mt-4 px-1 border-t border-ink-faint pt-4">
-                <span className="font-mono text-[9px] opacity-20 uppercase">Are you a supplier?</span>
-                <button
-                  type="button"
-                  onClick={() => { setTab("supplier"); setErrorMsg(""); setSuccessMsg(""); setSupplierUsernameInput(""); setSupplierPasswordInput(""); }}
-                  className="font-mono text-[9px] font-bold text-accent uppercase tracking-widest hover:underline"
-                >
-                  Supplier Portal Access
-                </button>
-              </div>
-            )}
-          </div>
-          <p className="font-mono text-[8px] opacity-10 uppercase tracking-widest">
-            Guest Entry persists data locally in your browser cache only.
-          </p>
-        </div>
       </div>
     </div>
   );
