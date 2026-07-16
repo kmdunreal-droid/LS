@@ -330,22 +330,24 @@ export default function SupplierPortal({
           </button>
         </div>
 
-        <div className="flex items-center gap-8">
-          {isSupplier ? (
-            <button onClick={onExit} className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-0.5 hover:opacity-70 transition-opacity flex items-center gap-2">
-              <LogOut className="w-3.5 h-3.5" /> Logout
-            </button>
-          ) : isLockedOnly ? (
-            <button onClick={() => setShowPinModal(true)} className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent border-b border-accent pb-0.5 hover:opacity-70 transition-opacity flex items-center gap-2">
-              <Unlock className="w-3.5 h-3.5" /> Admin Unlock
-            </button>
-          ) : (
-            <button onClick={onExit} className="font-mono text-[10px] font-bold uppercase tracking-widest opacity-50 hover:opacity-100 transition-colors flex items-center gap-2">
-              <X className="w-3.5 h-3.5" /> Exit
-            </button>
-          )}
-        </div>
       </header>
+
+      {/* Logout button - fixed top-right */}
+      <div className="fixed top-4 right-4 z-50">
+        {isSupplier ? (
+          <button onClick={onExit} className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent bg-surface border border-accent/30 px-4 py-2 rounded-lg hover:bg-accent/10 transition-all flex items-center gap-2 shadow-lg">
+            <LogOut className="w-3.5 h-3.5" /> Logout
+          </button>
+        ) : isLockedOnly ? (
+          <button onClick={() => setShowPinModal(true)} className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent bg-surface border border-accent/30 px-4 py-2 rounded-lg hover:bg-accent/10 transition-all flex items-center gap-2 shadow-lg">
+            <Unlock className="w-3.5 h-3.5" /> Admin Unlock
+          </button>
+        ) : (
+          <button onClick={onExit} className="font-mono text-[10px] font-bold uppercase tracking-widest opacity-50 hover:opacity-100 bg-surface border border-ink-faint px-4 py-2 rounded-lg transition-all flex items-center gap-2 shadow-lg">
+            <X className="w-3.5 h-3.5" /> Exit
+          </button>
+        )}
+      </div>
 
       {/* Supplier Rate Editor with Date - matches owner portal UI */}
       <div className="max-w-7xl mx-auto w-full px-4 md:px-12 pt-4 md:pt-6">
