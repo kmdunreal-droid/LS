@@ -303,16 +303,7 @@ export default function SupplierPortal({
             <h1 className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50 leading-none">Supplier</h1>
             <p className="font-display text-2xl uppercase tracking-tight leading-tight">Portal</p>
           </div>
-          <div className="hidden md:flex items-center gap-3 pl-6 ml-6 border-l border-ink-faint">
-            <div className="text-right">
-              <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Raw Rate</span>
-              <span className="block font-mono text-sm font-bold text-orange-400">Rs. {settings.baseRawRate}/Kg</span>
-            </div>
-            <div className="text-right">
-              <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Supply</span>
-              <span className="block font-mono text-sm font-bold text-amber-400">{totalTodayWeight.toLocaleString()} Kg</span>
-            </div>
-          </div>
+
         </div>
 
         {/* Top Navbar Style Navigation Tabs - Hidden on mobile, shown on desktop */}
