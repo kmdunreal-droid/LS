@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Order, SupplyLog, SupplierPayment, Expense, FormulaSettings, Supplier } from "../types";
 import { 
   Flame, 
@@ -35,6 +35,10 @@ export default function DashboardTab({
   const [quickRate, setQuickRate] = useState<string>(settings.baseRawRate.toString());
   const [isUpdatingRate, setIsUpdatingRate] = useState(false);
   const [selectedLog, setSelectedLog] = useState<SupplyLog | SupplierPayment | null>(null);
+
+  useEffect(() => {
+    setQuickRate(settings.baseRawRate.toString());
+  }, [settings.baseRawRate]);
 
   // Extract custom formula categories
   const uniqueCategories = Object.values(settings.items || {})

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { evaluate } from "mathjs";
 import { FormulaSettings, SupplyLog, Supplier, SupplierPayment } from "../types";
 import { 
@@ -54,6 +54,11 @@ export default function SupplierPortal({
   const [supplyRate, setSupplyRate] = useState<string>(settings.baseRawRate.toString());
   const [proposedRate, setProposedRate] = useState<string>(settings.baseRawRate.toString());
   const [isUpdatingRate, setIsUpdatingRate] = useState(false);
+
+  useEffect(() => {
+    setProposedRate(settings.baseRawRate.toString());
+    setSupplyRate(settings.baseRawRate.toString());
+  }, [settings.baseRawRate]);
   const [supplierName, setSupplierName] = useState(currentSupplier ? currentSupplier.name : "Zeeshan Broiler");
   const [isOtherSupplier, setIsOtherSupplier] = useState(false);
   const [otherSupplierName, setOtherSupplierName] = useState("");
