@@ -26,17 +26,17 @@
     background-attachment: fixed;
   }
 
-  /* Make default gray card background softer, lighter, and beautiful glass-translucent */
+  /* Make default gray card background visible and distinct from bg */
   .bg-surface {
-    background-color: rgba(30, 30, 48, 0.45) !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(248, 250, 252, 0.08);
+    background-color: rgba(40, 40, 70, 0.75) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(248, 250, 252, 0.15);
   }
 
-  /* Make default borders incredibly subtle and soft */
+  /* Make borders more visible for clear separation */
   .border-ink-faint, .border-neutral-800, .border-zinc-800, .border-neutral-700 {
-    border-color: rgba(248, 250, 252, 0.08) !important;
+    border-color: rgba(248, 250, 252, 0.15) !important;
   }
 
   /* Soften gray text styling to make it clearer and less harsh */
