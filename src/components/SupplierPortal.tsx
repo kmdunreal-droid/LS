@@ -90,19 +90,9 @@ export default function SupplierPortal({
   const [editPayAmount, setEditPayAmount] = useState<string>("");
   const [editPayNotes, setEditPayNotes] = useState<string>("");
 
-  const uniqueCategories = Array.from(
-    new Set([
-      "Whole Chicken",
-      "Chest / Boneless",
-      "Leg / Thigh",
-      "Wings",
-      "Wings V",
-      ...Object.values(settings.items || {})
-        .filter(it => it.name && it.name.trim() !== "")
-        .map(it => it.name),
-      ...supplyLogs.map((log) => log.category).filter(Boolean),
-    ])
-  );
+  const uniqueCategories = Object.values(settings.items || {})
+    .filter(it => it.name && it.name.trim() !== "" && it.expression && it.expression.trim() !== "")
+    .map(it => it.name);
 
   const getEstimatedRateForCategory = (cat: string) => {
     const base = settings.baseRawRate;
