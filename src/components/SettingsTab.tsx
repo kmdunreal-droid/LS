@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FormulaSettings, Supplier, Order, SupplyLog, SupplierPayment, Expense } from "../types";
-import { KeyRound, ShieldCheck, Save, Eye, EyeOff, AlertTriangle, ExternalLink, HelpCircle, Coins, UserPlus, Trash2, Palette, Plus, Layers, X, Flame, Settings, History, CalendarDays, GitBranch, DollarSign, ShoppingCart, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
+import { KeyRound, ShieldCheck, Save, Eye, EyeOff, AlertTriangle, ExternalLink, HelpCircle, Coins, UserPlus, Trash2, Palette, Plus, Layers, X, Flame, Settings, History, CalendarDays, GitBranch, DollarSign, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
 import { SUPPLY_CATEGORIES } from "../constants";
 import { Reorder } from "motion/react";
 import RateCalculatorTab from "./RateCalculatorTab";
@@ -22,7 +22,6 @@ interface SettingsTabProps {
   onAddExpense: (expense: Omit<Expense, "id">) => Promise<string>;
   onUpdateExpense: (id: string, expense: Partial<Expense>) => Promise<void>;
   onDeleteExpense: (id: string) => Promise<void>;
-  onNavigateToSales?: () => void;
   onResetAllData: () => Promise<void>;
 }
 
@@ -41,7 +40,6 @@ export default function SettingsTab({
   onAddExpense,
   onUpdateExpense,
   onDeleteExpense,
-  onNavigateToSales,
   onResetAllData
 }: SettingsTabProps) {
   const [shopName, setShopName] = useState<string>(settings.shopName || "ZEESHAN TIKKA");
@@ -239,18 +237,7 @@ export default function SettingsTab({
           </div>
         </button>
 
-        <button 
-          onClick={onNavigateToSales}
-          className="flex flex-col items-center justify-center gap-2 md:gap-4 p-2.5 md:p-6 bg-gradient-to-br from-rose-950/20 via-red-950/5 to-rose-900/10 border border-rose-500/30 hover:border-rose-500/60 transition-all cursor-pointer group rounded"
-        >
-          <div className="p-2 md:p-3 rounded transition-all bg-rose-500/10 text-rose-400 group-hover:bg-rose-500 group-hover:text-white">
-            <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-          </div>
-          <div className="text-center space-y-0.5 md:space-y-1">
-            <span className="block font-mono text-[6px] md:text-[8px] font-bold uppercase tracking-[0.2em] text-rose-400 group-hover:text-rose-300">Sales</span>
-            <span className="block font-display text-[8px] md:text-sm uppercase tracking-widest truncate w-full px-0.5 text-rose-300 group-hover:text-rose-200">POS Screen / سیلز</span>
-          </div>
-        </button>
+
       </div>
 
       {/* Conditional Supplier Form */}

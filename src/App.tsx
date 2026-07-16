@@ -489,7 +489,6 @@ export function AppContent() {
             onAddExpense={handleAddExpense}
             onUpdateExpense={handleUpdateExpense}
             onDeleteExpense={handleDeleteExpense}
-            onNavigateToSales={() => setActiveTab("pos")}
             onResetAllData={handleResetAllData}
           />
         );

@@ -835,7 +835,19 @@ export async function updateSupplier(id: string, supplier: Partial<Supplier>): P
 }
 
 export async function deleteSupplier(id: string): Promise<void> {
-  // 1. Local
+  // 1. Delete related supply logs (local)
+  const currentLogs = getLocalData<SupplyLog[]>(LOCAL_STORAGE_KEYS.SUPPLY_LOGS, []);
+  const filteredLogs = currentLogs.filter(l => l.supplierId !== id);
+  saveLocalData(LOCAL_STORAGE_KEYS.SUPPLY_LOGS, filteredLogs);
+  notifyDataSubscribers('supply_logs', filteredLogs);
+
+  // 2. Delete related payments (local)
+  const currentPayments = getLocalData<SupplierPayment[]>(LOCAL_STORAGE_KEYS.PAYMENTS, []);
+  const filteredPayments = currentPayments.filter(p => p.supplierId !== id);
+  saveLocalData(LOCAL_STORAGE_KEYS.PAYMENTS, filteredPayments);
+  notifyDataSubscribers('payments', filteredPayments);
+
+  // 3. Delete supplier (local)
   const currentSuppliers = getLocalData<Supplier[]>(LOCAL_STORAGE_KEYS.SUPPLIERS, []);
   const filteredSuppliers = currentSuppliers.filter(s => s.id !== id);
   saveLocalData(LOCAL_STORAGE_KEYS.SUPPLIERS, filteredSuppliers);
@@ -844,6 +856,21 @@ export async function deleteSupplier(id: string): Promise<void> {
   setSyncStatus('syncing');
 
   try {
+    // 4. Delete related supply logs (supabase)
+    const { error: logsError } = await supabase
+      .from('supply_logs')
+      .delete()
+      .eq('supplier_id', id);
+    if (logsError) throw logsError;
+
+    // 5. Delete related payments (supabase)
+    const { error: paysError } = await supabase
+      .from('supplier_payments')
+      .delete()
+      .eq('supplier_id', id);
+    if (paysError) throw paysError;
+
+    // 6. Delete supplier (supabase)
     const { error } = await supabase
       .from('suppliers')
       .delete()
