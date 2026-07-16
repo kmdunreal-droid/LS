@@ -654,7 +654,7 @@ export function AppContent() {
     );
   }
 
-  if (isSupplier || isSupplierPortalActive) {
+  if (isSupplierPortalActive) {
     return (
       <SupplierPortal
         settings={settings}
@@ -668,15 +668,7 @@ export function AppContent() {
         onUpdatePayment={handleUpdatePayment}
         onDeletePayment={handleDeletePayment}
         onSaveSettings={handleSaveSettings}
-        onExit={async () => {
-          if (isSupplier) {
-            localStorage.setItem("tikka_auth_pref_tab", "supplier");
-            await logout();
-          } else {
-            setIsSupplierPortalActive(false);
-          }
-        }}
-        isLockedOnly={isSupplier}
+        onExit={() => setIsSupplierPortalActive(false)}
       />
     );
   }
@@ -873,9 +865,19 @@ export function AppContent() {
               </div>
               <div className="user-info min-w-0">
                 <span className="block text-xs font-black truncate leading-tight text-white">{userName}</span>
-                <span className="block text-[10px] text-pink-400 font-bold uppercase tracking-widest truncate leading-tight">System Owner</span>
+                <span className="block text-[10px] text-pink-400 font-bold uppercase tracking-widest truncate leading-tight">{isSupplier ? 'Supplier' : 'System Owner'}</span>
               </div>
             </div>
+
+            {isSupplier && (
+              <button 
+                onClick={() => setIsSupplierPortalActive(true)}
+                className="flex items-center gap-3 px-4 py-2.5 w-full font-mono text-[10px] uppercase tracking-widest transition-all duration-300 transform cursor-pointer opacity-50 hover:opacity-100 hover:text-orange-400"
+              >
+                <Weight className="w-4 h-4" />
+                Supplier Portal
+              </button>
+            )}
 
             <button 
               onClick={() => setActiveTab('settings')}
