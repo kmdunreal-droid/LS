@@ -1,15 +1,9 @@
 import React, { useState } from "react";
 import { Order, SupplyLog, SupplierPayment, Expense, FormulaSettings, Supplier } from "../types";
 import { 
-  DollarSign, 
-  AlertCircle, 
   Flame, 
-  Smartphone,
-  Check,
   Activity,
-  Layers,
-  ChevronDown,
-  ShoppingCart
+  X
 } from "lucide-react";
 import { evaluate } from "mathjs";
 
@@ -40,7 +34,7 @@ export default function DashboardTab({
 }: DashboardTabProps) {
   const [quickRate, setQuickRate] = useState<string>(settings.baseRawRate.toString());
   const [isUpdatingRate, setIsUpdatingRate] = useState(false);
-  const [showRatesDropdown, setShowRatesDropdown] = useState(false);
+  const [selectedLog, setSelectedLog] = useState<SupplyLog | SupplierPayment | null>(null);
 
   // Extract custom formula categories
   const uniqueCategories = Object.values(settings.items || {})
@@ -310,31 +304,118 @@ export default function DashboardTab({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <span className="font-mono text-[10px] uppercase tracking-widest opacity-50">Recent Logs</span>
-            <div className="divide-y divide-ink-faint">
-              {recentLogs.slice(0, 4).map(log => {
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {recentLogs.slice(0, 8).map(log => {
                 const isSupply = 'totalCost' in log;
+                const sLog = isSupply ? (log as SupplyLog) : null;
+                const pLog = !isSupply ? (log as SupplierPayment) : null;
+                const sup = suppliers.find(s => s.id === log.supplierId);
+                const supName = sup?.name || log.notes?.split(' ')[0] || 'Unknown';
                 return (
-                  <div key={log.id} className="py-3 flex justify-between items-center group">
-                    <div className="space-y-1">
-                      <span className={`font-mono text-[9px] font-bold uppercase tracking-widest ${isSupply ? "text-accent" : "text-emerald-custom"}`}>
+                  <button
+                    key={log.id}
+                    onClick={() => setSelectedLog(log)}
+                    className={`bg-surface border border-ink-faint p-3 rounded-lg text-left hover:border-accent/40 transition-all cursor-pointer group ${
+                      isSupply ? "hover:border-orange-500/40" : "hover:border-emerald-500/40"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`font-mono text-[8px] font-bold uppercase tracking-widest ${isSupply ? "text-orange-400" : "text-emerald-400"}`}>
                         {isSupply ? "Supply" : "Payment"}
                       </span>
-                      <div className="font-mono text-sm font-bold">
-                        Rs. {(isSupply ? (log as SupplyLog).totalCost : (log as SupplierPayment).amountPaid).toLocaleString()}
-                      </div>
+                      <span className="font-mono text-[7px] opacity-30">
+                        {new Date(log.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                      </span>
                     </div>
-                    <span className="font-mono text-[9px] opacity-30">
-                      {new Date(log.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                    </span>
-                  </div>
+                    <div className="font-mono text-sm font-bold truncate">
+                      Rs. {(isSupply ? sLog!.totalCost : pLog!.amountPaid).toLocaleString()}
+                    </div>
+                    <div className="font-mono text-[8px] opacity-40 truncate mt-1">
+                      {supName}
+                    </div>
+                    {isSupply && sLog && (
+                      <div className="font-mono text-[8px] opacity-30 mt-0.5">
+                        {sLog.weightKg}kg × Rs.{sLog.supplyRatePerKg}
+                      </div>
+                    )}
+                  </button>
                 );
               })}
             </div>
           </div>
         </div>
       </div>
+      {/* Detail Modal */}
+      {selectedLog && (
+        <div className="fixed inset-0 bg-bg/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in" onClick={() => setSelectedLog(null)}>
+          <div className="bg-surface border border-ink-faint rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <span className={`font-mono text-[10px] font-bold uppercase tracking-widest ${'totalCost' in selectedLog ? 'text-orange-400' : 'text-emerald-400'}`}>
+                {'totalCost' in selectedLog ? 'Supply Detail' : 'Payment Detail'}
+              </span>
+              <button onClick={() => setSelectedLog(null)} className="p-1 hover:bg-ink-faint rounded transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {'totalCost' in selectedLog ? (
+              <>
+                <div className="space-y-3">
+                  <div className="flex justify-between border-b border-ink-faint pb-2">
+                    <span className="font-mono text-[9px] opacity-40">Date</span>
+                    <span className="font-mono text-[9px] font-bold">{selectedLog.date}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-ink-faint pb-2">
+                    <span className="font-mono text-[9px] opacity-40">Category</span>
+                    <span className="font-mono text-[9px] font-bold">{selectedLog.category || 'Raw Chicken'}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-ink-faint pb-2">
+                    <span className="font-mono text-[9px] opacity-40">Weight</span>
+                    <span className="font-mono text-[9px] font-bold">{selectedLog.weightKg} kg</span>
+                  </div>
+                  <div className="flex justify-between border-b border-ink-faint pb-2">
+                    <span className="font-mono text-[9px] opacity-40">Rate / Kg</span>
+                    <span className="font-mono text-[9px] font-bold">Rs. {selectedLog.supplyRatePerKg}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-ink-faint pb-2">
+                    <span className="font-mono text-[9px] opacity-40">Total Cost</span>
+                    <span className="font-mono text-[9px] font-bold text-accent">Rs. {selectedLog.totalCost.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-mono text-[9px] opacity-40">Notes</span>
+                    <span className="font-mono text-[9px] font-bold text-right max-w-[60%] break-words">{selectedLog.notes || '—'}</span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="space-y-3">
+                  <div className="flex justify-between border-b border-ink-faint pb-2">
+                    <span className="font-mono text-[9px] opacity-40">Date</span>
+                    <span className="font-mono text-[9px] font-bold">{selectedLog.date}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-ink-faint pb-2">
+                    <span className="font-mono text-[9px] opacity-40">Amount Paid</span>
+                    <span className="font-mono text-[9px] font-bold text-emerald-400">Rs. {selectedLog.amountPaid.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-mono text-[9px] opacity-40">Notes</span>
+                    <span className="font-mono text-[9px] font-bold text-right max-w-[60%] break-words">{selectedLog.notes || '—'}</span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setSelectedLog(null)} className="flex-1 py-2.5 bg-accent text-bg font-mono text-[9px] font-bold uppercase tracking-widest rounded hover:brightness-110 transition-all">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
