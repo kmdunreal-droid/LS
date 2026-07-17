@@ -162,6 +162,7 @@ export default function SupplierPortal({
   const [pinInput, setPinInput] = useState("");
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinError, setPinError] = useState("");
+  const [showReport, setShowReport] = useState(false);
 
   const handleAddLog = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -312,6 +313,32 @@ export default function SupplierPortal({
   const totalPaid = relevantPayments.reduce((sum, p) => sum + p.amountPaid, 0);
   const balance = totalSupplied - totalPaid;
 
+  // Report calculations
+  const reportDateObj = new Date(date + "T00:00:00");
+  const reportMonth = reportDateObj.getMonth();
+  const reportYear = reportDateObj.getFullYear();
+
+  const getLast7FromDate = () => {
+    const dates = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(reportDateObj);
+      d.setDate(d.getDate() - i);
+      dates.push(d.toISOString().split("T")[0]);
+    }
+    return dates;
+  };
+  const last7FromSelected = getLast7FromDate();
+
+  const weekSupplied = last7FromSelected.reduce((sum, d) => sum + relevantLogs.filter(l => l.date === d).reduce((s, l) => s + l.totalCost, 0), 0);
+  const weekPaid = last7FromSelected.reduce((sum, d) => sum + relevantPayments.filter(p => p.date === d).reduce((s, p) => s + p.amountPaid, 0), 0);
+  const weekBalance = weekSupplied - weekPaid;
+
+  const monthSupplies = relevantLogs.filter(l => { const d = new Date(l.date + "T00:00:00"); return d.getMonth() === reportMonth && d.getFullYear() === reportYear; });
+  const monthPayments = relevantPayments.filter(p => { const d = new Date(p.date + "T00:00:00"); return d.getMonth() === reportMonth && d.getFullYear() === reportYear; });
+  const monthSupplied = monthSupplies.reduce((s, l) => s + l.totalCost, 0);
+  const monthPaid = monthPayments.reduce((s, p) => s + p.amountPaid, 0);
+  const monthBalance = monthSupplied - monthPaid;
+
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "deliveries", label: "Deliveries", icon: Weight },
@@ -418,6 +445,9 @@ export default function SupplierPortal({
               </div>
             </div>
             <div className="lg:col-span-12 flex items-center justify-end gap-2">
+              <button onClick={() => setShowReport(true)} className="px-2.5 py-1 bg-surface border border-ink-faint rounded font-mono text-[7px] font-bold uppercase tracking-widest text-ink/60 hover:bg-ink-faint/20 transition-all cursor-pointer shrink-0">
+                Report
+              </button>
               <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">Report Date</span>
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
                 className="w-auto bg-bg/80 border border-ink-faint rounded px-2 py-1 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none appearance-none cursor-pointer" />
@@ -472,6 +502,75 @@ export default function SupplierPortal({
                 </div>
               </div>
             </div>
+
+            {/* Report Modal */}
+            {showReport && (
+              <div className="fixed inset-0 bg-bg/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in" onClick={() => setShowReport(false)}>
+                <div className="bg-surface border border-ink-faint rounded-xl p-5 w-full max-w-sm shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent">Day / Week / Month Report</span>
+                    <button onClick={() => setShowReport(false)} className="p-1 hover:bg-ink-faint rounded transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Today */}
+                  <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
+                    <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">Today <span className="text-ink/20 normal-case font-normal">{date}</span></span>
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[7px] text-ink/40 uppercase">Supplied</span>
+                      <span className="font-mono text-[10px] font-bold text-ink truncate">{totalTodayCost.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[7px] text-ink/40 uppercase">Paid</span>
+                      <span className="font-mono text-[10px] font-bold text-ink/70 truncate">{totalTodayPayments.toLocaleString()}</span>
+                    </div>
+                    <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
+                      <span className="font-mono text-[7px] text-ink/40 uppercase">Balance</span>
+                      <span className={`font-mono text-[11px] font-black ${(totalTodayCost - totalTodayPayments) >= 0 ? "text-red-400" : "text-emerald-400"} truncate`}>{(totalTodayCost - totalTodayPayments).toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* This Week */}
+                  <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
+                    <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Week <span className="text-ink/20 normal-case font-normal">{last7FromSelected[0]} – {date}</span></span>
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[7px] text-ink/40 uppercase">Supplied</span>
+                      <span className="font-mono text-[10px] font-bold text-ink truncate">{weekSupplied.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[7px] text-ink/40 uppercase">Paid</span>
+                      <span className="font-mono text-[10px] font-bold text-ink/70 truncate">{weekPaid.toLocaleString()}</span>
+                    </div>
+                    <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
+                      <span className="font-mono text-[7px] text-ink/40 uppercase">Balance</span>
+                      <span className={`font-mono text-[11px] font-black ${weekBalance >= 0 ? "text-red-400" : "text-emerald-400"} truncate`}>{weekBalance.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* This Month */}
+                  <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
+                    <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Month <span className="text-ink/20 normal-case font-normal">{reportDateObj.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span></span>
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[7px] text-ink/40 uppercase">Supplied</span>
+                      <span className="font-mono text-[10px] font-bold text-ink truncate">{monthSupplied.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[7px] text-ink/40 uppercase">Paid</span>
+                      <span className="font-mono text-[10px] font-bold text-ink/70 truncate">{monthPaid.toLocaleString()}</span>
+                    </div>
+                    <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
+                      <span className="font-mono text-[7px] text-ink/40 uppercase">Balance</span>
+                      <span className={`font-mono text-[11px] font-black ${monthBalance >= 0 ? "text-red-400" : "text-emerald-400"} truncate`}>{monthBalance.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <button onClick={() => setShowReport(false)} className="w-full py-2.5 bg-accent text-bg font-mono text-[9px] font-bold uppercase tracking-widest rounded hover:brightness-110 transition-all">
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         ) : activeTab === "deliveries" ? (
           <>
@@ -771,7 +870,7 @@ export default function SupplierPortal({
       </div>
 
       {/* Mobile Bottom Navigation Bar for Supplier Portal */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-ink-faint grid grid-cols-3 py-2 z-40">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-ink-faint grid grid-cols-4 py-2 z-40">
         <button
           onClick={() => setActiveTab("dashboard")}
           className={`flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-300 transform ${
@@ -822,6 +921,15 @@ export default function SupplierPortal({
             <CreditCard className={`w-5 h-5 transition-transform ${activeTab === 'payments' ? 'stroke-[2.5px] scale-110' : ''}`} />
           </div>
           <span className={`text-[9px] font-mono font-bold uppercase tracking-widest ${activeTab === 'payments' ? 'text-accent' : 'text-ink/50'}`}>Payments</span>
+        </button>
+        <button
+          onClick={onExit}
+          className="flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-300 text-rose-400/60 hover:text-rose-400"
+        >
+          <div className="p-2.5 rounded-xl transition-all duration-300 bg-rose-500/10 text-rose-400/60 hover:bg-rose-500/20">
+            <LogOut className="w-5 h-5" />
+          </div>
+          <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-rose-400/60">Exit</span>
         </button>
       </nav>
 
