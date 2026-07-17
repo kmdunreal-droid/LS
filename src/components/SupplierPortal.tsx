@@ -352,14 +352,19 @@ export default function SupplierPortal({
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-56 bg-surface border-r border-ink-faint shrink-0">
         <div className="p-5 border-b border-ink-faint">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-accent text-bg shadow-lg shadow-accent/20 rounded-lg">
-              <Weight className="w-5 h-5" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-accent text-bg shadow-lg shadow-accent/20 rounded-lg">
+                <Weight className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <span className="font-mono text-[8px] uppercase tracking-[0.2em] opacity-40 leading-none block">Supplier</span>
+                <span className="font-display text-sm uppercase tracking-tight leading-tight block">Portal</span>
+              </div>
             </div>
-            <div className="space-y-0.5">
-              <span className="font-mono text-[8px] uppercase tracking-[0.2em] opacity-40 leading-none block">Supplier</span>
-              <span className="font-display text-sm uppercase tracking-tight leading-tight block">Portal</span>
-            </div>
+            <button onClick={onExit} className="p-2 rounded-lg hover:bg-rose-500/10 text-ink/30 hover:text-rose-400 transition-all cursor-pointer" title="Exit">
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
@@ -384,22 +389,6 @@ export default function SupplierPortal({
             </button>
           ))}
         </nav>
-
-        <div className="p-3 border-t border-ink-faint">
-          {isSupplier ? (
-            <button onClick={onExit} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-mono text-[10px] font-bold uppercase tracking-widest text-rose-400/60 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer">
-              <LogOut className="w-4 h-4" /> Logout
-            </button>
-          ) : isLockedOnly ? (
-            <button onClick={() => setShowPinModal(true)} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-mono text-[10px] font-bold uppercase tracking-widest text-accent/60 hover:text-accent hover:bg-accent/10 transition-all cursor-pointer">
-              <Unlock className="w-4 h-4" /> Admin Unlock
-            </button>
-          ) : (
-            <button onClick={onExit} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-mono text-[10px] font-bold uppercase tracking-widest text-ink/40 hover:text-ink/70 hover:bg-ink-faint/10 transition-all cursor-pointer">
-              <X className="w-4 h-4" /> Exit
-            </button>
-          )}
-        </div>
       </aside>
 
       {/* Main Content Area */}
@@ -451,6 +440,9 @@ export default function SupplierPortal({
               <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">Report Date</span>
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
                 className="w-auto bg-bg/80 border border-ink-faint rounded px-2 py-1 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none appearance-none cursor-pointer" />
+              <button onClick={onExit} className="md:hidden p-1.5 rounded-lg hover:bg-rose-500/10 text-ink/30 hover:text-rose-400 transition-all cursor-pointer" title="Exit">
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
             <div className="lg:col-span-12 animate-fade-in">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -870,7 +862,7 @@ export default function SupplierPortal({
       </div>
 
       {/* Mobile Bottom Navigation Bar for Supplier Portal */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-ink-faint grid grid-cols-4 py-2 z-40">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-ink-faint grid grid-cols-3 py-2 z-40">
         <button
           onClick={() => setActiveTab("dashboard")}
           className={`flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-300 transform ${
@@ -921,15 +913,6 @@ export default function SupplierPortal({
             <CreditCard className={`w-5 h-5 transition-transform ${activeTab === 'payments' ? 'stroke-[2.5px] scale-110' : ''}`} />
           </div>
           <span className={`text-[9px] font-mono font-bold uppercase tracking-widest ${activeTab === 'payments' ? 'text-accent' : 'text-ink/50'}`}>Payments</span>
-        </button>
-        <button
-          onClick={onExit}
-          className="flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-300 text-rose-400/60 hover:text-rose-400"
-        >
-          <div className="p-2.5 rounded-xl transition-all duration-300 bg-rose-500/10 text-rose-400/60 hover:bg-rose-500/20">
-            <LogOut className="w-5 h-5" />
-          </div>
-          <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-rose-400/60">Exit</span>
         </button>
       </nav>
 
