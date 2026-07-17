@@ -370,6 +370,10 @@ export function AppContent() {
     }
   };
 
+  // Derived values
+  const selectedSupplierObj = suppliers.find(s => s.id === selectedSupplierId);
+  const selectedSupplierName = selectedSupplierObj?.name || "All Suppliers";
+
   // Stats Calculations
   const todayString = new Date().toISOString().split("T")[0];
   const todayOrders = orders.filter((o) => o.date === todayString);
@@ -391,8 +395,8 @@ export function AppContent() {
     if (loading) {
       return (
         <div className="flex flex-col items-center justify-center py-24 space-y-4">
-          <div className="w-12 h-12 border-4 border-t-orange-500 border-slate-700 rounded-full animate-spin"></div>
-          <span className="text-slate-400 font-bold text-sm">Real-time Data Syncing...</span>
+          <div className="w-12 h-12 border-4 border-t-accent border-ink-faint rounded-full animate-spin"></div>
+          <span className="text-ink/50 font-bold text-sm">Real-time Data Syncing...</span>
         </div>
       );
     }
@@ -445,6 +449,7 @@ export function AppContent() {
             settings={settings}
             supplyLogs={filteredSupplyLogs}
             suppliers={suppliers}
+            selectedSupplierId={selectedSupplierId}
             onAddLog={handleAddSupplyLog}
             onUpdateLog={handleUpdateSupplyLog}
             onDeleteLog={handleDeleteSupplyLog}
@@ -507,67 +512,67 @@ export function AppContent() {
     mobileIconClass: string;
   }> = {
     dashboard: {
-      activeClass: "bg-gradient-to-r from-blue-500 to-indigo-600 text-bg shadow-lg shadow-blue-500/25 ring-2 ring-blue-500/20 scale-[1.06] font-bold opacity-100",
-      inactiveClass: "text-ink/60 hover:text-blue-400 hover:bg-blue-500/10 hover:scale-103 opacity-70 hover:opacity-100",
-      iconColor: "text-blue-400",
-      activeText: "text-blue-500",
-      mobileActiveBg: "bg-blue-500/15 text-blue-500",
-      mobileRing: "ring-1 ring-blue-500/20",
-      mobileIconClass: "text-blue-500 stroke-[2.5px] scale-110",
+      activeClass: "bg-accent text-bg font-bold opacity-100",
+      inactiveClass: "text-ink/40 hover:text-ink hover:bg-ink-faint hover:scale-103 opacity-70 hover:opacity-100",
+      iconColor: "text-ink/70",
+      activeText: "text-ink",
+      mobileActiveBg: "bg-accent/20 text-ink",
+      mobileRing: "ring-1 ring-accent/20",
+      mobileIconClass: "text-ink stroke-[2.5px] scale-110",
     },
     supplies: {
-      activeClass: "bg-gradient-to-r from-orange-500 to-amber-500 text-bg shadow-lg shadow-orange-500/25 ring-2 ring-orange-500/20 scale-[1.06] font-bold opacity-100",
-      inactiveClass: "text-ink/60 hover:text-orange-400 hover:bg-orange-500/10 hover:scale-103 opacity-70 hover:opacity-100",
-      iconColor: "text-orange-400",
-      activeText: "text-orange-500",
-      mobileActiveBg: "bg-orange-500/15 text-orange-500",
-      mobileRing: "ring-1 ring-orange-500/20",
-      mobileIconClass: "text-orange-500 stroke-[2.5px] scale-110",
+      activeClass: "bg-accent text-bg font-bold opacity-100",
+      inactiveClass: "text-ink/40 hover:text-ink hover:bg-ink-faint hover:scale-103 opacity-70 hover:opacity-100",
+      iconColor: "text-ink/70",
+      activeText: "text-ink",
+      mobileActiveBg: "bg-accent/20 text-ink",
+      mobileRing: "ring-1 ring-accent/20",
+      mobileIconClass: "text-ink stroke-[2.5px] scale-110",
     },
     payments: {
-      activeClass: "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 ring-2 ring-emerald-500/20 scale-[1.06] font-bold opacity-100",
-      inactiveClass: "text-ink/60 hover:text-emerald-400 hover:bg-emerald-500/10 hover:scale-103 opacity-70 hover:opacity-100",
-      iconColor: "text-emerald-400",
-      activeText: "text-emerald-500",
-      mobileActiveBg: "bg-emerald-500/15 text-emerald-500",
-      mobileRing: "ring-1 ring-emerald-500/20",
-      mobileIconClass: "text-emerald-500 stroke-[2.5px] scale-110",
+      activeClass: "bg-accent text-bg font-bold opacity-100",
+      inactiveClass: "text-ink/40 hover:text-ink hover:bg-ink-faint hover:scale-103 opacity-70 hover:opacity-100",
+      iconColor: "text-ink/70",
+      activeText: "text-ink",
+      mobileActiveBg: "bg-accent/20 text-ink",
+      mobileRing: "ring-1 ring-accent/20",
+      mobileIconClass: "text-ink stroke-[2.5px] scale-110",
     },
     pos: {
-      activeClass: "bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/25 ring-2 ring-rose-500/20 scale-[1.06] font-bold opacity-100",
-      inactiveClass: "text-ink/60 hover:text-rose-400 hover:bg-rose-500/10 hover:scale-103 opacity-70 hover:opacity-100",
-      iconColor: "text-rose-400",
-      activeText: "text-rose-500",
-      mobileActiveBg: "bg-rose-500/15 text-rose-500",
-      mobileRing: "ring-1 ring-rose-500/20",
-      mobileIconClass: "text-rose-500 stroke-[2.5px] scale-110",
+      activeClass: "bg-accent text-bg font-bold opacity-100",
+      inactiveClass: "text-ink/40 hover:text-ink hover:bg-ink-faint hover:scale-103 opacity-70 hover:opacity-100",
+      iconColor: "text-ink/70",
+      activeText: "text-ink",
+      mobileActiveBg: "bg-accent/20 text-ink",
+      mobileRing: "ring-1 ring-accent/20",
+      mobileIconClass: "text-ink stroke-[2.5px] scale-110",
     },
     expenses: {
-      activeClass: "bg-gradient-to-r from-yellow-500 to-orange-600 text-white shadow-lg shadow-yellow-500/25 ring-2 ring-yellow-500/20 scale-[1.06] font-bold opacity-100",
-      inactiveClass: "text-ink/60 hover:text-yellow-400 hover:bg-yellow-500/10 hover:scale-103 opacity-70 hover:opacity-100",
-      iconColor: "text-yellow-400",
-      activeText: "text-yellow-500",
-      mobileActiveBg: "bg-yellow-500/15 text-yellow-500",
-      mobileRing: "ring-1 ring-yellow-500/20",
-      mobileIconClass: "text-yellow-500 stroke-[2.5px] scale-110",
+      activeClass: "bg-accent text-bg font-bold opacity-100",
+      inactiveClass: "text-ink/40 hover:text-ink hover:bg-ink-faint hover:scale-103 opacity-70 hover:opacity-100",
+      iconColor: "text-ink/70",
+      activeText: "text-ink",
+      mobileActiveBg: "bg-accent/20 text-ink",
+      mobileRing: "ring-1 ring-accent/20",
+      mobileIconClass: "text-ink stroke-[2.5px] scale-110",
     },
     settings: {
-      activeClass: "bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white shadow-lg shadow-purple-500/25 ring-2 ring-purple-500/20 scale-[1.06] font-bold opacity-100",
-      inactiveClass: "text-ink/60 hover:text-purple-400 hover:bg-purple-500/10 hover:scale-103 opacity-70 hover:opacity-100",
-      iconColor: "text-purple-400",
-      activeText: "text-purple-500",
-      mobileActiveBg: "bg-purple-500/15 text-purple-500",
-      mobileRing: "ring-1 ring-purple-500/20",
-      mobileIconClass: "text-purple-500 stroke-[2.5px] scale-110",
+      activeClass: "bg-accent text-bg font-bold opacity-100",
+      inactiveClass: "text-ink/40 hover:text-ink hover:bg-ink-faint hover:scale-103 opacity-70 hover:opacity-100",
+      iconColor: "text-ink/70",
+      activeText: "text-ink",
+      mobileActiveBg: "bg-accent/20 text-ink",
+      mobileRing: "ring-1 ring-accent/20",
+      mobileIconClass: "text-ink stroke-[2.5px] scale-110",
     },
     calculator: {
-      activeClass: "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 ring-2 ring-emerald-500/20 scale-[1.06] font-bold opacity-100",
-      inactiveClass: "text-ink/60 hover:text-emerald-400 hover:bg-emerald-500/10 hover:scale-103 opacity-70 hover:opacity-100",
-      iconColor: "text-emerald-400",
-      activeText: "text-emerald-500",
-      mobileActiveBg: "bg-emerald-500/15 text-emerald-500",
-      mobileRing: "ring-1 ring-emerald-500/20",
-      mobileIconClass: "text-emerald-500 stroke-[2.5px] scale-110",
+      activeClass: "bg-accent text-bg font-bold opacity-100",
+      inactiveClass: "text-ink/40 hover:text-ink hover:bg-ink-faint hover:scale-103 opacity-70 hover:opacity-100",
+      iconColor: "text-ink/70",
+      activeText: "text-ink",
+      mobileActiveBg: "bg-accent/20 text-ink",
+      mobileRing: "ring-1 ring-accent/20",
+      mobileIconClass: "text-ink stroke-[2.5px] scale-110",
     }
   };
 
@@ -593,15 +598,15 @@ export function AppContent() {
           {/* Animated Glowing Trash/Check icon */}
           <div className="flex justify-center">
             <div className="relative">
-              <div className="absolute inset-0 bg-red-500/20 rounded-full blur-xl scale-125 animate-pulse" />
-              <div className="relative p-8 bg-red-500/10 border border-red-500/30 text-red-500 rounded-2xl shadow-xl shadow-red-500/10">
-                <Trash2 className="w-12 h-12 stroke-[2px] animate-bounce" />
+              <div className="absolute inset-0 bg-accent/20 rounded-full blur-xl scale-125" />
+              <div className="relative p-8 bg-accent/10 border border-ink-faint text-ink rounded-2xl">
+                <Trash2 className="w-12 h-12 stroke-[2px]" />
               </div>
             </div>
           </div>
 
           <div className="space-y-4">
-            <span className="inline-block font-mono text-[10px] font-bold text-red-500 uppercase tracking-[0.25em] bg-red-500/10 border border-red-500/20 px-3.5 py-1.5 rounded-full">
+            <span className="inline-block font-mono text-[10px] font-bold text-ink uppercase tracking-[0.25em] bg-accent/10 border border-ink-faint px-3.5 py-1.5 rounded-full">
               Deleted / خارج کر دیا گیا
             </span>
             <h1 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-tight text-ink">
@@ -629,7 +634,7 @@ export function AppContent() {
             {deleteNotification.amount && (
               <div className="space-y-1.5 border-b border-ink-faint pb-4">
                 <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Purged Value</span>
-                <span className="block font-mono text-xl font-bold text-red-400 tracking-tighter">{deleteNotification.amount}</span>
+                <span className="block font-mono text-xl font-bold text-ink/70 tracking-tighter">{deleteNotification.amount}</span>
               </div>
             )}
 
@@ -644,7 +649,7 @@ export function AppContent() {
           {/* Return Button */}
           <button
             onClick={() => setDeleteNotification(null)}
-            className="w-full bg-gradient-to-r from-red-500 to-rose-600 text-bg font-mono font-bold py-4.5 rounded-xl text-xs uppercase tracking-[0.2em] shadow-lg shadow-red-500/20 hover:brightness-110 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
+            className="w-full bg-accent text-bg font-mono font-bold py-4.5 rounded-xl text-xs uppercase tracking-[0.2em] hover:brightness-110 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Dismiss & Return / واپس جائیں
@@ -686,12 +691,12 @@ export function AppContent() {
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-[100] bg-bg/95 backdrop-blur-xl animate-fade-in flex flex-col">
-          <div className="flex items-center justify-between p-6 border-b border-indigo-500/15">
+          <div className="flex items-center justify-between p-6 border-b border-ink-faint">
             <div className="flex flex-col">
-              <span className="font-display text-2xl uppercase tracking-tight bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 bg-clip-text text-transparent font-black leading-none">
+              <span className="font-display text-2xl uppercase tracking-tight text-ink font-black leading-none">
                 Akbar Tikka
               </span>
-              <span className="font-mono text-[10px] uppercase tracking-widest text-pink-400/80 font-bold">System Menu</span>
+              <span className="font-mono text-[10px] uppercase tracking-widest text-ink/50 font-bold">System Menu</span>
             </div>
             <button 
               onClick={() => setIsMobileMenuOpen(false)}
@@ -703,7 +708,7 @@ export function AppContent() {
 
           <div className="flex-1 overflow-y-auto p-6 space-y-8">
             <div className="space-y-3">
-              <span className="block font-mono text-[10px] font-bold text-indigo-400 uppercase tracking-[0.2em] mb-4">Core Management</span>
+              <span className="block font-mono text-[10px] font-bold text-ink/70 uppercase tracking-[0.2em] mb-4">Core Management</span>
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -725,21 +730,21 @@ export function AppContent() {
                       <Icon className={`w-6 h-6 ${isActive ? (colors?.mobileIconClass || 'text-accent') : 'text-ink/40'}`} />
                     </div>
                     <span className="font-mono text-sm uppercase tracking-wider">{item.label}</span>
-                    {isActive && <CheckCircle className="w-4 h-4 ml-auto text-emerald-500" />}
+                    {isActive && <CheckCircle className="w-4 h-4 ml-auto text-ink" />}
                   </button>
                 );
               })}
             </div>
 
-            <div className="pt-6 border-t border-indigo-500/10">
+            <div className="pt-6 border-t border-ink-faint">
               <button 
                 onClick={() => {
                   logout();
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 font-mono text-sm uppercase tracking-widest"
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-accent/10 border border-ink-faint text-ink/70 font-mono text-sm uppercase tracking-widest"
               >
-                <div className="p-3 bg-red-500/20 rounded-xl">
+                <div className="p-3 bg-accent/20 rounded-xl">
                   <LogOut className="w-6 h-6" />
                 </div>
                 Logout / لاگ آؤٹ
@@ -747,20 +752,20 @@ export function AppContent() {
             </div>
           </div>
 
-          <div className="p-6 bg-surface/30 border-t border-indigo-500/10">
-             <div className="flex items-center gap-4 p-4 bg-indigo-950/20 rounded-2xl">
-                <div className="w-10 h-10 rounded-full border-2 border-pink-500 overflow-hidden shrink-0 shadow-lg">
+          <div className="p-6 bg-surface/30 border-t border-ink-faint">
+             <div className="flex items-center gap-4 p-4 bg-surface rounded-2xl">
+                <div className="w-10 h-10 rounded-full border-2 border-accent overflow-hidden shrink-0 shadow-lg">
                   {userPhoto ? (
                     <img src={userPhoto} alt={userName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold text-sm">
+                    <div className="w-full h-full flex items-center justify-center bg-accent text-white font-bold text-sm">
                        {userName.charAt(0)}
                     </div>
                   )}
                 </div>
                 <div className="user-info min-w-0">
                   <span className="block text-sm font-black truncate text-white">{userName}</span>
-                  <span className="block text-[10px] text-pink-400 font-bold uppercase tracking-widest leading-tight">Administrator</span>
+                  <span className="block text-[10px] text-ink/70 font-bold uppercase tracking-widest leading-tight">Administrator</span>
                 </div>
              </div>
           </div>
@@ -768,67 +773,55 @@ export function AppContent() {
       )}
 
       {/* Mobile Top Brand Bar */}
-      <div className="md:hidden bg-bg border-b border-indigo-500/15 py-4 px-6 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md bg-bg/80">
+      <div className="md:hidden bg-bg border-b border-ink-faint py-4 px-6 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md bg-bg/80">
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setIsMobileMenuOpen(true)}
-            className="p-2.5 bg-surface border border-ink-faint rounded-xl text-ink active:scale-90 transition-all hover:bg-indigo-500/10"
+            className="p-1.5 bg-surface border border-ink-faint rounded-lg text-ink active:scale-90 transition-all"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-4 h-4" />
           </button>
           <div className="flex flex-col">
-            <span className="font-display text-xl uppercase tracking-tight bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 bg-clip-text text-transparent font-black leading-none">
+            <span className="font-display text-xl uppercase tracking-tight text-ink font-black leading-none">
               Akbar Tikka
             </span>
-            <span className="font-mono text-[8px] uppercase tracking-widest text-pink-400/80 font-bold">Manager</span>
+            <span className="font-mono text-[8px] uppercase tracking-widest text-ink/50 font-bold">Manager</span>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
-          {/* Mobile Sync Indicator */}
-          <div className="flex flex-col items-end mr-1">
-             {syncStatus === 'syncing' ? (
-                <RefreshCw className="w-2.5 h-2.5 text-blue-400 animate-spin" />
-             ) : syncStatus === 'success' ? (
-                <CloudCheck className="w-2.5 h-2.5 text-emerald-400" />
-             ) : syncStatus === 'error' ? (
-                <CloudOff className="w-2.5 h-2.5 text-red-400" />
-             ) : (
-                <Wifi className={`w-2.5 h-2.5 ${isDbLive ? "text-emerald-500" : "text-amber-500"} opacity-40`} />
-             )}
-          </div>
-
-          {activeTab === "pos" && (
+          {todayOrders.length > 0 ? (
+            <button 
+              onClick={() => setActiveTab("pos")}
+              className={`p-2 rounded-xl border transition-all ${
+                activeTab === "pos" 
+                  ? "bg-accent/20 border-accent/50 text-ink" 
+                  : "border-ink-faint bg-accent/10 text-ink/70"
+              }`}
+            >
+              <ShoppingCart className="w-5 h-5" />
+            </button>
+          ) : (
             <div className="flex flex-col items-end">
-              <span className="font-mono text-[7px] uppercase text-indigo-400/40 font-bold leading-none mb-0.5">Today Sale</span>
-              <span className="font-mono text-[10px] font-black text-indigo-300 leading-none">Rs. {todaySales.toLocaleString()}</span>
+              <span className="font-mono text-[7px] uppercase text-ink/30 font-bold leading-none mb-0.5">Source</span>
+              <span className="font-mono text-[9px] font-black text-ink/70 leading-none truncate max-w-[100px]">{selectedSupplierName}</span>
             </div>
           )}
-          <button 
-            onClick={() => setActiveTab("pos")}
-            className={`p-2.5 rounded-xl border transition-all ${
-              activeTab === "pos" 
-                ? "bg-rose-500/20 border-rose-500/50 text-rose-300" 
-                : "border-rose-500/30 bg-rose-500/10 text-rose-400"
-            }`}
-          >
-            <ShoppingCart className="w-5 h-5" />
-          </button>
         </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
         {/* Side Navigation - Wide & Branded */}
-        <aside className="hidden md:flex w-[260px] flex-col py-8 px-6 bg-gradient-to-b from-surface/95 via-[#0c0c18] to-surface/95 border-r border-indigo-500/15 shrink-0 z-50 overflow-y-auto">
+        <aside className="hidden md:flex w-[260px] flex-col py-8 px-6 bg-gradient-to-b from-surface/95 via-[#0c0c18] to-surface/95 border-r border-ink-faint shrink-0 z-50 overflow-y-auto">
           <div className="brand flex flex-col gap-2 mb-10">
-            <span className="brand-name font-display text-2xl leading-[0.9] uppercase tracking-[-0.04em] bg-gradient-to-r from-orange-400 via-pink-500 to-purple-500 bg-clip-text text-transparent filter drop-shadow-[0_2px_10px_rgba(236,72,153,0.3)] font-black">
+            <span className="brand-name font-display text-2xl leading-[0.9] uppercase tracking-[-0.04em] text-ink font-black">
               Akbar Tikka
             </span>
-            <span className="brand-meta font-mono text-[10px] uppercase tracking-[0.15em] text-pink-400/80 font-bold">Supplies & Cash Manager</span>
+            <span className="brand-meta font-mono text-[10px] uppercase tracking-[0.15em] text-ink/50 font-bold">Supplies & Cash Manager</span>
           </div>
           
           <nav className="flex flex-col gap-2.5 flex-1">
-            <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-purple-400 font-bold mb-2">System Controls</div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink/70 font-bold mb-2">System Controls</div>
             
             {(settings.sidebarNavItems?.length ? (settings.sidebarNavItems.includes("pos") ? settings.sidebarNavItems : ["pos", ...settings.sidebarNavItems]) : ["dashboard", "pos", "supplies", "expenses", "payments", "calculator"]).map((id) => {
               const item = navItems.find(n => n.id === id);
@@ -855,25 +848,25 @@ export function AppContent() {
             })}
           </nav>
 
-          <div className="mt-auto pt-8 border-t border-indigo-500/10 space-y-6">
-            <div className="p-4 bg-indigo-950/20 border border-indigo-500/10 rounded-xl text-[11px] opacity-90 text-indigo-200">
-              <div className="font-mono text-[10px] uppercase tracking-widest text-indigo-400 font-bold mb-1">🔥 App Update</div>
+          <div className="mt-auto pt-8 border-t border-ink-faint space-y-6">
+            <div className="p-4 bg-surface border border-ink-faint rounded-xl text-[11px] opacity-90 text-ink/70">
+              <div className="font-mono text-[10px] uppercase tracking-widest text-ink/70 font-bold mb-1">🔥 App Update</div>
               Active cloud database with real-time syncing is online.
             </div>
 
-            <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-950/40 to-pink-950/20 border border-purple-500/15 rounded-xl">
-              <div className="w-8 h-8 rounded-full border-2 border-pink-500 overflow-hidden shrink-0 shadow-[0_0_10px_rgba(236,72,153,0.4)]">
+            <div className="flex items-center gap-4 p-4 bg-surface border border-ink-faint rounded-xl">
+              <div className="w-8 h-8 rounded-full border-2 border-accent overflow-hidden shrink-0">
                 {userPhoto ? (
                   <img src={userPhoto} alt={userName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold text-xs">
+                  <div className="w-full h-full flex items-center justify-center bg-accent text-white font-bold text-xs">
                      {userName.charAt(0)}
                   </div>
                 )}
               </div>
               <div className="user-info min-w-0">
                 <span className="block text-xs font-black truncate leading-tight text-white">{userName}</span>
-                <span className="block text-[10px] text-pink-400 font-bold uppercase tracking-widest truncate leading-tight">{isSupplier ? 'Supplier' : 'System Owner'}</span>
+                <span className="block text-[10px] text-ink/70 font-bold uppercase tracking-widest truncate leading-tight">{isSupplier ? 'Supplier' : 'System Owner'}</span>
               </div>
             </div>
 
@@ -1030,12 +1023,12 @@ export function AppContent() {
           const isActive = activeTab === item.id;
           
           const activeBtnStyles: Record<string, string> = {
-            dashboard: "bg-blue-500/15 border-blue-500/45 text-blue-300",
-            supplies: "bg-orange-500/15 border-orange-500/45 text-orange-300",
-            pos: "bg-rose-500/15 border-rose-500/45 text-rose-300 glow-rose",
-            payments: "bg-emerald-500/15 border-emerald-500/45 text-emerald-300",
-            expenses: "bg-yellow-500/15 border-yellow-500/45 text-yellow-300",
-            settings: "bg-purple-500/15 border-purple-500/45 text-purple-300",
+            dashboard: "border-blue-500 text-blue-300",
+            supplies: "border-orange-500 text-orange-300",
+            pos: "border-rose-500 text-rose-300 glow-rose",
+            payments: "border-emerald-500 text-emerald-300",
+            expenses: "border-yellow-500 text-yellow-300",
+            settings: "border-purple-500 text-purple-300",
           };
 
           const shortLabels: Record<string, string> = {
@@ -1053,8 +1046,8 @@ export function AppContent() {
               onClick={() => setActiveTab(item.id)}
               className={`flex flex-col items-center justify-center gap-1.5 py-2 px-1 rounded-xl border transition-all duration-300 cursor-pointer select-none active:scale-[0.92] flex-1 min-w-0 ${
                 isActive 
-                  ? `${activeBtnStyles[item.id] || "border-accent text-accent"} font-bold scale-[1.03] shadow-lg` 
-                  : "bg-[#111122]/35 border-ink-faint text-ink/50"
+                  ? `${activeBtnStyles[item.id] || "border-accent text-accent"} font-bold scale-[1.03] shadow-lg border-2` 
+                  : "border-transparent text-ink/40 hover:text-ink/70"
               }`}
             >
               <Icon className={`w-5 h-5 transition-all ${isActive ? 'stroke-[2.5px] scale-110' : 'opacity-75'}`} />

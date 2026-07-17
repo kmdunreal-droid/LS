@@ -25,25 +25,6 @@ export default function PaymentsTab({ payments, supplyLogs, suppliers, onAddPaym
   const [editNotes, setEditNotes] = useState("");
   const [editSupplierId, setEditSupplierId] = useState("");
 
-  const getSupplierNameFromNotes = (notesStr: string) => {
-    const note = notesStr?.trim() || "";
-    if (!note) return "Zeeshan Broiler";
-    if (note.includes("(")) return note.split("(")[0].trim();
-    if (note.includes(",")) return note.split(",")[0].trim();
-    if (note.includes(":")) return note.split(":")[0].trim();
-    return note;
-  };
-
-  const uniqueSuppliers = Array.from(
-    new Set([
-      "Zeeshan Broiler",
-      "Sajid Poultry",
-      ...suppliers.map(s => s.name),
-      ...supplyLogs.map((log) => getSupplierNameFromNotes(log.notes)),
-      ...payments.map((p) => p.notes.startsWith("Payment to ") ? p.notes.replace("Payment to ", "") : "")
-    ])
-  ).filter(Boolean);
-
   const selectedSupplier = suppliers.find(s => s.id === selectedSupplierId || s.name === selectedSupplierId);
 
   // Filter supplies and payments by selected supplier
@@ -168,72 +149,39 @@ export default function PaymentsTab({ payments, supplyLogs, suppliers, onAddPaym
           </div>
         </div>
 
-        <div className="w-full md:w-auto flex items-center gap-4">
-          <select
-            value={selectedSupplierId}
-            onChange={(e) => setSelectedSupplierId(e.target.value)}
-            className="w-full md:w-72 bg-bg border border-ink-faint rounded px-4 py-2 font-mono text-sm focus:ring-1 focus:ring-accent outline-none appearance-none cursor-pointer uppercase"
-          >
-            <option value="">-- SELECT SOURCE --</option>
-            {suppliers.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name.toUpperCase()}
-              </option>
-            ))}
-            {uniqueSuppliers.filter(name => !suppliers.some(s => s.name === name)).map(name => (
-              <option key={name} value={name}>
-                {name.toUpperCase()}
-              </option>
-            ))}
-          </select>
-          {selectedSupplier && (
-            <div 
-              className="w-8 h-8 rounded border border-ink-faint shrink-0" 
-              style={{ backgroundColor: selectedSupplier.color }}
-            />
-          )}
-        </div>
+
       </div>
 
       {/* Supplier Ledger Stats - Responsive */}
       <div className="grid grid-cols-3 gap-2 md:gap-6">
-        {/* Inventory Val. - Cyan / Indigo */}
-        <div className="bg-gradient-to-br from-indigo-950/50 via-cyan-950/20 to-indigo-900/30 border border-indigo-500/35 p-3 sm:p-5 md:p-6 flex flex-col justify-between h-28 sm:h-32 md:h-40 rounded-2xl group relative overflow-hidden transition-all duration-300 shadow-[0_8px_30px_rgba(99,102,241,0.12)] hover:border-indigo-400/50 glow-blue">
-          {selectedSupplier && (
-            <div className="absolute left-0 top-0 bottom-0 w-1 transition-all group-hover:w-2" style={{ backgroundColor: selectedSupplier.color }} />
-          )}
-          <span className="font-mono text-[7px] md:text-[9px] font-bold uppercase tracking-[0.2em] text-indigo-300">Inventory Val.</span>
-          <div className="flex items-baseline gap-0.5 sm:gap-2">
-            <span className="font-mono text-[7px] sm:text-[10px] font-bold text-indigo-400/60 uppercase">Rs.</span>
-            <span className="font-display text-xs sm:text-2xl md:text-4xl font-black text-indigo-100 tracking-tight truncate">
+        {/* Inventory Total */}
+          <div className="bg-surface border border-ink-faint p-3 sm:p-5 md:p-6 flex flex-col justify-between h-28 sm:h-32 md:h-40 rounded-2xl group relative overflow-hidden transition-all duration-300 hover:border-ink/40">
+            <span className="font-mono text-[7px] md:text-[9px] font-bold uppercase tracking-[0.2em] text-ink/70">Inventory Total</span>
+            <span className="font-mono text-[7px] sm:text-[10px] font-bold text-ink/50 uppercase block">Rs.</span>
+            <div className="flex items-baseline gap-0.5 sm:gap-2">
+              <span className="font-display text-xs sm:text-2xl md:text-4xl font-black text-ink tracking-tight truncate">
               {totalValueReceived.toLocaleString()}
             </span>
           </div>
         </div>
 
-        {/* Total Paid - Emerald / Teal */}
-        <div className="bg-gradient-to-br from-emerald-950/50 via-teal-950/20 to-emerald-900/30 border border-emerald-500/35 p-3 sm:p-5 md:p-6 flex flex-col justify-between h-28 sm:h-32 md:h-40 rounded-2xl group relative overflow-hidden transition-all duration-300 shadow-[0_8px_30px_rgba(16,185,129,0.12)] hover:border-emerald-400/50 glow-emerald">
-          {selectedSupplier && (
-            <div className="absolute left-0 top-0 bottom-0 w-1 transition-all group-hover:w-2" style={{ backgroundColor: selectedSupplier.color }} />
-          )}
-          <span className="font-mono text-[7px] md:text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-300">Total Paid</span>
-          <div className="flex items-baseline gap-0.5 sm:gap-2">
-            <span className="font-mono text-[7px] sm:text-[10px] font-bold text-emerald-400/60 uppercase">Rs.</span>
-            <span className="font-display text-xs sm:text-2xl md:text-4xl font-black text-emerald-100 tracking-tight truncate">
+        {/* Total Paid - Green */}
+          <div className="bg-surface border border-emerald-500/20 p-3 sm:p-5 md:p-6 flex flex-col justify-between h-28 sm:h-32 md:h-40 rounded-2xl group relative overflow-hidden transition-all duration-300">
+            <span className="font-mono text-[7px] md:text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-400">Total Paid</span>
+            <span className="font-mono text-[7px] sm:text-[10px] font-bold text-emerald-400/60 uppercase block">Rs.</span>
+            <div className="flex items-baseline gap-0.5 sm:gap-2">
+              <span className="font-display text-xs sm:text-2xl md:text-4xl font-black text-emerald-400 tracking-tight truncate">
               {totalAmountPaid.toLocaleString()}
             </span>
           </div>
         </div>
 
-        {/* Balance Due - Fire Orange / Rose */}
-        <div className="bg-gradient-to-br from-orange-950/50 via-rose-950/20 to-orange-900/30 border border-orange-500/35 p-3 sm:p-5 md:p-6 flex flex-col justify-between h-28 sm:h-32 md:h-40 rounded-2xl group relative overflow-hidden transition-all duration-300 shadow-[0_8px_30px_rgba(249,115,22,0.12)] hover:border-orange-400/50 glow-orange">
-          {selectedSupplier && (
-            <div className="absolute left-0 top-0 bottom-0 w-1 transition-all group-hover:w-2" style={{ backgroundColor: selectedSupplier.color }} />
-          )}
-          <span className="font-mono text-[7px] md:text-[9px] font-bold uppercase tracking-[0.2em] text-orange-300">Balance Due</span>
-          <div className="flex items-baseline gap-0.5 sm:gap-2">
-            <span className="font-mono text-[7px] sm:text-[10px] font-bold text-orange-400/60 uppercase">Rs.</span>
-            <span className={`font-display text-xs sm:text-2xl md:text-4xl font-black tracking-tight truncate ${outstandingSupplierBalance > 0 ? "text-orange-400" : "text-emerald-400"}`}>
+        {/* Balance */}
+          <div className={`bg-surface border p-3 sm:p-5 md:p-6 flex flex-col justify-between h-28 sm:h-32 md:h-40 rounded-2xl group relative overflow-hidden transition-all duration-300 ${outstandingSupplierBalance > 0 ? "border-red-500/20" : "border-emerald-500/20"}`}>
+            <span className={`font-mono text-[7px] md:text-[9px] font-bold uppercase tracking-[0.2em] ${outstandingSupplierBalance > 0 ? "text-red-400" : "text-emerald-400"}`}>Balance</span>
+            <span className={`font-mono text-[7px] sm:text-[10px] font-bold uppercase block ${outstandingSupplierBalance > 0 ? "text-red-400/60" : "text-emerald-400/60"}`}>Rs.</span>
+            <div className="flex items-baseline gap-0.5 sm:gap-2">
+              <span className={`font-display text-xs sm:text-2xl md:text-4xl font-black tracking-tight truncate ${outstandingSupplierBalance > 0 ? "text-red-400" : "text-emerald-400"}`}>
               {outstandingSupplierBalance.toLocaleString()}
             </span>
           </div>
@@ -331,11 +279,7 @@ export default function PaymentsTab({ payments, supplyLogs, suppliers, onAddPaym
             </div>
           </div>
           
-          {!selectedSupplierId ? (
-            <div className="py-12 text-center border border-dashed border-ink-faint rounded">
-              <p className="font-mono text-[10px] font-bold uppercase tracking-widest opacity-20 italic">Select a source to view ledger details</p>
-            </div>
-          ) : subTab === "daily" ? (
+          {subTab === "daily" ? (
             dailyLedger.length === 0 ? (
               <div className="py-12 text-center border border-dashed border-ink-faint rounded">
                 <p className="font-mono text-[10px] font-bold uppercase tracking-widest opacity-20 italic">No activity recorded for this source</p>

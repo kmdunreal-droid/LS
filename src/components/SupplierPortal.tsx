@@ -53,7 +53,7 @@ export default function SupplierPortal({
   
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [weightKg, setWeightKg] = useState<string>("");
-  const [category, setCategory] = useState<string>("Whole Chicken");
+  const [category, setCategory] = useState<string>("Chicken Dabu");
   const [supplyRate, setSupplyRate] = useState<string>(settings.baseRawRate.toString());
   const [proposedRate, setProposedRate] = useState<string>(settings.baseRawRate.toString());
   const [isUpdatingRate, setIsUpdatingRate] = useState(false);
@@ -81,19 +81,6 @@ export default function SupplierPortal({
     }
   };
 
-  const [supplierName, setSupplierName] = useState(currentSupplier ? currentSupplier.name : "Zeeshan Broiler");
-  const [isOtherSupplier, setIsOtherSupplier] = useState(false);
-  const [otherSupplierName, setOtherSupplierName] = useState("");
-
-  const handleSupplierNameChange = (val: string) => {
-    if (val === "__OTHER__") {
-      setIsOtherSupplier(true);
-      setSupplierName("");
-    } else {
-      setIsOtherSupplier(false);
-      setSupplierName(val);
-    }
-  };
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -106,6 +93,17 @@ export default function SupplierPortal({
   const [editRate, setEditRate] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editNotes, setEditNotes] = useState("");
+
+  // Weight entry modal (category click)
+  const [weightModalCat, setWeightModalCat] = useState<string | null>(null);
+  const [weightModalWeight, setWeightModalWeight] = useState<string>("");
+  const [weightModalSaving, setWeightModalSaving] = useState(false);
+
+  // Quick weight edit modal
+  const weightEditPressRef = React.useRef<any>(null);
+  const weightEditStartRef = React.useRef<number>(0);
+  const [weightEditLog, setWeightEditLog] = useState<SupplyLog | null>(null);
+  const [weightEditValue, setWeightEditValue] = useState<string>("");
 
   // Tabs
   const [activeTab, setActiveTab] = useState<"dashboard" | "deliveries" | "payments" | "settings">("dashboard");
@@ -142,8 +140,7 @@ export default function SupplierPortal({
       }
     }
     switch (cat) {
-      case "Whole Chicken": return base;
-      case "Chest / Boneless": return Math.round(base * 1.4);
+      case "Chicken Dabu": return base;
       case "Leg / Thigh": return Math.round(base * 1.1);
       case "Wings": return Math.round(base * 0.8);
       case "Wings V": return Math.round(base * 0.85);
@@ -178,22 +175,17 @@ export default function SupplierPortal({
 
     setSaving(true);
     try {
-      const selectedSup = suppliers.find(s => s.name === supplierName);
-      const finalSupplierName = isOtherSupplier ? otherSupplierName.trim() : supplierName.trim();
-
       await onAddLog({
         date,
         weightKg: weightNum,
         supplyRatePerKg: rateNum,
         totalCost: weightNum * rateNum,
-        notes: `${finalSupplierName} ${notes.trim() ? `(${notes.trim()})` : ""}`.trim() || "Raw Chicken Supply",
+        notes: notes.trim() || "Raw Chicken Supply",
         category: finalCategory,
-        ...(currentSupplier ? { supplierId: currentSupplier.id } : (selectedSup ? { supplierId: selectedSup.id } : { supplierId: finalSupplierName })),
+        supplierId: currentSupplier!.id,
       });
       setWeightKg("");
       setNotes("");
-      setOtherSupplierName("");
-      setIsOtherSupplier(false);
       setCustomCategoryName("");
       setIsNewCategory(false);
       setSuccessMessage("✓ Delivery Saved");
@@ -210,7 +202,7 @@ export default function SupplierPortal({
     setEditingLogId(log.id);
     setEditWeight(log.weightKg.toString());
     setEditRate(log.supplyRatePerKg.toString());
-    setEditCategory(log.category || "Whole Chicken");
+    setEditCategory(log.category || "Chicken Dabu");
     setEditNotes(log.notes || "");
   };
 
@@ -256,19 +248,14 @@ export default function SupplierPortal({
     }
     setPaySaving(true);
     try {
-      const selectedSup = suppliers.find(s => s.name === supplierName);
-      const finalSupplierName = isOtherSupplier ? otherSupplierName.trim() : supplierName.trim();
-
       await onAddPayment({
         date,
         amountPaid: amountNum,
-        notes: `${finalSupplierName} ${payNotes.trim() ? `(${payNotes.trim()})` : ""}`.trim() || "Cash Payment Received",
-        ...(currentSupplier ? { supplierId: currentSupplier.id } : (selectedSup ? { supplierId: selectedSup.id } : { supplierId: finalSupplierName })),
+        notes: payNotes.trim() || "Cash Payment Received",
+        supplierId: currentSupplier!.id,
       });
       setPayAmount("");
       setPayNotes("");
-      setOtherSupplierName("");
-      setIsOtherSupplier(false);
       setSuccessMessage("✓ Payment recorded successfully");
       setTimeout(() => setSuccessMessage(null), 4000);
     } catch (err) {
@@ -305,7 +292,7 @@ export default function SupplierPortal({
   };
 
   const relevantLogs = currentSupplier 
-    ? supplyLogs.filter(l => l.supplierId === currentSupplier.id || l.notes.toLowerCase().includes(currentSupplier.name.toLowerCase()))
+    ? supplyLogs.filter(l => l.supplierId === currentSupplier.id || (l.notes || "").toLowerCase().includes(currentSupplier.name.toLowerCase()))
     : supplyLogs;
 
   const todayLogs = relevantLogs.filter((log) => log.date === date);
@@ -313,7 +300,7 @@ export default function SupplierPortal({
   const totalTodayCost = todayLogs.reduce((sum, log) => sum + log.totalCost, 0);
 
   const relevantPayments = currentSupplier 
-    ? payments.filter(p => p.supplierId === currentSupplier.id || p.notes.toLowerCase().includes(currentSupplier.name.toLowerCase()))
+    ? payments.filter(p => p.supplierId === currentSupplier.id || (p.notes || "").toLowerCase().includes(currentSupplier.name.toLowerCase()))
     : payments;
 
   const todayPayments = relevantPayments.filter((p) => p.date === date);
@@ -391,88 +378,84 @@ export default function SupplierPortal({
       <div className="flex-1 flex flex-col min-h-screen">
 
         {/* Rate Editor Bar */}
-        <div className="bg-bg/50 border-b border-ink-faint px-4 md:px-8 py-3">
+        <div className="bg-bg/50 border-b border-ink-faint px-3 md:px-4 py-2">
           <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-500/10 text-orange-400 rounded-lg">
+              <div className="p-2 bg-ink-faint/20 text-ink/50 rounded-lg">
                 <Flame className="w-4 h-4" />
               </div>
               <div>
-                <span className="font-mono text-[9px] uppercase tracking-widest text-orange-300 font-bold">Daily Rate</span>
-                <p className="font-mono text-[8px] text-orange-400/60">Update today's chicken rate</p>
+                <span className="font-mono text-[9px] uppercase tracking-widest text-ink/70 font-bold">Daily Rate</span>
+                <p className="font-mono text-[8px] text-ink/40">Update today's chicken rate</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 flex-wrap justify-center">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold text-orange-400/60">Rs.</span>
+            <div className="flex items-center gap-3 flex-wrap justify-center">
+              <div className="flex items-center gap-1">
+                <span className="font-mono text-xs font-bold text-ink/40">Rs.</span>
                 <input
                   type="number"
                   value={proposedRate}
                   onChange={(e) => setProposedRate(e.target.value)}
-                  className="w-24 bg-transparent border-b-2 border-orange-500/30 text-xl font-display font-black text-orange-400 text-center focus:outline-none focus:border-orange-400 transition-all py-0.5"
+                  className="w-20 bg-transparent border-b-2 border-ink-faint text-lg font-display font-black text-ink text-center focus:outline-none focus:border-accent transition-all py-0.5"
                   placeholder="000"
                 />
               </div>
               <button
                 onClick={handleUpdateGlobalRate}
                 disabled={isUpdatingRate || parseFloat(proposedRate) === settings.baseRawRate}
-                className="font-mono text-[9px] font-bold uppercase tracking-widest px-4 py-2 border border-orange-500/30 bg-orange-500/10 text-orange-300 rounded-lg hover:bg-orange-500 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg"
+                className="font-mono text-[8px] font-bold uppercase tracking-widest px-3 py-1.5 border border-ink-faint text-ink/60 rounded-lg hover:bg-accent hover:text-bg hover:border-accent transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {isUpdatingRate ? "Updating..." : "Update Rate"}
               </button>
             </div>
             {rateSuccessMsg && (
-              <span className="font-mono text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-emerald-400 animate-fade-in">{rateSuccessMsg}</span>
+              <span className="font-mono text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-emerald-custom animate-fade-in">{rateSuccessMsg}</span>
             )}
           </div>
         </div>
 
-        <div className="flex-1 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 p-4 md:p-8">
+        <div className="flex-1 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 p-3 md:p-4">
         {activeTab === "dashboard" ? (
           <>
             <div className="lg:col-span-12 animate-fade-in">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-gradient-to-br from-violet-950/50 via-purple-950/20 to-fuchsia-900/30 border border-violet-500/35 p-6 md:p-8 flex flex-col justify-between rounded-2xl shadow-[0_8px_30px_rgba(139,92,246,0.12)] hover:border-violet-400/50 transition-all duration-300 glow-purple">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[8px] font-bold uppercase tracking-[0.2em] text-violet-300">Total Supplied (Raqam)</span>
-                    <Weight className="w-4 h-4 text-violet-400" />
+                <div className="bg-surface border border-ink-faint p-5 md:p-6 flex flex-col justify-between rounded-xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-mono text-[7px] font-bold uppercase tracking-[0.2em] text-ink/50">Total Supplied (Raqam)</span>
+                    <Weight className="w-4 h-4 text-ink/30" />
                   </div>
-                  <div className="space-y-1 mt-4">
+                  <div>
                     <div className="flex items-baseline gap-2">
-                      <span className="font-mono text-[9px] font-bold text-violet-400/60 uppercase">Rs.</span>
-                      <span className="font-display text-3xl md:text-4xl font-black text-violet-100 tracking-tight">{totalSupplied.toLocaleString()}</span>
+                      <span className="font-mono text-[8px] font-bold text-ink/40 uppercase">Rs.</span>
+                      <span className="font-display text-2xl md:text-3xl font-black text-ink tracking-tight">{totalSupplied.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
-                <div className="bg-gradient-to-br from-emerald-950/50 via-teal-950/20 to-green-900/30 border border-emerald-500/35 p-6 md:p-8 flex flex-col justify-between rounded-2xl shadow-[0_8px_30px_rgba(16,185,129,0.12)] hover:border-emerald-400/50 transition-all duration-300 glow-emerald">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[8px] font-bold uppercase tracking-[0.2em] text-emerald-300">Total Paid (Ada Shuda)</span>
+                <div className="bg-surface border border-emerald-500/20 p-5 md:p-6 flex flex-col justify-between rounded-xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-mono text-[7px] font-bold uppercase tracking-[0.2em] text-emerald-400">Total Paid (Ada Shuda)</span>
                     <CreditCard className="w-4 h-4 text-emerald-400" />
                   </div>
-                  <div className="space-y-1 mt-4">
+                  <div>
                     <div className="flex items-baseline gap-2">
-                      <span className="font-mono text-[9px] font-bold text-emerald-400/60 uppercase">Rs.</span>
-                      <span className="font-display text-3xl md:text-4xl font-black text-emerald-100 tracking-tight">{totalPaid.toLocaleString()}</span>
+                      <span className="font-mono text-[8px] font-bold text-emerald-400/60 uppercase">Rs.</span>
+                      <span className="font-display text-2xl md:text-3xl font-black text-emerald-400 tracking-tight">{totalPaid.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
-                <div className={`bg-gradient-to-br p-6 md:p-8 flex flex-col justify-between rounded-2xl shadow-[0_8px_30px_rgba(249,115,22,0.12)] transition-all duration-300 ${
-                  balance > 0
-                    ? "from-orange-950/50 via-amber-950/20 to-orange-900/30 border border-orange-500/35 hover:border-orange-400/50 glow-orange"
-                    : "from-teal-950/50 via-cyan-950/20 to-emerald-900/30 border border-teal-500/35 hover:border-teal-400/50 glow-emerald"
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <span className={`font-mono text-[8px] font-bold uppercase tracking-[0.2em] ${balance > 0 ? "text-orange-300" : "text-teal-300"}`}>Balance (Baki)</span>
-                    {balance > 0 ? <Weight className="w-4 h-4 text-orange-400" /> : <CheckCircle className="w-4 h-4 text-teal-400" />}
+                <div className={`bg-surface border p-5 md:p-6 flex flex-col justify-between rounded-xl ${balance > 0 ? "border-red-500/20" : "border-emerald-500/20"}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className={`font-mono text-[7px] font-bold uppercase tracking-[0.2em] ${balance > 0 ? "text-red-400" : "text-emerald-400"}`}>Balance (Baki / Pending)</span>
+                    {balance > 0 ? <Weight className="w-4 h-4 text-red-400" /> : <CheckCircle className="w-4 h-4 text-emerald-400" />}
                   </div>
-                  <div className="space-y-1 mt-4">
+                  <div>
                     <div className="flex items-baseline gap-2">
-                      <span className={`font-mono text-[9px] font-bold uppercase ${balance > 0 ? "text-orange-400/60" : "text-teal-400/60"}`}>Rs.</span>
-                      <span className={`font-display text-3xl md:text-4xl font-black tracking-tight ${balance > 0 ? "text-orange-100" : "text-teal-100"}`}>
+                      <span className={`font-mono text-[8px] font-bold uppercase ${balance > 0 ? "text-red-400/60" : "text-emerald-400/60"}`}>Rs.</span>
+                      <span className={`font-display text-2xl md:text-3xl font-black tracking-tight ${balance > 0 ? "text-red-400" : "text-emerald-400"}`}>
                         {Math.abs(balance).toLocaleString()}
                       </span>
-                      <span className={`font-mono text-[8px] font-bold uppercase ${balance > 0 ? "text-orange-400/60" : "text-teal-400/60"}`}>
-                        {balance >= 0 ? "Receivable" : "Excess"}
+                      <span className={`font-mono text-[8px] font-bold uppercase ${balance > 0 ? "text-red-400/60" : "text-emerald-400/60"}`}>
+                        {balance >= 0 ? "Pending" : "Excess Paid"}
                       </span>
                     </div>
                   </div>
@@ -482,207 +465,134 @@ export default function SupplierPortal({
           </>
         ) : activeTab === "deliveries" ? (
           <>
-            {/* Left Column: Deliveries Form */}
-            <div className="lg:col-span-5 space-y-8 md:space-y-12 animate-fade-in">
-              <div className="space-y-6 md:space-y-8">
-                <div className="flex items-center gap-4">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50 shrink-0">Add Delivery</span>
-                  <div className="h-px bg-ink-faint flex-1" />
+            {/* Add Stock Form */}
+            <div className="lg:col-span-12 space-y-8 animate-fade-in">
+              {successMessage && <div className="bg-emerald-custom/10 border border-emerald-custom/20 text-emerald-custom p-6 font-mono text-sm animate-fade-in rounded-lg">{successMessage}</div>}
+
+              <div className="bg-surface border border-ink-faint p-3 md:p-4 space-y-3 rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink/70 font-bold">Add Stock</span>
+                  <Weight className="w-4 h-4 text-ink/40" />
                 </div>
 
-                {successMessage && <div className="bg-emerald-custom/10 border border-emerald-custom/20 text-emerald-custom p-6 font-mono text-sm animate-fade-in rounded-lg">{successMessage}</div>}
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <span className="font-mono text-[7px] font-bold opacity-40 uppercase tracking-widest">Entry Date</span>
+                    <input type="date" required value={date} onChange={(e) => setDate(e.target.value)}
+                      className="w-full bg-bg/80 border border-ink-faint rounded px-3 py-2 font-mono text-xs focus:ring-1 focus:ring-accent outline-none appearance-none" />
+                  </div>
 
-                <form onSubmit={handleAddLog} className="space-y-10">
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-8">
-                      <div className="space-y-2">
-                        <label className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Effective Date</label>
-                        <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-surface border border-ink-faint px-4 py-3 text-xs focus:ring-1 focus:ring-accent outline-none font-mono rounded" />
+                  <div className="space-y-1">
+                    <span className="font-mono text-[7px] font-bold opacity-40 uppercase tracking-widest">Stock Category</span>
+                    {isNewCategory ? (
+                      <div className="animate-fade-in">
+                        <input type="text" required placeholder="CATEGORY_NAME" value={customCategoryName}
+                          onChange={(e) => { setCustomCategoryName(e.target.value); setCategory(e.target.value); }}
+                          className="w-full bg-bg/80 border border-accent/20 rounded px-3 py-2 font-mono text-xs text-accent outline-none appearance-none" />
+                        <div className="flex items-center gap-2 mt-2">
+                          <button type="button" onClick={() => { setWeightModalCat(customCategoryName.trim()); setWeightModalWeight(""); }}
+                            disabled={!customCategoryName.trim()}
+                            className="flex-1 bg-accent text-bg rounded-lg px-3 py-2 font-mono text-[8px] font-bold uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-30 cursor-pointer"
+                          >Add Weight →</button>
+                          <button type="button" onClick={() => { setIsNewCategory(false); setCategory(uniqueCategories[0] || ""); }}
+                            className="font-mono text-[7px] text-rose-400/60 hover:text-rose-400 uppercase tracking-widest"
+                          >Cancel</button>
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <label className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Supplier Name</label>
-                        {currentSupplier ? (
-                          <input 
-                            type="text" 
-                            disabled 
-                            value={currentSupplier.name} 
-                            className="w-full bg-surface border border-ink-faint px-4 py-3 text-xs font-mono font-bold uppercase outline-none rounded opacity-50 cursor-not-allowed" 
-                          />
-                        ) : (
-                          <div className="space-y-2">
-                            <div className="relative">
-                              <select
-                                value={isOtherSupplier ? "__OTHER__" : supplierName}
-                                onChange={(e) => handleSupplierNameChange(e.target.value)}
-                                className="w-full bg-surface border border-ink-faint px-4 py-3 text-xs font-mono font-bold uppercase outline-none rounded focus:ring-1 focus:ring-accent appearance-none cursor-pointer"
-                              >
-                                <option value="">-- SELECT SOURCE --</option>
-                                {suppliers.map(s => <option key={s.id} value={s.name}>{s.name.toUpperCase()}</option>)}
-                                <option value="Zeeshan Broiler">ZEESHAN BROILER</option>
-                                <option value="Sajid Poultry">SAJID POULTRY</option>
-                                <option value="__OTHER__">+ REGISTER_NEW_SOURCE</option>
-                              </select>
-                              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                                <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                              </div>
-                            </div>
-                            {isOtherSupplier && (
-                              <input 
-                                type="text" 
-                                required 
-                                placeholder="ENTER_SOURCE_NAME" 
-                                value={otherSupplierName} 
-                                onChange={(e) => setOtherSupplierName(e.target.value)} 
-                                className="w-full bg-accent/5 border border-accent/20 px-4 py-3 text-xs text-accent font-mono font-bold uppercase rounded outline-none focus:ring-1 focus:ring-accent" 
-                              />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Category</label>
-                      <div className="grid grid-cols-2 gap-1.5 mb-3">
+                    ) : (
+                      <div className="grid grid-cols-2 gap-1.5">
                         {uniqueCategories.map((cat) => {
                           const estimatedRate = getEstimatedRateForCategory(cat);
                           const isSelected = category === cat;
-                          const colorIdx = uniqueCategories.indexOf(cat) % 5;
-                          const cardThemes = [
-                            { bg: "from-teal-950/60 to-emerald-950/40", border: "border-teal-500/30", selected: "border-teal-400 ring-2 ring-teal-400/30", text: "text-teal-300" },
-                            { bg: "from-blue-950/60 to-indigo-950/40", border: "border-blue-500/30", selected: "border-blue-400 ring-2 ring-blue-400/30", text: "text-blue-300" },
-                            { bg: "from-purple-950/60 to-fuchsia-950/40", border: "border-purple-500/30", selected: "border-purple-400 ring-2 ring-purple-400/30", text: "text-purple-300" },
-                            { bg: "from-amber-950/60 to-orange-950/40", border: "border-amber-500/30", selected: "border-amber-400 ring-2 ring-amber-400/30", text: "text-amber-300" },
-                            { bg: "from-rose-950/60 to-pink-950/40", border: "border-rose-500/30", selected: "border-rose-400 ring-2 ring-rose-400/30", text: "text-rose-300" },
-                          ];
-                          const ct = cardThemes[colorIdx];
                           return (
-                            <button key={cat} type="button" onClick={() => setCategory(cat)}
-                              className={`bg-gradient-to-br ${ct.bg} border ${isSelected ? ct.selected : ct.border} p-2 rounded-lg text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] cursor-pointer ${isSelected ? "scale-[1.02]" : "opacity-70 hover:opacity-100"}`}>
-                              <span className={`font-mono text-[6px] font-bold uppercase tracking-widest block ${ct.text}`}>{cat.toUpperCase()}</span>
-                              <span className="font-mono text-[8px] font-black text-white leading-none">Rs.{estimatedRate}<span className="text-[6px] font-normal opacity-50">/KG</span></span>
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => { setWeightModalCat(cat); setWeightModalWeight(""); }}
+                              className={`bg-surface border ${isSelected ? "border-accent ring-2 ring-accent/20" : "border-ink-faint hover:border-ink/40"} p-2 md:p-3 rounded-xl text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] cursor-pointer ${isSelected ? "scale-[1.02]" : "opacity-70 hover:opacity-100"}`}
+                            >
+                              <span className="font-mono text-[9px] md:text-[10px] font-bold uppercase tracking-widest block text-ink/70 mb-1">{cat.toUpperCase()}</span>
+                              <span className="font-mono text-[11px] md:text-sm font-black text-ink leading-none">Rs.{estimatedRate}<span className="text-[8px] font-normal opacity-50">/KG</span></span>
                             </button>
                           );
                         })}
-                        <button type="button" onClick={() => setIsNewCategory(true)}
-                          className="bg-bg/40 border border-dashed border-ink-faint p-2 rounded-lg text-center transition-all hover:border-accent/40 hover:bg-accent/5 cursor-pointer flex flex-col items-center justify-center">
-                          <span className="font-mono text-[14px] font-bold text-accent/60 leading-none">+</span>
-                          <span className="font-mono text-[6px] font-bold uppercase tracking-widest text-accent/40">New</span>
+                        <button
+                          type="button"
+                          onClick={() => setIsNewCategory(true)}
+                          className="bg-bg/40 border border-dashed border-ink-faint p-2 md:p-3 rounded-xl text-center transition-all hover:border-accent/40 hover:bg-accent/5 cursor-pointer flex flex-col items-center justify-center min-h-[60px]"
+                        >
+                          <span className="font-mono text-[18px] font-bold text-accent/60 leading-none">+</span>
+                          <span className="font-mono text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-accent/40">New</span>
                         </button>
                       </div>
-                      <select value={isNewCategory ? "__CUSTOM_CAT__" : category} onChange={(e) => handleCategoryChange(e.target.value)} className="w-full bg-surface border border-ink-faint px-4 py-3 text-xs cursor-pointer appearance-none uppercase font-mono font-bold tracking-tight rounded outline-none focus:ring-1 focus:ring-accent">
-                        {uniqueCategories.map((cat) => {
-                          const estimatedRate = getEstimatedRateForCategory(cat);
-                          return <option key={cat} value={cat} className="bg-surface">{cat.toUpperCase()} (RS. {estimatedRate}/KG)</option>;
-                        })}
-                        <option value="__CUSTOM_CAT__" className="text-accent bg-surface">+ ADD_CUSTOM_CLASS</option>
-                      </select>
-                      {isNewCategory && <input type="text" required placeholder="Enter Category..." value={customCategoryName} onChange={(e) => { setCustomCategoryName(e.target.value); setCategory(e.target.value); }} className="w-full bg-accent/5 border border-accent/20 px-4 py-3 text-xs text-accent font-mono font-bold uppercase mt-2 rounded outline-none focus:ring-1 focus:ring-accent" />}
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Weight (KG)</label>
-                      <input type="number" step="0.01" min="0.1" required value={weightKg} onChange={(e) => setWeightKg(e.target.value)} className="w-full bg-surface border border-ink-faint px-4 py-4 text-2xl font-mono font-bold focus:ring-1 focus:ring-accent outline-none rounded" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Metadata / Annotations</label>
-                      <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full bg-surface border border-ink-faint px-4 py-3 text-xs font-mono opacity-50 focus:opacity-100 transition-all focus:ring-1 focus:ring-accent outline-none rounded" placeholder="Optional logistics notes..." />
-                    </div>
+                    )}
                   </div>
-
-                  {weightKg && supplyRate && (
-                    <div className="bg-surface border border-ink-faint border-l-4 border-l-accent p-8 space-y-4 rounded-lg relative overflow-hidden group">
-                      <div className="absolute top-0 right-0 p-4 opacity-5"><CheckCircle className="w-16 h-16" /></div>
-                      <span className="block font-mono text-[8px] font-bold text-accent uppercase tracking-widest">Computed Gross Value</span>
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-mono text-4xl font-bold tracking-tighter">Rs. {(parseFloat(weightKg) * parseFloat(supplyRate)).toLocaleString()}</span>
-                      </div>
-                      <span className="block font-mono text-[10px] opacity-20 uppercase tracking-widest">Audit Ref: L-{Date.now().toString().slice(-6)}</span>
-                    </div>
-                  )}
-
-                  <button type="submit" disabled={saving} className="w-full bg-accent text-bg font-mono font-bold py-5 rounded text-[10px] uppercase tracking-[0.3em] shadow-xl shadow-accent/10 hover:brightness-110 transition-all disabled:opacity-20 cursor-pointer">
-                    {saving ? "Processing Transaction..." : "Commit Logistics Entry"}
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            {/* Right Column: Deliveries Ledger */}
-            <div className="lg:col-span-7 space-y-12 animate-fade-in">
-              <div className="grid grid-cols-3 gap-8">
-                <div className="bg-surface border border-ink-faint p-8 space-y-4 rounded-lg">
-                  <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Daily Total Weight</span>
-                  <span className="block font-mono text-[26px] font-bold tracking-tighter">{totalTodayWeight.toLocaleString()} <span className="text-sm opacity-30 uppercase">KG</span></span>
-                </div>
-                <div className="bg-surface border border-ink-faint p-8 space-y-4 rounded-lg">
-                  <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Daily Total Value</span>
-                  <span className="block font-mono text-[26px] font-bold text-accent tracking-tighter">Rs. {totalTodayCost.toLocaleString()}</span>
-                </div>
-                <div className="bg-surface border border-ink-faint p-8 space-y-4 rounded-lg">
-                  <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Avg Rate / Kg</span>
-                  <span className="block font-mono text-[26px] font-bold text-emerald-400 tracking-tighter">Rs. {totalTodayWeight > 0 ? Math.round(totalTodayCost / totalTodayWeight).toLocaleString() : "0"} <span className="text-sm opacity-30 uppercase">/KG</span></span>
                 </div>
               </div>
 
-              <div className="space-y-8">
-                <div className="flex items-center gap-4">
-                  <span className="font-mono text-[9px] uppercase tracking-[0.2em] opacity-50 shrink-0">Daily Deliveries</span>
+              {/* Stock History */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-[9px] uppercase tracking-[0.2em] opacity-50 shrink-0">Stock History</span>
                   <div className="h-px bg-ink-faint flex-1" />
                 </div>
 
                 {todayLogs.length === 0 ? (
-                  <div className="py-32 text-center space-y-4 border border-dashed border-ink-faint rounded-lg">
-                    <span className="block font-mono text-[10px] font-bold uppercase tracking-widest opacity-20 italic">No entries recorded</span>
+                  <div className="py-12 text-center border border-dashed border-ink-faint rounded-lg">
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-widest opacity-20 italic">No entries recorded</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {todayLogs.map((log) => (
-                      <div key={log.id} className="bg-surface border border-ink-faint p-6 group hover:border-accent/30 transition-all rounded-lg relative">
-                        {editingLogId === log.id ? (
-                          <form onSubmit={handleUpdateLogSubmit} className="space-y-6 animate-fade-in">
-                            <div className="grid grid-cols-2 gap-6">
-                              <div className="space-y-1">
-                                <label className="font-mono text-[8px] uppercase opacity-30">Weight (KG)</label>
-                                <input type="number" step="0.01" value={editWeight} onChange={e => setEditWeight(e.target.value)} className="w-full bg-bg border border-ink-faint rounded px-3 py-2 text-xs font-mono focus:ring-1 focus:ring-accent outline-none" />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="font-mono text-[8px] uppercase opacity-30">Rate (PKR)</label>
-                                <input type="number" value={editRate} onChange={e => setEditRate(e.target.value)} className="w-full bg-bg border border-ink-faint rounded px-3 py-2 text-xs font-mono focus:ring-1 focus:ring-accent outline-none" />
-                              </div>
-                            </div>
-                            <div className="flex gap-6">
-                              <button onClick={() => setEditingLogId(null)} className="font-mono text-[8px] font-bold uppercase opacity-30 hover:opacity-100 transition-all">Cancel</button>
-                              <button type="submit" className="font-mono text-[8px] font-bold uppercase text-accent border-b border-accent">Save Changes</button>
-                            </div>
-                          </form>
-                        ) : (
-                          <div className="md:flex md:justify-between md:items-center">
-                            <div className="space-y-4">
-                              <div className="flex items-center gap-4">
-                                <span className="font-mono text-[9px] font-bold uppercase tracking-widest bg-bg border border-ink-faint px-3 py-1 rounded text-accent">{log.category?.toUpperCase() || "UNCLASSIFIED"}</span>
-                                <span className="font-mono text-xs opacity-50 truncate max-w-[200px] md:max-w-none">{log.notes}</span>
-                              </div>
-                              <div className="flex gap-8 font-mono text-[10px] font-bold opacity-30 uppercase">
-                                <span>Weight: {log.weightKg}kg</span>
-                                <span>Rate: Rs.{log.supplyRatePerKg}</span>
-                              </div>
-                            </div>
-                            <div className="mt-6 md:mt-0 flex items-center gap-8">
-                              <div className="text-right">
-                                <span className="block font-mono text-[8px] font-bold opacity-20 uppercase mb-1">Value</span>
-                                <span className="font-mono text-xl font-bold text-accent tracking-tighter">Rs.{log.totalCost.toLocaleString()}</span>
-                              </div>
-                              <div className="flex flex-col gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => startEditingLog(log)} className="opacity-30 hover:opacity-100 hover:text-accent transition-all"><RefreshCw className="w-3.5 h-3.5" /></button>
-                                <button onClick={() => { if (confirm("Delete this entry?")) onDeleteLog(log.id); }} className="opacity-30 hover:opacity-100 hover:text-accent transition-all"><X className="w-3.5 h-3.5" /></button>
-                              </div>
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-2">
+                    {todayLogs.map((log, idx) => {
+                      const catKey = (log.category || "UNCLASSIFIED").replace(/\s+/g, "_").toUpperCase();
+                      return (
+                        <div
+                          key={log.id}
+                          className={`bg-surface border border-ink-faint hover:border-ink/30 p-2.5 md:p-3 transition-all duration-300 flex flex-col justify-between rounded-2xl group cursor-pointer select-none active:scale-[0.96] relative overflow-hidden`}
+                          style={{ minHeight: "90px", WebkitTouchCallout: "none", userSelect: "none" as const }}
+                          onMouseDown={() => { weightEditStartRef.current = Date.now(); }}
+                          onMouseUp={() => { if (Date.now() - weightEditStartRef.current >= 300 && editingLogId !== log.id) { setWeightEditLog(log); setWeightEditValue(log.weightKg.toString()); } }}
+                          onTouchStart={() => { weightEditStartRef.current = Date.now(); }}
+                          onTouchEnd={() => { if (Date.now() - weightEditStartRef.current >= 300 && editingLogId !== log.id) { setWeightEditLog(log); setWeightEditValue(log.weightKg.toString()); } }}
+                        >
+                          <div className="flex items-start justify-between relative z-10">
+                            <span className="font-mono text-[7px] md:text-[8px] font-black uppercase tracking-widest text-ink/70 opacity-80">
+                              {catKey}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); startEditingLog(log); }}
+                                className="opacity-0 group-hover:opacity-60 hover:opacity-100 transition-all p-0.5"
+                              >
+                                <RefreshCw className="w-3 h-3 text-ink/50" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); if (confirm("Delete this entry?")) onDeleteLog(log.id); }}
+                                className="text-rose-400 opacity-0 group-hover:opacity-60 hover:opacity-100 transition-all p-0.5"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
                             </div>
                           </div>
-                        )}
-                      </div>
-                    ))}
+
+                          <div className="space-y-1 relative z-10">
+                            <div className="flex items-baseline gap-1 mt-1">
+                              <span className="font-mono text-[11px] md:text-sm font-black leading-none text-ink">{log.weightKg}</span>
+                              <span className="font-mono text-[7px] font-bold uppercase text-ink/50 opacity-60">KG</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between relative z-10">
+                            <div className="flex items-baseline gap-1">
+                              <span className="font-mono text-[7px] font-bold uppercase text-ink/50">Rs.</span>
+                              <span className="font-mono text-sm md:text-base font-black text-ink">{log.totalCost.toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -691,8 +601,8 @@ export default function SupplierPortal({
         ) : activeTab === "payments" ? (
           <>
             {/* Left Column: Payments Form */}
-            <div className="lg:col-span-5 space-y-8 md:space-y-12 animate-fade-in">
-              <div className="space-y-6 md:space-y-8">
+            <div className="lg:col-span-5 space-y-4 md:space-y-6 animate-fade-in">
+              <div className="space-y-4 md:space-y-4">
                 <div className="flex items-center gap-4">
                   <span className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50 shrink-0">Add Payment Received</span>
                   <div className="h-px bg-ink-faint flex-1" />
@@ -700,52 +610,12 @@ export default function SupplierPortal({
 
                 {successMessage && <div className="bg-emerald-custom/10 border border-emerald-custom/20 text-emerald-custom p-6 font-mono text-sm animate-fade-in rounded-lg">{successMessage}</div>}
 
-                <form onSubmit={handleAddPaymentSubmit} className="space-y-10">
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-8">
+                <form onSubmit={handleAddPaymentSubmit} className="space-y-5">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Effective Date</label>
                         <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-surface border border-ink-faint px-4 py-3 text-xs focus:ring-1 focus:ring-accent outline-none font-mono rounded" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Supplier Name</label>
-                        {currentSupplier ? (
-                          <input 
-                            type="text" 
-                            disabled 
-                            value={currentSupplier.name} 
-                            className="w-full bg-surface border border-ink-faint px-4 py-3 text-xs font-mono font-bold uppercase outline-none rounded opacity-50 cursor-not-allowed" 
-                          />
-                        ) : (
-                          <div className="space-y-2">
-                            <div className="relative">
-                              <select
-                                value={isOtherSupplier ? "__OTHER__" : supplierName}
-                                onChange={(e) => handleSupplierNameChange(e.target.value)}
-                                className="w-full bg-surface border border-ink-faint px-4 py-3 text-xs font-mono font-bold uppercase outline-none rounded focus:ring-1 focus:ring-accent appearance-none cursor-pointer"
-                              >
-                                <option value="">-- SELECT SOURCE --</option>
-                                {suppliers.map(s => <option key={s.id} value={s.name}>{s.name.toUpperCase()}</option>)}
-                                <option value="Zeeshan Broiler">ZEESHAN BROILER</option>
-                                <option value="Sajid Poultry">SAJID POULTRY</option>
-                                <option value="__OTHER__">+ REGISTER_NEW_SOURCE</option>
-                              </select>
-                              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                                <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                              </div>
-                            </div>
-                            {isOtherSupplier && (
-                              <input 
-                                type="text" 
-                                required 
-                                placeholder="ENTER_SOURCE_NAME" 
-                                value={otherSupplierName} 
-                                onChange={(e) => setOtherSupplierName(e.target.value)} 
-                                className="w-full bg-accent/5 border border-accent/20 px-4 py-3 text-xs text-accent font-mono font-bold uppercase rounded outline-none focus:ring-1 focus:ring-accent" 
-                              />
-                            )}
-                          </div>
-                        )}
                       </div>
                     </div>
 
@@ -760,7 +630,7 @@ export default function SupplierPortal({
                     </div>
                   </div>
 
-                  <button type="submit" disabled={paySaving} className="w-full bg-accent text-bg font-mono font-bold py-5 rounded text-[10px] uppercase tracking-[0.3em] shadow-xl shadow-accent/10 hover:brightness-110 transition-all disabled:opacity-20 cursor-pointer">
+                  <button type="submit" disabled={paySaving} className="w-full bg-accent text-bg font-mono font-bold py-3.5 rounded text-[10px] uppercase tracking-[0.3em] shadow-xl shadow-accent/10 hover:brightness-110 transition-all disabled:opacity-20 cursor-pointer">
                     {paySaving ? "Saving Payment..." : "Record Payment Entry"}
                   </button>
                 </form>
@@ -768,16 +638,16 @@ export default function SupplierPortal({
             </div>
 
             {/* Right Column: Payments Ledger */}
-            <div className="lg:col-span-7 space-y-12 animate-fade-in">
-              <div className="grid grid-cols-1 gap-8">
-                <div className="bg-surface border border-ink-faint p-8 space-y-4 rounded-lg">
+            <div className="lg:col-span-7 space-y-6 animate-fade-in">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="bg-surface border border-ink-faint p-5 space-y-3 rounded-lg">
                   <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Daily Total Payments Received</span>
-                  <span className="block font-mono text-4xl font-bold text-emerald-custom tracking-tighter">Rs. {totalTodayPayments.toLocaleString()}</span>
+                  <span className="block font-mono text-4xl font-bold text-emerald-400 tracking-tighter">Rs. {totalTodayPayments.toLocaleString()}</span>
                 </div>
               </div>
 
-              <div className="space-y-8">
-                <div className="flex items-center gap-4">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
                   <span className="font-mono text-[9px] uppercase tracking-[0.2em] opacity-50 shrink-0">Daily Payments</span>
                   <div className="h-px bg-ink-faint flex-1" />
                 </div>
@@ -787,9 +657,9 @@ export default function SupplierPortal({
                     <span className="block font-mono text-[10px] font-bold uppercase tracking-widest opacity-20 italic">No payments recorded for this date</span>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     {todayPayments.map((pay) => (
-                      <div key={pay.id} className="bg-surface border border-ink-faint p-6 group hover:border-accent/30 transition-all rounded-lg relative">
+                      <div key={pay.id} className="bg-surface border border-ink-faint p-4 group hover:border-accent/30 transition-all rounded-lg relative">
                         {editingPaymentId === pay.id ? (
                           <form onSubmit={handleUpdatePaymentSubmit} className="space-y-6 animate-fade-in">
                             <div className="grid grid-cols-1 gap-6">
@@ -811,14 +681,14 @@ export default function SupplierPortal({
                           <div className="md:flex md:justify-between md:items-center">
                             <div className="space-y-4">
                               <div className="flex items-center gap-4">
-                                <span className="font-mono text-[9px] font-bold uppercase tracking-widest bg-bg border border-emerald-custom/20 text-emerald-custom px-3 py-1 rounded">CASH RECEIVED</span>
+                                <span className="font-mono text-[9px] font-bold uppercase tracking-widest bg-bg border border-emerald-500/20 text-emerald-400 px-3 py-1 rounded">CASH RECEIVED</span>
                                 <span className="font-mono text-xs opacity-50 truncate max-w-[200px] md:max-w-none">{pay.notes}</span>
                               </div>
                             </div>
                             <div className="mt-6 md:mt-0 flex items-center gap-8">
                               <div className="text-right">
                                 <span className="block font-mono text-[8px] font-bold opacity-20 uppercase mb-1">Amount</span>
-                                <span className="font-mono text-xl font-bold text-emerald-custom tracking-tighter">Rs. {pay.amountPaid.toLocaleString()}</span>
+                                <span className="font-mono text-xl font-bold text-emerald-400 tracking-tighter">Rs. {pay.amountPaid.toLocaleString()}</span>
                               </div>
                               <div className="flex flex-col gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button onClick={() => startEditingPayment(pay)} className="opacity-30 hover:opacity-100 hover:text-accent transition-all"><RefreshCw className="w-3.5 h-3.5" /></button>
@@ -861,8 +731,8 @@ export default function SupplierPortal({
       </div>
 
       {/* Footer */}
-      <footer className="bg-surface border-t border-ink-faint py-6 px-8 mt-auto">
-        <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-6">
+        <footer className="bg-surface border-t border-ink-faint py-3 px-4 mt-auto">
+        <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-3">
           <div className="font-mono text-[9px] text-ink/40 uppercase tracking-[0.2em]">
             Supplier Portal &copy; {new Date().getFullYear()}
           </div>
@@ -874,57 +744,57 @@ export default function SupplierPortal({
       </div>
 
       {/* Mobile Bottom Navigation Bar for Supplier Portal */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-ink-faint grid grid-cols-3 py-3 z-40 shadow-[0_-8px_20px_rgba(0,0,0,0.3)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-ink-faint grid grid-cols-3 py-2 z-40">
         <button
           onClick={() => setActiveTab("dashboard")}
           className={`flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-300 transform ${
             activeTab === "dashboard" 
-              ? "text-purple-500 scale-112 font-bold opacity-100" 
-              : "text-ink/40 hover:text-purple-400 hover:scale-105"
+              ? "text-accent scale-112 font-bold opacity-100" 
+              : "text-ink/40 hover:text-ink/70 hover:scale-105"
           }`}
         >
           <div className={`p-2.5 rounded-xl transition-all duration-300 ${
             activeTab === 'dashboard' 
-              ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-md shadow-purple-500/20 ring-2 ring-purple-500/20' 
-              : 'bg-purple-500/5 text-purple-400/60 hover:bg-purple-500/10'
+              ? 'bg-accent text-bg' 
+              : 'bg-ink-faint/10 text-ink/50 hover:bg-ink-faint/20'
           }`}>
             <LayoutDashboard className={`w-5 h-5 transition-transform ${activeTab === 'dashboard' ? 'stroke-[2.5px] scale-110' : ''}`} />
           </div>
-          <span className={`text-[9px] font-mono font-bold uppercase tracking-widest ${activeTab === 'dashboard' ? 'text-purple-500' : 'text-ink/50'}`}>Dashboard</span>
+          <span className={`text-[9px] font-mono font-bold uppercase tracking-widest ${activeTab === 'dashboard' ? 'text-accent' : 'text-ink/50'}`}>Dashboard</span>
         </button>
         <button
           onClick={() => setActiveTab("deliveries")}
           className={`flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-300 transform ${
             activeTab === "deliveries" 
-              ? "text-orange-500 scale-112 font-bold opacity-100" 
-              : "text-ink/40 hover:text-orange-400 hover:scale-105"
+              ? "text-accent scale-112 font-bold opacity-100" 
+              : "text-ink/40 hover:text-ink/70 hover:scale-105"
           }`}
         >
           <div className={`p-2.5 rounded-xl transition-all duration-300 ${
             activeTab === 'deliveries' 
-              ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-bg shadow-md shadow-orange-500/20 ring-2 ring-orange-500/20' 
-              : 'bg-orange-500/5 text-orange-400/60 hover:bg-orange-500/10'
+              ? 'bg-accent text-bg' 
+              : 'bg-ink-faint/10 text-ink/50 hover:bg-ink-faint/20'
           }`}>
             <Weight className={`w-5 h-5 transition-transform ${activeTab === 'deliveries' ? 'stroke-[2.5px] scale-110' : ''}`} />
           </div>
-          <span className={`text-[9px] font-mono font-bold uppercase tracking-widest ${activeTab === 'deliveries' ? 'text-orange-500' : 'text-ink/50'}`}>Deliveries</span>
+          <span className={`text-[9px] font-mono font-bold uppercase tracking-widest ${activeTab === 'deliveries' ? 'text-accent' : 'text-ink/50'}`}>Deliveries</span>
         </button>
         <button
           onClick={() => setActiveTab("payments")}
           className={`flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-300 transform ${
             activeTab === "payments" 
-              ? "text-emerald-500 scale-112 font-bold opacity-100" 
-              : "text-ink/40 hover:text-emerald-400 hover:scale-105"
+              ? "text-accent scale-112 font-bold opacity-100" 
+              : "text-ink/40 hover:text-ink/70 hover:scale-105"
           }`}
         >
           <div className={`p-2.5 rounded-xl transition-all duration-300 ${
             activeTab === 'payments' 
-              ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/20 ring-2 ring-emerald-500/20' 
-              : 'bg-emerald-500/5 text-emerald-400/60 hover:bg-emerald-500/10'
+              ? 'bg-accent text-bg' 
+              : 'bg-ink-faint/10 text-ink/50 hover:bg-ink-faint/20'
           }`}>
             <CreditCard className={`w-5 h-5 transition-transform ${activeTab === 'payments' ? 'stroke-[2.5px] scale-110' : ''}`} />
           </div>
-          <span className={`text-[9px] font-mono font-bold uppercase tracking-widest ${activeTab === 'payments' ? 'text-emerald-500' : 'text-ink/50'}`}>Payments</span>
+          <span className={`text-[9px] font-mono font-bold uppercase tracking-widest ${activeTab === 'payments' ? 'text-accent' : 'text-ink/50'}`}>Payments</span>
         </button>
       </nav>
 
@@ -953,6 +823,112 @@ export default function SupplierPortal({
                 <button type="submit" className="flex-1 py-4 bg-accent text-bg font-mono text-[10px] font-bold uppercase tracking-widest shadow-xl shadow-accent/20 rounded hover:brightness-110 transition-colors">Submit</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Weight Edit Modal */}
+      {weightEditLog && (
+        <div className="fixed inset-0 bg-bg/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in" onClick={() => setWeightEditLog(null)}>
+          <div className="bg-surface border border-ink-faint rounded-xl p-5 w-full max-w-xs shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent">Edit Weight</span>
+              <button onClick={() => setWeightEditLog(null)} className="p-1 hover:bg-ink-faint rounded transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="space-y-1">
+              <span className="font-mono text-[8px] font-bold opacity-40 uppercase tracking-widest">Weight (KG)</span>
+              <input type="number" step="0.01" value={weightEditValue} onChange={e => setWeightEditValue(e.target.value)} className="w-full bg-bg border border-ink-faint rounded px-3 py-3 font-mono text-2xl font-bold text-ink focus:ring-1 focus:ring-accent outline-none" autoFocus />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setWeightEditLog(null)} className="flex-1 py-2.5 font-mono text-[9px] font-bold uppercase tracking-widest opacity-40 hover:opacity-100 transition-all cursor-pointer">Cancel</button>
+              <button onClick={async () => {
+                const w = parseFloat(weightEditValue);
+                if (isNaN(w) || w <= 0) return;
+                try {
+                  await onUpdateLog(weightEditLog.id, { weightKg: w, totalCost: w * weightEditLog.supplyRatePerKg });
+                  setWeightEditLog(null);
+                } catch (e) { console.error(e); }
+              }} className="flex-1 py-2.5 bg-accent text-bg font-mono text-[9px] font-bold uppercase tracking-widest rounded hover:brightness-110 transition-all cursor-pointer">Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Weight Entry Modal (category click) */}
+      {weightModalCat && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in" onClick={() => setWeightModalCat(null)}>
+          <div className="bg-surface border border-ink-faint rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent">{weightModalCat}</span>
+                <button type="button" onClick={() => setWeightModalCat(null)} className="opacity-40 hover:opacity-100 transition-all">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </div>
+              <div>
+                <span className="font-mono text-[7px] font-bold opacity-40 uppercase tracking-widest block mb-1">Net Weight (KG)</span>
+                <input
+                  type="number" step="0.01" min="0.1" required
+                  placeholder="00.00"
+                  value={weightModalWeight}
+                  onChange={(e) => setWeightModalWeight(e.target.value)}
+                  className="w-full bg-bg/80 border border-ink-faint rounded px-4 py-4 font-mono text-3xl font-bold text-ink focus:ring-1 focus:ring-accent outline-none appearance-none"
+                  autoFocus
+                />
+              </div>
+              {weightModalWeight && parseFloat(weightModalWeight) > 0 && (
+                <div className="bg-bg/60 border border-ink-faint rounded-xl p-4 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono text-[8px] opacity-40 uppercase tracking-widest">Rate</span>
+                    <span className="font-mono text-sm font-bold text-ink">Rs. {getEstimatedRateForCategory(weightModalCat!).toLocaleString()}/KG</span>
+                  </div>
+                  <div className="flex justify-between items-center border-t border-ink-faint/40 pt-2">
+                    <span className="font-mono text-[8px] opacity-40 uppercase tracking-widest">Total Raqam</span>
+                    <span className="font-display text-xl font-black text-accent">Rs. {(parseFloat(weightModalWeight) * getEstimatedRateForCategory(weightModalCat!)).toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
+              <div className="text-right space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setWeightModalCat(null)}
+                  className="px-4 py-2 font-mono text-[9px] uppercase tracking-widest opacity-40 hover:opacity-80"
+                >Cancel</button>
+                <button
+                  type="button"
+                  disabled={weightModalSaving || !weightModalWeight || parseFloat(weightModalWeight) <= 0}
+                  onClick={async () => {
+                    const w = parseFloat(weightModalWeight);
+                    if (!weightModalCat || isNaN(w) || w <= 0) return;
+                    setWeightModalSaving(true);
+                    try {
+                      const rate = getEstimatedRateForCategory(weightModalCat);
+                      await onAddLog({
+                        date,
+                        weightKg: w,
+                        supplyRatePerKg: rate,
+                        totalCost: w * rate,
+                        category: weightModalCat,
+                        notes: "",
+                        supplierId: currentSupplier?.id || "",
+                      });
+                      setWeightModalCat(null);
+                      setWeightModalWeight("");
+                    } catch (err) {
+                      console.error(err);
+                      alert("Failed to save.");
+                    } finally {
+                      setWeightModalSaving(false);
+                    }
+                  }}
+                  className="px-6 py-2 bg-accent text-bg rounded-lg font-mono text-[9px] font-bold uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-30 cursor-pointer"
+                >
+                  {weightModalSaving ? "Saving..." : "Save"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

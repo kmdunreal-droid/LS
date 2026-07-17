@@ -110,42 +110,42 @@ export default function ExpensesTab({ expenses, onAddExpense, onUpdateExpense, o
       {/* Header with 3 Stats - Responsive */}
       <div className="grid grid-cols-3 gap-2 md:gap-6">
         {/* Total Outflow - Red / Rose */}
-        <div className="bg-gradient-to-br from-rose-950/50 via-red-950/20 to-rose-900/30 border border-rose-500/35 p-3 sm:p-5 md:p-6 flex flex-col justify-between h-28 sm:h-32 md:h-36 rounded-2xl shadow-[0_8px_30px_rgba(244,63,94,0.12)] hover:border-rose-400/50 transition-all duration-300 glow-rose">
+        <div className="bg-surface border border-ink-faint p-3 sm:p-5 md:p-6 flex flex-col justify-between h-28 sm:h-32 md:h-36 rounded-2xl hover:border-ink/40 transition-all duration-300">
           <div className="flex justify-between items-center">
-            <span className="font-mono text-[7px] md:text-[9px] font-bold uppercase tracking-[0.2em] text-rose-300">Total Outflow</span>
-            <Coins className="w-3 h-3 sm:w-4 sm:h-4 text-rose-400" />
+            <span className="font-mono text-[7px] md:text-[9px] font-bold uppercase tracking-[0.2em] text-ink/70">Total Outflow</span>
+            <Coins className="w-3 h-3 sm:w-4 sm:h-4 text-ink/50" />
           </div>
           <div className="flex items-baseline gap-0.5 sm:gap-2">
-            <span className="font-mono text-[7px] sm:text-[10px] font-bold text-rose-400/60 uppercase">Rs.</span>
-            <span className="font-display text-xs sm:text-2xl md:text-4xl font-black text-rose-100 tracking-tight truncate">
+            <span className="font-mono text-[7px] sm:text-[10px] font-bold text-ink/50 uppercase">Rs.</span>
+            <span className="font-display text-xs sm:text-2xl md:text-4xl font-black text-ink tracking-tight truncate">
               {totalExpenses.toLocaleString()}
             </span>
           </div>
         </div>
 
         {/* Today's Cost - Orange / Flame */}
-        <div className="bg-gradient-to-br from-orange-950/50 via-amber-950/20 to-orange-900/30 border border-orange-500/35 p-3 sm:p-5 md:p-6 flex flex-col justify-between h-28 sm:h-32 md:h-36 rounded-2xl shadow-[0_8px_30px_rgba(249,115,22,0.12)] hover:border-orange-400/50 transition-all duration-300 glow-orange">
+        <div className="bg-surface border border-ink-faint p-3 sm:p-5 md:p-6 flex flex-col justify-between h-28 sm:h-32 md:h-36 rounded-2xl hover:border-ink/40 transition-all duration-300">
           <div className="flex justify-between items-center">
-            <span className="font-mono text-[7px] md:text-[9px] font-bold uppercase tracking-[0.2em] text-orange-300">Today's Cost</span>
-            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-orange-500 animate-ping" />
+            <span className="font-mono text-[7px] md:text-[9px] font-bold uppercase tracking-[0.2em] text-ink/70">Today's Cost</span>
+            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-ink-faint animate-ping" />
           </div>
           <div className="flex items-baseline gap-0.5 sm:gap-2">
-            <span className="font-mono text-[7px] sm:text-[10px] font-bold text-orange-400/60 uppercase">Rs.</span>
-            <span className="font-display text-xs sm:text-2xl md:text-4xl font-black text-orange-300 tracking-tight truncate">
+            <span className="font-mono text-[7px] sm:text-[10px] font-bold text-ink/50 uppercase">Rs.</span>
+            <span className="font-display text-xs sm:text-2xl md:text-4xl font-black text-ink/70 tracking-tight truncate">
               {todayExpenses.toLocaleString()}
             </span>
           </div>
         </div>
 
         {/* Daily Average - Magic Purple */}
-        <div className="bg-gradient-to-br from-purple-950/50 via-fuchsia-950/20 to-purple-900/30 border border-purple-500/35 p-3 sm:p-5 md:p-6 flex flex-col justify-between h-28 sm:h-32 md:h-36 rounded-2xl shadow-[0_8px_30px_rgba(168,85,247,0.12)] hover:border-purple-400/50 transition-all duration-300 glow-purple">
+        <div className="bg-surface border border-ink-faint p-3 sm:p-5 md:p-6 flex flex-col justify-between h-28 sm:h-32 md:h-36 rounded-2xl hover:border-ink/40 transition-all duration-300">
           <div className="flex justify-between items-center">
-            <span className="font-mono text-[7px] md:text-[9px] font-bold uppercase tracking-[0.2em] text-purple-300">Daily Average</span>
-            <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400" />
+            <span className="font-mono text-[7px] md:text-[9px] font-bold uppercase tracking-[0.2em] text-ink/70">Daily Average</span>
+            <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4 text-ink/50" />
           </div>
           <div className="flex items-baseline gap-0.5 sm:gap-2">
-            <span className="font-mono text-[7px] sm:text-[10px] font-bold text-purple-400/60 uppercase">Rs.</span>
-            <span className="font-display text-xs sm:text-2xl md:text-4xl font-black text-purple-100 tracking-tight truncate">
+            <span className="font-mono text-[7px] sm:text-[10px] font-bold text-ink/50 uppercase">Rs.</span>
+            <span className="font-display text-xs sm:text-2xl md:text-4xl font-black text-ink tracking-tight truncate">
               {avgDailyExpense.toLocaleString()}
             </span>
           </div>

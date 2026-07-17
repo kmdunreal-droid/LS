@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FormulaSettings, Order, OrderItem, ItemFormula } from "../types";
-import { ShoppingCart, User, Plus, Minus, Trash2, CheckCircle2, AlertCircle, TrendingUp, Sparkles, RefreshCw, Scale, Weight, Flame, Info } from "lucide-react";
+import { ShoppingCart, User, Plus, Minus, Trash2, CheckCircle2, AlertCircle, TrendingUp, Sparkles, RefreshCw, Scale, Weight, Info } from "lucide-react";
 import { evaluate } from "mathjs";
 
 interface POSTabProps {
@@ -20,8 +20,6 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
   const [successMsg, setSuccessMsg] = useState("");
 
   const [customBaseRate, setCustomBaseRate] = useState<number>(settings.baseRawRate);
-  const [updatingRate, setUpdatingRate] = useState(false);
-  const [rateSuccessMsg, setRateSuccessMsg] = useState("");
 
   // Weight Calculator states
   const [isWeightModalOpen, setIsWeightModalOpen] = useState(false);
@@ -40,39 +38,54 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
   const [savingFormula, setSavingFormula] = useState(false);
   const [longPressActionItem, setLongPressActionItem] = useState<any | null>(null);
   const [deletingFormula, setDeletingFormula] = useState(false);
-  const longPressTimeoutRef = React.useRef<any>(null);
+  const pressTimeoutRef = React.useRef<any>(null);
+  const pressStartTimeRef = React.useRef<number>(0);
   const isLongPressRef = React.useRef<boolean>(false);
+  const isShortTapRef = React.useRef<boolean>(false);
 
   const handleButtonPressStart = (item: any) => {
     isLongPressRef.current = false;
-    if (longPressTimeoutRef.current) clearTimeout(longPressTimeoutRef.current);
+    isShortTapRef.current = false;
+    pressStartTimeRef.current = Date.now();
+    if (pressTimeoutRef.current) clearTimeout(pressTimeoutRef.current);
     
-    longPressTimeoutRef.current = setTimeout(() => {
+    // Long press (3s) → formula edit/delete modal
+    pressTimeoutRef.current = setTimeout(() => {
       isLongPressRef.current = true;
       setLongPressActionItem(item);
-    }, 1500); // Trigger after 1.5 seconds of holding (optimized for reliable touch feel)
+    }, 3000);
+
+    // Short hold (300ms) → open weight modal
+    setTimeout(() => {
+      if (!isLongPressRef.current && !isShortTapRef.current) {
+        isShortTapRef.current = true;
+      }
+    }, 300);
   };
 
   const handleButtonPressEnd = (e: React.MouseEvent | React.TouchEvent, item: any) => {
-    if (longPressTimeoutRef.current) {
-      clearTimeout(longPressTimeoutRef.current);
-      longPressTimeoutRef.current = null;
+    const elapsed = Date.now() - pressStartTimeRef.current;
+    
+    if (pressTimeoutRef.current) {
+      clearTimeout(pressTimeoutRef.current);
+      pressTimeoutRef.current = null;
     }
     
     if (isLongPressRef.current) {
       e.preventDefault();
       e.stopPropagation();
-    } else {
-      // Normal click
+    } else if (elapsed >= 300) {
+      // Pressed for at least 300ms → open weight modal
       setSelectedCalcItem(item);
       setModalWeight(1.0);
     }
+    // Less than 300ms → ignore (accidental tap)
   };
 
   const handleButtonPressCancel = () => {
-    if (longPressTimeoutRef.current) {
-      clearTimeout(longPressTimeoutRef.current);
-      longPressTimeoutRef.current = null;
+    if (pressTimeoutRef.current) {
+      clearTimeout(pressTimeoutRef.current);
+      pressTimeoutRef.current = null;
     }
   };
 
@@ -117,25 +130,6 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
     } catch (err) {
       console.error("Price Eval error:", err);
       return 0;
-    }
-  };
-
-  const handleUpdateGlobalRate = async () => {
-    if (!onSaveSettings) return;
-    setUpdatingRate(true);
-    try {
-      const updatedSettings: FormulaSettings = {
-        ...settings,
-        baseRawRate: customBaseRate,
-      };
-      await onSaveSettings(updatedSettings);
-      setRateSuccessMsg("Base rate updated successfully! ✨");
-      setTimeout(() => setRateSuccessMsg(""), 3000);
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred while saving the rate.");
-    } finally {
-      setUpdatingRate(false);
     }
   };
 
@@ -239,44 +233,11 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-ink-faint pb-2">
               <span className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50 shrink-0">Grill Menu Selection</span>
               <span className="font-mono text-[8px] md:text-[9px] text-accent/80 bg-accent/5 px-2 py-0.5 rounded italic flex items-center gap-1 self-start sm:self-auto">
-                💡 Tip: Kisi bhi item ko 2 second dba kar rakhain us ka formula edit karne ke liye.
+                💡 Tip: Kisi bhi item ko 3 second dba kar rakhain us ka formula edit karne ke liye.
               </span>
             </div>
 
-            {/* Live Chicken Supply Price Controller */}
-            <div className="bg-gradient-to-br from-orange-950/40 via-orange-900/10 to-amber-950/30 border border-orange-500/35 p-5 md:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 md:gap-6 rounded-2xl glow-orange">
-              <div className="flex items-center gap-4 w-full sm:w-auto">
-                <div className="p-3 bg-orange-500/15 text-orange-400 rounded-xl">
-                  <Flame className="w-5 h-5 animate-pulse" />
-                </div>
-                <div className="space-y-0.5">
-                  <span className="block font-mono text-[10px] uppercase tracking-widest text-orange-300 font-bold leading-tight">Chicken Rate / Kg</span>
-                  <span className="block font-mono text-[11px] font-bold text-orange-400/60 leading-tight">Syncs across items</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 w-full sm:w-auto">
-                <div className="relative flex-1 sm:flex-initial">
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 font-mono text-sm font-bold text-orange-400/40">Rs.</span>
-                  <input
-                    type="number"
-                    value={customBaseRate || ""}
-                    onChange={(e) => setCustomBaseRate(Number(e.target.value))}
-                    className="w-full sm:w-32 bg-transparent border-b border-orange-500/40 rounded-none pl-8 pr-2 py-2 text-xl font-mono font-black text-orange-400 focus:outline-none focus:border-orange-400 transition-all"
-                    placeholder="000"
-                  />
-                </div>
-                {onSaveSettings && (
-                  <button
-                    type="button"
-                    onClick={handleUpdateGlobalRate}
-                    disabled={updatingRate || customBaseRate === settings.baseRawRate || !customBaseRate}
-                    className="font-mono text-[9px] font-bold uppercase tracking-widest px-4 py-2 border-2 border-orange-500/40 bg-orange-500/10 text-orange-300 rounded-lg hover:bg-orange-500 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer shadow-lg shadow-orange-500/10"
-                  >
-                    {updatingRate ? "Syncing..." : "Update"}
-                  </button>
-                )}
-              </div>
-            </div>
+
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5 md:gap-4">
               {menuItems.map((item, idx) => {
@@ -284,11 +245,11 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
                 
                 // Color mapping for a highly colorful experience
                 const colorPalettes = [
-                  { bg: "from-blue-950/50 via-blue-900/10 to-indigo-950/30", border: "border-blue-500/30 hover:border-blue-400/60 shadow-[0_4px_20px_rgba(59,130,246,0.1)]", glow: "glow-blue", labelText: "text-blue-300", accentText: "text-blue-400" },
-                  { bg: "from-emerald-950/50 via-emerald-900/10 to-teal-950/30", border: "border-emerald-500/30 hover:border-emerald-400/60 shadow-[0_4px_20px_rgba(16,185,129,0.1)]", glow: "glow-emerald", labelText: "text-emerald-300", accentText: "text-emerald-400" },
-                  { bg: "from-purple-950/50 via-purple-900/10 to-fuchsia-950/30", border: "border-purple-500/30 hover:border-purple-400/60 shadow-[0_4px_20px_rgba(168,85,247,0.1)]", glow: "glow-purple", labelText: "text-purple-300", accentText: "text-purple-400" },
-                  { bg: "from-amber-950/50 via-orange-900/10 to-amber-950/30", border: "border-amber-500/30 hover:border-amber-400/60 shadow-[0_4px_20px_rgba(245,158,11,0.1)]", glow: "glow-orange", labelText: "text-amber-300", accentText: "text-amber-400" },
-                  { bg: "from-rose-950/50 via-rose-900/10 to-pink-950/30", border: "border-rose-500/30 hover:border-rose-400/60 shadow-[0_4px_20px_rgba(244,63,94,0.1)]", glow: "glow-rose", labelText: "text-rose-300", accentText: "text-rose-400" }
+                  { bg: "", border: "border-ink-faint hover:border-ink/30", glow: "", labelText: "text-ink/70", accentText: "text-ink/50" },
+                  { bg: "", border: "border-ink-faint hover:border-ink/30", glow: "", labelText: "text-ink/70", accentText: "text-ink/50" },
+                  { bg: "", border: "border-ink-faint hover:border-ink/30", glow: "", labelText: "text-ink/70", accentText: "text-ink/50" },
+                  { bg: "", border: "border-ink-faint hover:border-ink/30", glow: "", labelText: "text-ink/70", accentText: "text-ink/50" },
+                  { bg: "", border: "border-ink-faint hover:border-ink/30", glow: "", labelText: "text-ink/70", accentText: "text-ink/50" }
                 ];
                 
                 const theme = colorPalettes[idx % colorPalettes.length];
@@ -302,7 +263,7 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
                     onMouseLeave={handleButtonPressCancel}
                     onTouchStart={() => handleButtonPressStart(item)}
                     onTouchEnd={(e) => handleButtonPressEnd(e, item)}
-                    className={`bg-gradient-to-br ${theme.bg} border ${theme.border} ${theme.glow} p-4 md:p-6 text-left transition-all duration-300 flex flex-col justify-between h-28 md:h-36 rounded-2xl group cursor-pointer select-none active:scale-[0.96]`}
+                    className={`bg-surface border ${theme.border} p-4 md:p-6 text-left transition-all duration-300 flex flex-col justify-between h-28 md:h-36 rounded-2xl group cursor-pointer select-none active:scale-[0.96]`}
                     style={{ WebkitTouchCallout: "none", userSelect: "none" }}
                   >
                     <span className={`font-mono text-[8px] md:text-[9px] font-black uppercase tracking-widest ${theme.labelText} opacity-80 group-hover:opacity-100 transition-all`}>
@@ -326,20 +287,20 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
 
         {/* Right Side: Order Receipt Cart */}
         <div className="lg:col-span-5">
-          <div className="bg-gradient-to-br from-indigo-950/40 via-purple-950/10 to-pink-950/30 border border-purple-500/35 p-6 md:p-8 sticky top-12 space-y-6 md:space-y-10 rounded-2xl glow-purple shadow-xl">
+          <div className="bg-surface border border-ink-faint p-6 md:p-8 sticky top-12 space-y-6 md:space-y-10 rounded-2xl">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-purple-300 font-bold">Active Order Sheet</span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink/70 font-bold">Active Order Sheet</span>
               <button
                 type="button"
                 onClick={() => setIsWeightModalOpen(true)}
-                className="font-mono text-[10px] font-black uppercase tracking-widest text-pink-400 border-b-2 border-pink-500/40 pb-0.5 hover:text-pink-300 transition-colors cursor-pointer"
+                className="font-mono text-[10px] font-black uppercase tracking-widest text-ink/70 border-b-2 border-ink-faint pb-0.5 hover:text-ink transition-colors cursor-pointer"
               >
                 Calculator 🧮
               </button>
             </div>
 
             {successMsg && (
-              <div className="bg-emerald-custom/10 border border-emerald-custom/20 text-emerald-custom p-4 rounded text-[10px] font-mono font-bold uppercase tracking-widest animate-pulse text-center">
+              <div className="bg-emerald-custom/10 border border-emerald-custom/20 text-emerald-custom p-4 rounded text-[10px] font-mono font-bold uppercase tracking-widest text-center">
                 {successMsg}
               </div>
             )}
@@ -455,7 +416,7 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
                   <button
                     type="submit"
                     disabled={saving}
-                    className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white hover:brightness-110 active:scale-[0.98] py-5 font-mono text-[11px] font-black uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed rounded-xl shadow-lg shadow-pink-500/20 glow-purple cursor-pointer"
+                    className="w-full bg-accent text-bg hover:brightness-110 active:scale-[0.98] py-5 font-mono text-[11px] font-black uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed rounded-xl cursor-pointer"
                   >
                     {saving ? "Processing..." : "Confirm & Save Order ⚡"}
                   </button>
@@ -518,7 +479,7 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
                           className={`font-mono text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded border transition-all ${
                             order.status === "Paid"
                               ? "text-emerald-custom border-emerald-custom/10 bg-emerald-custom/5"
-                              : "text-accent border-accent/10 bg-accent/5 animate-pulse"
+                                                             : "text-accent border-accent/10 bg-accent/5"
                           }`}
                         >
                           {order.status}
@@ -560,7 +521,7 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
                       className={`font-mono text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded border transition-all ${
                         order.status === "Paid"
                           ? "text-emerald-custom border-emerald-custom/10 bg-emerald-custom/5"
-                          : "text-accent border-accent/10 bg-accent/5 animate-pulse"
+                          : "text-accent border-accent/10 bg-accent/5"
                       }`}
                     >
                       {order.status}
@@ -873,12 +834,12 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
       {/* Edit Formula Modal */}
       {editingFormulaItem && (
         <div className="fixed inset-0 bg-bg/90 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-surface border border-accent/30 rounded-2xl p-6 max-w-md w-full space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="bg-surface border border-accent/30 rounded-2xl p-6 max-w-md w-full space-y-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
             
             <div className="flex items-center gap-3 border-b border-ink-faint pb-4">
               <div className="p-2.5 bg-accent/10 text-accent rounded-xl">
-                <Sparkles className="w-5 h-5 animate-pulse" />
+                <Sparkles className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-display text-sm md:text-base uppercase tracking-tight text-accent">
@@ -1014,7 +975,7 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
       {/* Formula Item Held Action Options Modal */}
       {longPressActionItem && (
         <div className="fixed inset-0 bg-bg/95 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-surface border border-accent/20 rounded-2xl p-6 max-w-sm w-full space-y-6 shadow-2xl relative">
+          <div className="bg-surface border border-accent/20 rounded-2xl p-6 max-w-sm w-full space-y-6 relative">
             <div className="space-y-2 text-center">
               <span className="font-mono text-[9px] text-accent font-bold uppercase tracking-[0.2em] block">
                 Grill Menu Option
@@ -1048,7 +1009,7 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
                 type="button"
                 onClick={() => handleDeleteFormulaItem(longPressActionItem.key)}
                 disabled={deletingFormula}
-                className="w-full bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-500 transition-all duration-200 py-3.5 rounded-xl font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-surface border border-ink-faint hover:bg-accent hover:text-bg text-ink/70 transition-all duration-200 py-3.5 rounded-xl font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
                 {deletingFormula ? "Deleting..." : "Item Delete Karain"}

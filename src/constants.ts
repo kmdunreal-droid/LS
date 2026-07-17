@@ -36,8 +36,7 @@ export const DEFAULT_FORMULA_SETTINGS: FormulaSettings = {
 };
 
 export const SUPPLY_CATEGORIES = [
-  "Whole Chicken",
-  "Chest / Boneless",
+  "Chicken Dabu",
   "Leg / Thigh",
   "Wings",
   "Wings V",

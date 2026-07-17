@@ -185,10 +185,10 @@ export default function RateCalculatorTab({ settings, onSaveSettings }: RateCalc
       {showAddForm && (() => {
         const isNewFormulaValid = isFormulaValid(newExpression, baseRawRate);
         return (
-          <div className={`bg-surface border p-3 rounded-xl space-y-3 animate-fade-in ${isNewFormulaValid ? "border-emerald-500/30" : "border-rose-500/40"}`}>
+          <div className={`bg-surface border p-3 rounded-xl space-y-3 animate-fade-in ${isNewFormulaValid ? "border-ink-faint" : "border-ink-faint"}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
               <h3 className="font-mono text-[9px] font-bold uppercase tracking-widest opacity-60 flex items-center gap-1">
-                <Sparkles className={`w-3.5 h-3.5 ${isNewFormulaValid ? "text-emerald-500" : "text-rose-500 animate-pulse"}`} />
+                <Sparkles className={`w-3.5 h-3.5 ${isNewFormulaValid ? "text-ink/70" : "text-ink/50"}`} />
                 Add New Formula Item
               </h3>
               <div className="text-[8px] font-mono opacity-40 italic">
@@ -221,12 +221,12 @@ export default function RateCalculatorTab({ settings, onSaveSettings }: RateCalc
                   onChange={(e) => setNewExpression(e.target.value)}
                   className={`w-full bg-bg border rounded-lg px-3 py-2 font-mono text-xs focus:ring-1 outline-none appearance-none font-bold ${
                     isNewFormulaValid
-                      ? "border-emerald-500/30 text-emerald-500 focus:ring-emerald-500"
-                      : "border-rose-500 text-rose-500 focus:ring-rose-500"
+                      ? "border-ink-faint text-ink/70 focus:ring-accent"
+                      : "border-ink-faint text-ink/50 focus:ring-accent"
                   }`}
                 />
                 <div className="mt-1 flex items-center justify-between text-[8px] font-mono">
-                  <span className={isNewFormulaValid ? "text-emerald-500 font-bold" : "text-rose-500 font-bold animate-pulse"}>
+                  <span className={isNewFormulaValid ? "text-ink/70 font-bold" : "text-ink/50 font-bold"}>
                     {isNewFormulaValid ? "✓ Valid Formula" : "✗ Invalid Formula"}
                   </span>
                   {isNewFormulaValid && (
@@ -239,7 +239,7 @@ export default function RateCalculatorTab({ settings, onSaveSettings }: RateCalc
               <div className="md:col-span-3 flex gap-2">
                 <button
                   type="submit"
-                  className={`flex-1 py-2 rounded-lg font-mono font-bold text-[9px] uppercase tracking-widest cursor-pointer text-bg ${isNewFormulaValid ? "bg-emerald-500 hover:brightness-110" : "bg-rose-500 hover:brightness-110"}`}
+                  className={`flex-1 py-2 rounded-lg font-mono font-bold text-[9px] uppercase tracking-widest cursor-pointer text-bg ${isNewFormulaValid ? "bg-accent hover:brightness-110" : "bg-ink-faint hover:brightness-110"}`}
                 >
                   Add Formula
                 </button>
@@ -306,14 +306,14 @@ export default function RateCalculatorTab({ settings, onSaveSettings }: RateCalc
                 onTouchEnd={(e) => handleButtonPressEnd(e, key, item)}
                 className={`border rounded-2xl p-4 transition-all duration-300 space-y-3.5 relative group shadow-lg flex flex-col justify-between select-none active:scale-[0.97] cursor-pointer ${
                   isValid 
-                    ? "bg-gradient-to-br from-emerald-950/40 via-emerald-900/10 to-teal-950/20 border-emerald-500/30 hover:border-emerald-400 glow-emerald text-emerald-100" 
-                    : "bg-gradient-to-br from-rose-950/40 via-red-950/10 to-pink-950/20 border-rose-500/40 hover:border-rose-400 glow-rose text-rose-100"
+                    ? "bg-surface border-ink-faint text-ink/70" 
+                    : "bg-surface border-ink-faint text-ink/50"
                 }`}
                 style={{ WebkitTouchCallout: "none", userSelect: "none" }}
               >
                 <div className="space-y-2">
                   <div className="flex items-center gap-1.5 border-b border-ink-faint pb-1.5 min-w-0">
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${isValid ? "bg-emerald-500" : "bg-rose-500 animate-pulse"}`} title={isValid ? "Formula Valid" : "Formula Invalid"} />
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${isValid ? "bg-accent" : "bg-ink-faint"}`} title={isValid ? "Formula Valid" : "Formula Invalid"} />
                     <span className="font-display text-xs md:text-sm font-bold uppercase text-ink truncate flex-1">
                       {item.name}
                     </span>
@@ -321,7 +321,7 @@ export default function RateCalculatorTab({ settings, onSaveSettings }: RateCalc
 
                   <div className="flex items-baseline justify-between">
                     <span className="font-mono text-[8px] opacity-40 uppercase tracking-widest">Sale Price:</span>
-                    <span className={`font-mono text-sm md:text-lg font-bold tracking-tight ${isValid ? "text-emerald-500" : "text-rose-500"}`}>
+                    <span className={`font-mono text-sm md:text-lg font-bold tracking-tight ${isValid ? "text-ink/70" : "text-ink/50"}`}>
                       {isValid ? `Rs. ${salePrice}` : "Error"}
                     </span>
                   </div>
@@ -332,7 +332,7 @@ export default function RateCalculatorTab({ settings, onSaveSettings }: RateCalc
                       Formula (Hisaab)
                     </label>
                     <div className={`w-full bg-bg/50 border rounded-lg px-2.5 py-1.5 font-mono text-[10px] md:text-xs font-bold truncate ${
-                      isValid ? "border-emerald-500/20 text-emerald-500" : "border-rose-500/30 text-rose-500"
+                      isValid ? "border-ink-faint text-ink/70" : "border-ink-faint text-ink/50"
                     }`}>
                       {item.expression || `supply * ${item.multiplier || 1} + ${item.markup || 0}`}
                     </div>
@@ -341,7 +341,7 @@ export default function RateCalculatorTab({ settings, onSaveSettings }: RateCalc
 
                 {/* Formula preview */}
                 <div className={`font-mono text-[7px] md:text-[8px] bg-bg/50 px-2 py-1 rounded-md flex justify-between items-center italic truncate ${
-                  isValid ? "opacity-45 text-emerald-500" : "opacity-90 text-rose-500 font-bold"
+                  isValid ? "opacity-45 text-ink/70" : "opacity-90 text-ink/50 font-bold"
                 }`}>
                   <span className="truncate">
                     {isValid 
@@ -359,7 +359,7 @@ export default function RateCalculatorTab({ settings, onSaveSettings }: RateCalc
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface border border-ink-faint rounded-xl p-2.5">
           <div className="font-mono text-[8px] md:text-[9px] opacity-55 italic">
             {message ? (
-              <span className="text-emerald-custom font-bold animate-pulse">{message}</span>
+              <span className="text-ink/70 font-bold">{message}</span>
             ) : (
               <span>* Naye rates live POS aur sales calculations mein foran apply ho jayein ge.</span>
             )}
@@ -411,14 +411,14 @@ export default function RateCalculatorTab({ settings, onSaveSettings }: RateCalc
                 }}
                 className="w-full bg-accent/10 border border-accent/20 hover:bg-accent hover:text-bg text-accent transition-all duration-200 py-3.5 rounded-xl font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Sparkles className="w-4 h-4 animate-pulse" />
+                <Sparkles className="w-4 h-4" />
                 Edit Formula
               </button>
 
               <button
                 type="button"
                 onClick={() => handleDeleteItem(longPressActionItem.key)}
-                className="w-full bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-500 transition-all duration-200 py-3.5 rounded-xl font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-ink-faint/10 border border-ink-faint hover:bg-ink-faint hover:text-ink text-ink/50 transition-all duration-200 py-3.5 rounded-xl font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete Formula
@@ -442,7 +442,7 @@ export default function RateCalculatorTab({ settings, onSaveSettings }: RateCalc
           <div className="bg-surface border border-accent/30 rounded-2xl p-6 max-w-md w-full space-y-6 shadow-2xl relative">
             <div className="flex items-center gap-3 border-b border-ink-faint pb-4">
               <div className="p-2.5 bg-accent/10 text-accent rounded-xl">
-                <Sparkles className="w-5 h-5 animate-pulse" />
+                <Sparkles className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-display text-sm md:text-base uppercase tracking-tight text-accent">
@@ -486,8 +486,8 @@ export default function RateCalculatorTab({ settings, onSaveSettings }: RateCalc
                         onChange={(e) => setEditItemExpression(e.target.value)}
                         className={`w-full bg-bg border rounded-xl px-4 py-2.5 font-mono text-xs font-bold focus:ring-1 outline-none appearance-none ${
                           isEditFormulaValid 
-                            ? "border-emerald-500/30 text-emerald-500 focus:ring-emerald-500" 
-                            : "border-rose-500 text-rose-500 focus:ring-rose-500"
+                            ? "border-ink-faint text-ink/70 focus:ring-accent" 
+                            : "border-ink-faint text-ink/50 focus:ring-accent"
                         }`}
                         placeholder="e.g. supply * 1.5 + 50"
                       />
@@ -495,8 +495,8 @@ export default function RateCalculatorTab({ settings, onSaveSettings }: RateCalc
                       {/* Preview calculation */}
                       <div className={`border rounded-xl p-4 font-mono text-xs space-y-1.5 transition-all ${
                         isEditFormulaValid 
-                          ? "bg-emerald-500/[0.02] border-emerald-500/20 text-emerald-500" 
-                          : "bg-rose-500/[0.02] border-rose-500/30 text-rose-500 animate-pulse"
+                          ? "bg-ink-faint/10 border-ink-faint text-ink/70" 
+                          : "bg-ink-faint/10 border-ink-faint text-ink/50"
                       }`}>
                         <span className="text-[8px] opacity-40 uppercase tracking-widest block font-bold">Rate Preview</span>
                         <div className="flex justify-between items-center text-ink/70">
@@ -505,7 +505,7 @@ export default function RateCalculatorTab({ settings, onSaveSettings }: RateCalc
                         </div>
                         <div className="flex justify-between items-center border-t border-dashed border-ink-faint pt-2 mt-2">
                           <span className="opacity-50 text-ink/70">Calculated Sale Price:</span>
-                          <span className={`font-bold text-sm ${isEditFormulaValid ? "text-emerald-500" : "text-rose-500"}`}>
+                          <span className={`font-bold text-sm ${isEditFormulaValid ? "text-ink/70" : "text-ink/50"}`}>
                             {(() => {
                               try {
                                 const clean = editItemExpression.toLowerCase().replace(/supply/g, baseRawRate.toString());
