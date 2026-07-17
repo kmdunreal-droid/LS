@@ -237,112 +237,90 @@ export default function ExpensesTab({ expenses, onAddExpense, onUpdateExpense, o
           </div>
 
           {expenses.length === 0 ? (
-            <div className="py-12 text-center border border-dashed border-ink-faint rounded">
+            <div className="py-12 text-center border border-dashed border-orange-500/20 rounded">
               <p className="font-mono text-[10px] font-bold uppercase tracking-widest opacity-20 italic">No expenditure history found</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+            <div className="flex flex-col gap-1.5">
               {expenses.map((e) => (
-                <div key={e.id} className="bg-surface border border-ink-faint rounded p-4 space-y-4 hover:border-accent/20 transition-all group relative">
+                <div key={e.id}>
                   {editingExpenseId === e.id ? (
-                    <form onSubmit={handleUpdateExpenseSubmit} className="space-y-6 animate-fade-in">
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <span className="font-mono text-[8px] opacity-30 uppercase">Date</span>
-                            <input 
-                              type="date" 
-                              value={editDate} 
-                              onChange={ev => setEditDate(ev.target.value)}
-                              className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none appearance-none"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <span className="font-mono text-[8px] opacity-30 uppercase">Category</span>
-                            <select 
-                              value={editCategory} 
-                              onChange={ev => setEditCategory(ev.target.value as any)}
-                              className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none appearance-none"
-                            >
-                              {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c.toUpperCase()}</option>)}
-                            </select>
-                          </div>
-                        </div>
+                    <form onSubmit={handleUpdateExpenseSubmit} className="bg-orange-500/10 border border-orange-400/40 p-3 rounded-lg space-y-3 animate-fade-in">
+                      <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <span className="font-mono text-[8px] opacity-30 uppercase">Description</span>
+                          <span className="font-mono text-[7px] opacity-40 uppercase">Date</span>
                           <input 
-                            type="text" 
-                            value={editNotes} 
-                            onChange={ev => setEditNotes(ev.target.value)}
+                            type="date" 
+                            value={editDate} 
+                            onChange={ev => setEditDate(ev.target.value)}
                             className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none appearance-none"
                           />
                         </div>
                         <div className="space-y-1">
-                          <span className="font-mono text-[8px] opacity-30 uppercase">Amount</span>
-                          <input 
-                            type="number" 
-                            value={editAmount} 
-                            onChange={ev => setEditAmount(ev.target.value)}
-                            className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] text-right focus:ring-1 focus:ring-accent outline-none appearance-none"
-                          />
+                          <span className="font-mono text-[7px] opacity-40 uppercase">Category</span>
+                          <select 
+                            value={editCategory} 
+                            onChange={ev => setEditCategory(ev.target.value as any)}
+                            className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none appearance-none"
+                          >
+                            {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c.toUpperCase()}</option>)}
+                          </select>
                         </div>
                       </div>
-                      <div className="flex items-center justify-end gap-4 pt-2 border-t border-ink-faint">
-                        <button type="button" onClick={cancelEditingExpense} className="font-mono text-[10px] opacity-20 hover:opacity-100">Cancel</button>
-                        <button type="submit" className="font-mono text-[10px] font-bold text-accent">Save</button>
+                      <div className="space-y-1">
+                        <span className="font-mono text-[7px] opacity-40 uppercase">Description</span>
+                        <input 
+                          type="text" 
+                          value={editNotes} 
+                          onChange={ev => setEditNotes(ev.target.value)}
+                          className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none appearance-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="font-mono text-[7px] opacity-40 uppercase">Amount</span>
+                        <input 
+                          type="number" 
+                          value={editAmount} 
+                          onChange={ev => setEditAmount(ev.target.value)}
+                          className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] text-right focus:ring-1 focus:ring-accent outline-none appearance-none"
+                        />
+                      </div>
+                      <div className="flex items-center justify-end gap-3">
+                        <button type="button" onClick={cancelEditingExpense} className="font-mono text-[8px] opacity-40 hover:opacity-100">Cancel</button>
+                        <button type="submit" className="font-mono text-[8px] font-bold text-orange-300 border-b border-orange-300">Save</button>
                       </div>
                     </form>
                   ) : (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-[10px] font-bold opacity-20 uppercase">
-                          {new Date(e.date).toLocaleDateString("en-US", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric"
-                          })}
-                        </span>
-                        <div className="flex items-center gap-4 md:opacity-0 group-hover:opacity-100 transition-all">
-                          <button
-                            type="button"
-                            onClick={() => startEditingExpense(e)}
-                            className="text-accent opacity-30 hover:opacity-100 transition-colors"
-                          >
-                            <RefreshCw className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (confirm("Are you sure you want to delete this expense entry?")) {
-                                onDeleteExpense(e.id);
-                              }
-                            }}
-                            className="text-accent opacity-30 hover:opacity-100 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <span className="inline-block font-mono text-[8px] font-bold bg-bg px-2 py-0.5 rounded uppercase tracking-tighter opacity-40 leading-none">
-                          {e.category}
-                        </span>
-                        <p className="font-mono text-[11px] opacity-50 uppercase italic leading-tight line-clamp-2 min-h-[2.5rem]">
-                          {e.notes}
-                        </p>
-                      </div>
-
-                      <div className="bg-bg border border-ink-faint p-4 flex items-center justify-between rounded">
-                        <span className="font-mono text-[8px] font-bold opacity-20 uppercase tracking-widest">Amount Disbursed</span>
+                    <div className="bg-orange-500/5 border border-orange-500/20 p-2.5 rounded-lg flex items-center justify-between group">
+                      <div className="space-y-0.5">
+                        <span className="font-mono text-[9px] font-bold text-orange-300 uppercase">{e.category}</span>
+                        <p className="font-mono text-[8px] text-orange-300/60 uppercase italic">{e.notes}</p>
                         <div className="flex items-baseline gap-1">
-                          <span className="font-mono text-[9px] font-bold opacity-30 uppercase">Rs.</span>
-                          <span className="font-display text-xl text-ink tracking-tighter">
-                            {e.amount.toLocaleString()}
-                          </span>
+                          <span className="font-mono text-[7px] font-bold text-orange-300/60 uppercase">Rs.</span>
+                          <span className="font-display text-base font-black text-orange-100">{e.amount.toLocaleString()}</span>
                         </div>
                       </div>
-                    </>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => startEditingExpense(e)}
+                          className="opacity-60 hover:opacity-100 transition-colors p-0.5"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5 text-orange-300" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm("Are you sure you want to delete this expense entry?")) {
+                              onDeleteExpense(e.id);
+                            }
+                          }}
+                          className="text-red-400 opacity-60 hover:opacity-100 transition-colors p-0.5"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               ))}

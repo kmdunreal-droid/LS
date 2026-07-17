@@ -351,114 +351,93 @@ export default function PaymentsTab({ payments, supplyLogs, suppliers, onAddPaym
               </div>
             )
           ) : filteredPayments.length === 0 ? (
-            <div className="py-40 text-center border border-dashed border-ink-faint rounded">
+            <div className="py-40 text-center border border-dashed border-orange-500/20 rounded">
               <p className="font-mono text-[10px] font-bold uppercase tracking-widest opacity-20 italic">No payment logs found for this source</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+            <div className="flex flex-col gap-1.5">
               {filteredPayments.map((p) => (
-                <div
-                  key={p.id}
-                  className="bg-surface border border-ink-faint p-6 space-y-6 rounded hover:border-accent transition-all group relative overflow-hidden"
-                >
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-custom/20" />
-
+                <div key={p.id}>
                   {editingPaymentId === p.id ? (
-                    <form onSubmit={handleUpdatePaymentSubmit} className="space-y-6 animate-fade-in">
-                      <div className="grid grid-cols-1 gap-6">
-                        <div className="space-y-2">
-                          <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Amount</span>
+                    <form onSubmit={handleUpdatePaymentSubmit} className="bg-orange-500/10 border border-orange-400/40 p-3 rounded-lg space-y-3 animate-fade-in">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <span className="font-mono text-[7px] opacity-40 uppercase">Amount</span>
                           <input 
                             type="number" 
                             value={editAmount} 
                             onChange={e => setEditAmount(e.target.value)}
-                            className="w-full bg-bg border border-ink-faint rounded px-3 py-2 font-mono text-xs focus:ring-1 focus:ring-accent outline-none appearance-none"
+                            className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none appearance-none"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Date</span>
+                        <div className="space-y-1">
+                          <span className="font-mono text-[7px] opacity-40 uppercase">Date</span>
                           <input 
                             type="date" 
                             value={editDate} 
                             onChange={e => setEditDate(e.target.value)}
-                            className="w-full bg-bg border border-ink-faint rounded px-3 py-2 font-mono text-xs focus:ring-1 focus:ring-accent outline-none appearance-none uppercase"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Notes</span>
-                          <input 
-                            type="text" 
-                            value={editNotes} 
-                            onChange={e => setEditNotes(e.target.value)}
-                            className="w-full bg-bg border border-ink-faint rounded px-3 py-2 font-mono text-xs focus:ring-1 focus:ring-accent outline-none appearance-none"
+                            className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none appearance-none"
                           />
                         </div>
                       </div>
-                      <div className="flex items-center justify-end gap-4 pt-2">
+                      <div className="space-y-1">
+                        <span className="font-mono text-[7px] opacity-40 uppercase">Notes</span>
+                        <input 
+                          type="text" 
+                          value={editNotes} 
+                          onChange={e => setEditNotes(e.target.value)}
+                          className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none appearance-none"
+                        />
+                      </div>
+                      <div className="flex items-center justify-end gap-3">
                         <button 
                           type="button" 
                           onClick={cancelEditingPayment}
-                          className="font-mono text-[10px] font-bold uppercase tracking-widest opacity-20 hover:opacity-100"
+                          className="font-mono text-[8px] opacity-40 hover:opacity-100"
                         >
                           Cancel
                         </button>
                         <button 
                           type="submit"
-                          className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent"
+                          className="font-mono text-[8px] font-bold text-orange-300 border-b border-orange-300"
                         >
-                          Save Changes
+                          Save
                         </button>
                       </div>
                     </form>
                   ) : (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-[10px] font-bold opacity-20 uppercase">
-                          {new Date(p.date).toLocaleDateString("en-US", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })}
+                    <div className="bg-orange-500/5 border border-orange-500/20 p-2.5 rounded-lg flex items-center justify-between group">
+                      <div className="space-y-0.5">
+                        <span className="font-mono text-[8px] font-bold text-orange-300/60 uppercase">
+                          {new Date(p.date).toLocaleDateString("en-US", { day: "2-digit", month: "short" })}
                         </span>
-                        <div className="flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-all">
-                          <button
-                            type="button"
-                            onClick={() => startEditingPayment(p)}
-                            className="text-accent opacity-30 hover:opacity-100 transition-colors"
-                          >
-                            <RefreshCw className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (confirm("Are you sure you want to delete this payment record?")) {
-                                onDeletePayment(p.id);
-                              }
-                            }}
-                            className="text-accent opacity-30 hover:opacity-100 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <span className="font-mono text-[10px] font-bold uppercase tracking-widest opacity-20 block">REMITTANCE_LOG</span>
-                        <p className="font-mono text-sm opacity-60 uppercase italic leading-tight">
-                          {p.notes || "Supplier Payment"}
-                        </p>
-                      </div>
-
-                      <div className="bg-emerald-custom/5 p-4 rounded flex items-center justify-between border border-emerald-custom/10">
-                        <span className="font-mono text-[8px] font-bold text-emerald-custom uppercase tracking-widest">Amount Disbursed</span>
+                        <p className="font-mono text-[10px] text-orange-100 uppercase italic">{p.notes || "Supplier Payment"}</p>
                         <div className="flex items-baseline gap-1">
-                          <span className="font-mono text-[9px] font-bold text-emerald-custom opacity-40 uppercase">Rs.</span>
-                          <span className="font-display text-3xl text-emerald-custom tracking-tighter">
-                            {p.amountPaid.toLocaleString()}
-                          </span>
+                          <span className="font-mono text-[7px] font-bold text-orange-300/60 uppercase">Rs.</span>
+                          <span className="font-display text-base font-black text-orange-100">{p.amountPaid.toLocaleString()}</span>
                         </div>
                       </div>
-                    </>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => startEditingPayment(p)}
+                          className="opacity-60 hover:opacity-100 transition-colors p-0.5"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5 text-orange-300" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm("Are you sure you want to delete this payment record?")) {
+                              onDeletePayment(p.id);
+                            }
+                          }}
+                          className="text-red-400 opacity-60 hover:opacity-100 transition-colors p-0.5"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               ))}

@@ -304,30 +304,28 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
       </div>
 
       {/* Add Stock Form */}
-      <div className="bg-surface border border-ink-faint p-5 md:p-6 space-y-5 rounded-2xl">
+      <div className="bg-surface border border-ink-faint p-2 space-y-2 rounded-2xl">
         <div className="flex items-center justify-between">
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-teal-300 font-bold">Add Stock</span>
-          <Package className="w-4 h-4 text-teal-400" />
+          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-teal-300 font-bold">Add Stock</span>
+          <Package className="w-3.5 h-3.5 text-teal-400" />
         </div>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <span className="font-mono text-[7px] font-bold opacity-40 uppercase tracking-widest">Entry Date</span>
+        <div>
+          <div>
             <input type="date" required value={date} onChange={(e) => setDate(e.target.value)}
-              className="w-full bg-bg/80 border border-ink-faint rounded px-3 py-2 font-mono text-xs focus:ring-1 focus:ring-accent outline-none appearance-none" />
+              className="w-full bg-bg/80 border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none appearance-none" />
           </div>
 
-          <div className="space-y-2">
-            <span className="font-mono text-[7px] font-bold opacity-40 uppercase tracking-widest">Stock Category</span>
+          <div>
             {isNewCategory ? (
-              <div className="animate-fade-in">
+              <div className="animate-fade-in mt-1">
                 <input type="text" required placeholder="CATEGORY_NAME" value={customCategoryName}
                   onChange={(e) => { setCustomCategoryName(e.target.value); setCategory(e.target.value); }}
-                  className="w-full bg-bg/80 border border-accent/20 rounded px-3 py-2 font-mono text-xs text-accent outline-none appearance-none" />
-                <div className="flex items-center gap-2 mt-2">
+                  className="w-full bg-bg/80 border border-accent/20 rounded px-2 py-1.5 font-mono text-[10px] text-accent outline-none appearance-none" />
+                <div className="flex items-center gap-1 mt-1">
                   <button type="button" onClick={() => { setWeightModalCat(customCategoryName.trim()); setWeightModalWeight(""); }}
                     disabled={!customCategoryName.trim()}
-                    className="flex-1 bg-accent text-bg rounded-lg px-3 py-2 font-mono text-[8px] font-bold uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-30 cursor-pointer"
+                    className="flex-1 bg-accent text-bg rounded px-2 py-1 font-mono text-[7px] font-bold uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-30 cursor-pointer"
                   >Add Weight →</button>
                   <button type="button" onClick={() => { setIsNewCategory(false); setCategory(uniqueCategories[0] || ""); }}
                     className="font-mono text-[7px] text-rose-400/60 hover:text-rose-400 uppercase tracking-widest"
@@ -336,7 +334,7 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5 mt-1.5">
                   {uniqueCategories.map((cat) => {
                     const estimatedRate = getEstimatedRateForCategory(cat);
                     const isSelected = category === cat;
@@ -346,20 +344,20 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
                         key={cat}
                         type="button"
                         onClick={() => { setWeightModalCat(cat); setWeightModalWeight(""); }}
-                        className={`bg-surface border ${isSelected ? "border-accent ring-2 ring-accent/20" : "border-ink-faint hover:border-ink/40"} p-3 md:p-4 rounded-xl text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] cursor-pointer ${isSelected ? "scale-[1.02]" : "opacity-70 hover:opacity-100"}`}
+                        className={`bg-surface border ${isSelected ? "border-accent ring-2 ring-accent/20" : "border-ink-faint hover:border-ink/40"} p-2.5 rounded-xl text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] cursor-pointer ${isSelected ? "scale-[1.02]" : "opacity-70 hover:opacity-100"}`}
                       >
-                        <span className="font-mono text-[9px] md:text-[10px] font-bold uppercase tracking-widest block text-ink/70 mb-1">{cat.toUpperCase()}</span>
-                        <span className="font-mono text-[11px] md:text-sm font-black text-ink leading-none">Rs.{estimatedRate}<span className="text-[8px] font-normal opacity-50">/KG</span></span>
+                        <span className="font-mono text-[9px] md:text-[11px] font-bold uppercase tracking-widest block text-ink/70">{cat.toUpperCase()}</span>
+                        <span className="font-mono text-xs md:text-sm font-black text-ink leading-none">Rs.{estimatedRate}<span className="text-[8px] font-normal opacity-50">/KG</span></span>
                       </button>
                     );
                   })}
                   <button
                     type="button"
                     onClick={() => setIsNewCategory(true)}
-                    className="bg-bg/40 border border-dashed border-ink-faint p-3 md:p-4 rounded-xl text-center transition-all hover:border-accent/40 hover:bg-accent/5 cursor-pointer flex flex-col items-center justify-center min-h-[72px]"
+                    className="bg-bg/40 border border-dashed border-ink-faint p-2.5 rounded-xl text-center transition-all hover:border-accent/40 hover:bg-accent/5 cursor-pointer flex flex-col items-center justify-center min-h-[64px]"
                   >
-                    <span className="font-mono text-[18px] font-bold text-accent/60 leading-none">+</span>
-                    <span className="font-mono text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-accent/40">New</span>
+                    <span className="font-mono text-lg font-bold text-accent/60 leading-none">+</span>
+                    <span className="font-mono text-[9px] md:text-[11px] font-bold uppercase tracking-widest text-accent/40">New</span>
                   </button>
                 </div>
               </>
@@ -376,133 +374,74 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
         </div>
 
         {supplyLogs.length === 0 ? (
-          <div className="py-12 text-center border border-dashed border-ink-faint rounded">
+          <div className="py-12 text-center border border-dashed border-orange-500/20 rounded">
             <p className="font-mono text-[10px] font-bold uppercase tracking-widest opacity-20 italic">No inventory logs found</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          <div className="flex flex-col gap-1.5">
             {supplyLogs.map((log, idx) => {
-              const isExpanded = expandedLogIds.has(log.id);
               const theme = cardTheme;
               const catKey = (log.category || "WHOLE CHICKEN").replace(/\s+/g, "_").toUpperCase();
 
-              return (
+              return editingLogId === log.id ? (
+                <form 
+                  onSubmit={handleUpdateLogSubmit} 
+                  className="bg-orange-500/10 border border-orange-400/40 p-3 rounded-2xl space-y-3 animate-fade-in"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-orange-300">Edit Entry</span>
+                  <div className="space-y-2">
+                    <span className="font-mono text-[7px] font-bold opacity-40 uppercase tracking-widest">Weight (KG)</span>
+                    <input 
+                      type="number" step="0.01"
+                      value={editWeight} 
+                      onChange={e => setEditWeight(e.target.value)}
+                      className="w-full bg-bg/80 border border-ink-faint rounded px-2 py-1.5 font-mono text-xs focus:ring-1 focus:ring-accent outline-none appearance-none"
+                    />
+                  </div>
+                  <div className="flex items-center justify-end gap-3 pt-1">
+                    <button type="button" onClick={(e) => { e.stopPropagation(); cancelEditingLog(); }}
+                      className="font-mono text-[8px] uppercase tracking-widest opacity-40 hover:opacity-80"
+                    >Cancel</button>
+                    <button type="submit"
+                      className="font-mono text-[8px] font-bold uppercase tracking-widest text-orange-300 border-b border-orange-300"
+                    >Save</button>
+                  </div>
+                </form>
+              ) : (
                 <div
                   key={log.id}
-                  onClick={() => editingLogId !== log.id && toggleExpand(log.id)}
-                  className={`bg-surface border ${isExpanded ? "border-ink/30" : "border-ink-faint hover:border-ink/30"} p-3 md:p-5 transition-all duration-300 flex flex-col justify-between rounded-2xl group cursor-pointer select-none active:scale-[0.96] relative overflow-hidden`}
-                  style={{ minHeight: "130px" }}
+                  className="bg-orange-500/5 border border-orange-500/20 p-3 rounded-lg flex items-center justify-between group"
                 >
-                  {editingLogId === log.id ? (
-                    <form 
-                      onSubmit={handleUpdateLogSubmit} 
-                      className="space-y-3 animate-fade-in relative z-10"
-                      onClick={(e) => e.stopPropagation()}
+                  <div className="space-y-1">
+                    <span className="font-mono text-[10px] md:text-xs font-black uppercase tracking-widest text-orange-300">
+                      {catKey}
+                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-mono text-sm md:text-base font-black leading-none text-orange-100">{log.weightKg}</span>
+                      <span className="font-mono text-[9px] font-bold uppercase text-orange-300/60">KG</span>
+                    </div>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-mono text-[9px] font-bold uppercase text-orange-300/60">Rs.</span>
+                      <span className="font-mono text-base md:text-lg font-black text-orange-100">{log.totalCost.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); startEditingLog(log); }}
+                      className="opacity-60 hover:opacity-100 transition-all p-0.5"
                     >
-                      <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-ink/70">Edit Entry</span>
-                      <div className="space-y-2">
-                        <span className="font-mono text-[7px] font-bold opacity-40 uppercase tracking-widest">Weight (KG)</span>
-                        <input 
-                          type="number" step="0.01"
-                          value={editWeight} 
-                          onChange={e => setEditWeight(e.target.value)}
-                          className="w-full bg-bg/80 border border-ink-faint rounded px-3 py-2 font-mono text-xs focus:ring-1 focus:ring-accent outline-none appearance-none"
-                        />
-                      </div>
-                      <div className="flex items-center justify-end gap-3 pt-1">
-                        <button type="button" onClick={(e) => { e.stopPropagation(); cancelEditingLog(); }}
-                          className="font-mono text-[8px] uppercase tracking-widest opacity-40 hover:opacity-80"
-                        >Cancel</button>
-                        <button type="submit"
-                          className="font-mono text-[8px] font-bold uppercase tracking-widest text-ink/50 border-b border-current"
-                        >Save</button>
-                      </div>
-                    </form>
-                  ) : (
-                    <>
-                      <div className="flex items-start justify-between relative z-10">
-                        <span className={`font-mono text-[7px] md:text-[8px] font-black uppercase tracking-widest text-ink/70 opacity-80`}>
-                          {catKey}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          {!isExpanded && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); startEditingLog(log); }}
-                                className="opacity-0 group-hover:opacity-60 hover:opacity-100 transition-all p-0.5 text-ink/50"
-                              >
-                                <RefreshCw className="w-3 h-3" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); if (confirm("Delete this supply record?")) onDeleteLog(log.id); }}
-                                className="text-rose-400 opacity-0 group-hover:opacity-60 hover:opacity-100 transition-all p-0.5"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="space-y-1 relative z-10">
-                        <div className="flex items-baseline gap-1 mt-1">
-                          <span className={`font-mono text-[11px] md:text-sm font-black leading-none text-white`}>{log.weightKg}</span>
-                          <span className={`font-mono text-[7px] font-bold uppercase ${"text-ink/70"} opacity-60`}>KG</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between relative z-10">
-                        <div className="flex items-baseline gap-1">
-                          <span className={`font-mono text-[7px] font-bold uppercase ${"text-ink/50"}`}>Rs.</span>
-                          <span className="font-mono text-sm md:text-base font-black text-white">{log.totalCost.toLocaleString()}</span>
-                        </div>
-                        {!isExpanded && (
-                          <span className="font-mono text-[6px] opacity-20 uppercase tracking-wider italic group-hover:opacity-40 transition-opacity">Expand</span>
-                        )}
-                      </div>
-
-                      {isExpanded && (
-                        <div className="relative z-10 space-y-3 mt-2 pt-3 border-t border-white/10 animate-fade-in">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <span className={`font-mono text-[6px] font-bold uppercase tracking-widest block ${"text-ink/70"} opacity-60`}>Date</span>
-                              <span className="font-mono text-[10px] text-white/80">
-                                {new Date(log.date).toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" })}
-                              </span>
-                            </div>
-                            <div>
-                              <span className={`font-mono text-[6px] font-bold uppercase tracking-widest block ${"text-ink/70"} opacity-60`}>Rate</span>
-                              <span className="font-mono text-[10px] text-white/80">Rs. {log.supplyRatePerKg}/KG</span>
-                            </div>
-                          </div>
-                          {log.notes && (
-                            <p className="font-mono text-[7px] text-white/30 uppercase italic leading-relaxed">{log.notes}</p>
-                          )}
-                          <div className="flex items-center justify-center gap-4 pt-1">
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); startEditingLog(log); }}
-                              className="font-mono text-[7px] font-bold uppercase tracking-widest text-accent/50 hover:text-accent transition-colors flex items-center gap-1"
-                            >
-                              <RefreshCw className="w-3 h-3" /> Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); if (confirm("Delete this supply record?")) onDeleteLog(log.id); }}
-                              className="font-mono text-[7px] font-bold uppercase tracking-widest text-rose-400/50 hover:text-rose-400 transition-colors flex items-center gap-1"
-                            >
-                              <Trash2 className="w-3 h-3" /> Delete
-                            </button>
-                          </div>
-                          <div className="text-center">
-                            <span className="font-mono text-[6px] font-bold opacity-20 uppercase tracking-widest">Click to collapse</span>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
+                      <RefreshCw className="w-3.5 h-3.5 text-orange-300" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); if (confirm("Delete this supply record?")) onDeleteLog(log.id); }}
+                      className="text-red-400 opacity-60 hover:opacity-100 transition-all p-0.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -532,6 +471,18 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
                   autoFocus
                 />
               </div>
+              {weightModalWeight && parseFloat(weightModalWeight) > 0 && (
+                <div className="bg-bg/60 border border-ink-faint rounded-xl p-4 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono text-[8px] opacity-40 uppercase tracking-widest">Rate</span>
+                    <span className="font-mono text-sm font-bold text-ink">Rs. {getEstimatedRateForCategory(weightModalCat!).toLocaleString()}/KG</span>
+                  </div>
+                  <div className="flex justify-between items-center border-t border-ink-faint/40 pt-2">
+                    <span className="font-mono text-[8px] opacity-40 uppercase tracking-widest">Total Raqam</span>
+                    <span className="font-display text-xl font-black text-accent">Rs. {(parseFloat(weightModalWeight) * getEstimatedRateForCategory(weightModalCat!)).toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
               <div className="text-right space-x-3">
                 <button
                   type="button"

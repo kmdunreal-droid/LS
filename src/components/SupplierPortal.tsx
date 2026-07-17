@@ -11,7 +11,8 @@ import {
   CreditCard,
   LayoutDashboard,
   Settings,
-  Flame
+  Flame,
+  Activity
 } from "lucide-react";
 import { useAuth } from "./AuthGate";
 
@@ -377,48 +378,47 @@ export default function SupplierPortal({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-h-screen">
 
-        {/* Rate Editor Bar */}
-        <div className="bg-bg/50 border-b border-ink-faint px-3 md:px-4 py-2">
-          <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-ink-faint/20 text-ink/50 rounded-lg">
-                <Flame className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="font-mono text-[9px] uppercase tracking-widest text-ink/70 font-bold">Daily Rate</span>
-                <p className="font-mono text-[8px] text-ink/40">Update today's chicken rate</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 flex-wrap justify-center">
-              <div className="flex items-center gap-1">
-                <span className="font-mono text-xs font-bold text-ink/40">Rs.</span>
-                <input
-                  type="number"
-                  value={proposedRate}
-                  onChange={(e) => setProposedRate(e.target.value)}
-                  className="w-20 bg-transparent border-b-2 border-ink-faint text-lg font-display font-black text-ink text-center focus:outline-none focus:border-accent transition-all py-0.5"
-                  placeholder="000"
-                />
-              </div>
-              <button
-                onClick={handleUpdateGlobalRate}
-                disabled={isUpdatingRate || parseFloat(proposedRate) === settings.baseRawRate}
-                className="font-mono text-[8px] font-bold uppercase tracking-widest px-3 py-1.5 border border-ink-faint text-ink/60 rounded-lg hover:bg-accent hover:text-bg hover:border-accent transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                {isUpdatingRate ? "Updating..." : "Update Rate"}
-              </button>
-            </div>
-            {rateSuccessMsg && (
-              <span className="font-mono text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-emerald-custom animate-fade-in">{rateSuccessMsg}</span>
-            )}
-          </div>
-        </div>
-
         <div className="flex-1 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 p-3 md:p-4">
         {activeTab === "dashboard" ? (
           <>
+            {/* Rate Editor Bar */}
+            <div className="bg-bg/50 border border-ink-faint rounded-xl px-3 md:px-4 py-2 lg:col-span-12">
+              <div className="w-full flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-ink-faint/20 text-ink/50 rounded-lg">
+                    <Flame className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="font-mono text-[9px] uppercase tracking-widest text-ink/70 font-bold">Daily Rate</span>
+                    <p className="font-mono text-[8px] text-ink/40">Update today's chicken rate</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 flex-wrap justify-center">
+                  <div className="flex items-center gap-1">
+                    <span className="font-mono text-xs font-bold text-ink/40">Rs.</span>
+                    <input
+                      type="number"
+                      value={proposedRate}
+                      onChange={(e) => setProposedRate(e.target.value)}
+                      className="w-20 bg-transparent border-b-2 border-ink-faint text-lg font-display font-black text-ink text-center focus:outline-none focus:border-accent transition-all py-0.5"
+                      placeholder="000"
+                    />
+                  </div>
+                  <button
+                    onClick={handleUpdateGlobalRate}
+                    disabled={isUpdatingRate || parseFloat(proposedRate) === settings.baseRawRate}
+                    className="font-mono text-[8px] font-bold uppercase tracking-widest px-3 py-1.5 border border-ink-faint text-ink/60 rounded-lg hover:bg-accent hover:text-bg hover:border-accent transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    {isUpdatingRate ? "Updating..." : "Update Rate"}
+                  </button>
+                </div>
+                {rateSuccessMsg && (
+                  <span className="font-mono text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-emerald-custom animate-fade-in">{rateSuccessMsg}</span>
+                )}
+              </div>
+            </div>
             <div className="lg:col-span-12 animate-fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-surface border border-ink-faint p-5 md:p-6 flex flex-col justify-between rounded-xl">
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-mono text-[7px] font-bold uppercase tracking-[0.2em] text-ink/50">Total Supplied (Raqam)</span>
@@ -428,6 +428,18 @@ export default function SupplierPortal({
                     <div className="flex items-baseline gap-2">
                       <span className="font-mono text-[8px] font-bold text-ink/40 uppercase">Rs.</span>
                       <span className="font-display text-2xl md:text-3xl font-black text-ink tracking-tight">{totalSupplied.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-surface border border-ink-faint p-5 md:p-6 flex flex-col justify-between rounded-xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-mono text-[7px] font-bold uppercase tracking-[0.2em] text-ink/50">Today Delivery</span>
+                    <Activity className="w-4 h-4 text-ink/30" />
+                  </div>
+                  <div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-mono text-[8px] font-bold text-ink/40 uppercase">Rs.</span>
+                      <span className="font-display text-2xl md:text-3xl font-black text-ink tracking-tight">{totalTodayCost.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -509,20 +521,20 @@ export default function SupplierPortal({
                               key={cat}
                               type="button"
                               onClick={() => { setWeightModalCat(cat); setWeightModalWeight(""); }}
-                              className={`bg-surface border ${isSelected ? "border-accent ring-2 ring-accent/20" : "border-ink-faint hover:border-ink/40"} p-2 md:p-3 rounded-xl text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] cursor-pointer ${isSelected ? "scale-[1.02]" : "opacity-70 hover:opacity-100"}`}
+                              className={`bg-surface border ${isSelected ? "border-accent ring-2 ring-accent/20" : "border-ink-faint hover:border-ink/40"} p-2.5 md:p-3 rounded-xl text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] cursor-pointer ${isSelected ? "scale-[1.02]" : "opacity-70 hover:opacity-100"}`}
                             >
-                              <span className="font-mono text-[9px] md:text-[10px] font-bold uppercase tracking-widest block text-ink/70 mb-1">{cat.toUpperCase()}</span>
-                              <span className="font-mono text-[11px] md:text-sm font-black text-ink leading-none">Rs.{estimatedRate}<span className="text-[8px] font-normal opacity-50">/KG</span></span>
+                              <span className="font-mono text-[10px] md:text-xs font-bold uppercase tracking-widest block text-ink/70 mb-1">{cat.toUpperCase()}</span>
+                              <span className="font-mono text-xs md:text-sm font-black text-ink leading-none">Rs.{estimatedRate}<span className="text-[8px] font-normal opacity-50">/KG</span></span>
                             </button>
                           );
                         })}
                         <button
                           type="button"
                           onClick={() => setIsNewCategory(true)}
-                          className="bg-bg/40 border border-dashed border-ink-faint p-2 md:p-3 rounded-xl text-center transition-all hover:border-accent/40 hover:bg-accent/5 cursor-pointer flex flex-col items-center justify-center min-h-[60px]"
+                          className="bg-bg/40 border border-dashed border-ink-faint p-2.5 md:p-3 rounded-xl text-center transition-all hover:border-accent/40 hover:bg-accent/5 cursor-pointer flex flex-col items-center justify-center min-h-[64px]"
                         >
-                          <span className="font-mono text-[18px] font-bold text-accent/60 leading-none">+</span>
-                          <span className="font-mono text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-accent/40">New</span>
+                          <span className="font-mono text-lg font-bold text-accent/60 leading-none">+</span>
+                          <span className="font-mono text-[10px] md:text-xs font-bold uppercase tracking-widest text-accent/40">New</span>
                         </button>
                       </div>
                     )}
@@ -538,56 +550,80 @@ export default function SupplierPortal({
                 </div>
 
                 {todayLogs.length === 0 ? (
-                  <div className="py-12 text-center border border-dashed border-ink-faint rounded-lg">
+                  <div className="py-12 text-center border border-dashed border-orange-500/20 rounded-lg">
                     <p className="font-mono text-[10px] font-bold uppercase tracking-widest opacity-20 italic">No entries recorded</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-2">
+                  <div className="flex flex-col gap-1.5">
                     {todayLogs.map((log, idx) => {
                       const catKey = (log.category || "UNCLASSIFIED").replace(/\s+/g, "_").toUpperCase();
-                      return (
+                      return editingLogId === log.id ? (
+                        <div className="bg-orange-500/10 border border-orange-400/40 p-3 rounded-2xl animate-fade-in">
+                          <form onSubmit={handleUpdateLogSubmit} className="space-y-3">
+                            <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-orange-300">Edit Entry</span>
+                            <div className="space-y-2">
+                              <div>
+                                <span className="font-mono text-[6px] font-bold opacity-40 uppercase tracking-widest">Weight (KG)</span>
+                                <input type="number" step="0.01" value={editWeight} onChange={e => setEditWeight(e.target.value)} className="w-full bg-bg/80 border border-ink-faint rounded px-2 py-1.5 font-mono text-xs focus:ring-1 focus:ring-accent outline-none" />
+                              </div>
+                              <div>
+                                <span className="font-mono text-[6px] font-bold opacity-40 uppercase tracking-widest">Rate (Rs/KG)</span>
+                                <input type="number" value={editRate} onChange={e => setEditRate(e.target.value)} className="w-full bg-bg/80 border border-ink-faint rounded px-2 py-1.5 font-mono text-xs focus:ring-1 focus:ring-accent outline-none" />
+                              </div>
+                              <div>
+                                <span className="font-mono text-[6px] font-bold opacity-40 uppercase tracking-widest">Notes</span>
+                                <input type="text" value={editNotes} onChange={e => setEditNotes(e.target.value)} className="w-full bg-bg/80 border border-ink-faint rounded px-2 py-1.5 font-mono text-xs focus:ring-1 focus:ring-accent outline-none" />
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-end gap-3">
+                              <button type="button" onClick={() => setEditingLogId(null)} className="font-mono text-[7px] uppercase opacity-40 hover:opacity-80">Cancel</button>
+                              <button type="submit" className="font-mono text-[7px] font-bold uppercase text-orange-300 border-b border-orange-300">Save</button>
+                            </div>
+                          </form>
+                        </div>
+                      ) : (
                         <div
                           key={log.id}
-                          className={`bg-surface border border-ink-faint hover:border-ink/30 p-2.5 md:p-3 transition-all duration-300 flex flex-col justify-between rounded-2xl group cursor-pointer select-none active:scale-[0.96] relative overflow-hidden`}
-                          style={{ minHeight: "90px", WebkitTouchCallout: "none", userSelect: "none" as const }}
+                          className={`bg-orange-500/5 border border-orange-500/20 hover:border-orange-400/40 p-2.5 md:p-3 transition-all duration-300 flex flex-col justify-between rounded-2xl group cursor-pointer select-none active:scale-[0.96] relative overflow-hidden`}
+                          style={{ WebkitTouchCallout: "none", userSelect: "none" as const }}
                           onMouseDown={() => { weightEditStartRef.current = Date.now(); }}
                           onMouseUp={() => { if (Date.now() - weightEditStartRef.current >= 300 && editingLogId !== log.id) { setWeightEditLog(log); setWeightEditValue(log.weightKg.toString()); } }}
                           onTouchStart={() => { weightEditStartRef.current = Date.now(); }}
                           onTouchEnd={() => { if (Date.now() - weightEditStartRef.current >= 300 && editingLogId !== log.id) { setWeightEditLog(log); setWeightEditValue(log.weightKg.toString()); } }}
                         >
                           <div className="flex items-start justify-between relative z-10">
-                            <span className="font-mono text-[7px] md:text-[8px] font-black uppercase tracking-widest text-ink/70 opacity-80">
+                            <span className="font-mono text-[10px] md:text-xs font-black uppercase tracking-widest text-orange-300">
                               {catKey}
                             </span>
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
-                                onClick={(e) => { e.stopPropagation(); startEditingLog(log); }}
-                                className="opacity-0 group-hover:opacity-60 hover:opacity-100 transition-all p-0.5"
+                                onClick={(e) => { e.stopPropagation(); setEditingLogId(log.id); setEditWeight(log.weightKg.toString()); setEditRate(log.supplyRatePerKg.toString()); setEditCategory(log.category || ""); setEditNotes(log.notes || ""); }}
+                                className="opacity-60 hover:opacity-100 transition-all p-0.5"
                               >
-                                <RefreshCw className="w-3 h-3 text-ink/50" />
+                                <RefreshCw className="w-3.5 h-3.5 text-orange-300" />
                               </button>
                               <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); if (confirm("Delete this entry?")) onDeleteLog(log.id); }}
-                                className="text-rose-400 opacity-0 group-hover:opacity-60 hover:opacity-100 transition-all p-0.5"
+                                className="text-red-400 opacity-60 hover:opacity-100 transition-all p-0.5"
                               >
-                                <X className="w-3 h-3" />
+                                <X className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
 
                           <div className="space-y-1 relative z-10">
-                            <div className="flex items-baseline gap-1 mt-1">
-                              <span className="font-mono text-[11px] md:text-sm font-black leading-none text-ink">{log.weightKg}</span>
-                              <span className="font-mono text-[7px] font-bold uppercase text-ink/50 opacity-60">KG</span>
+                            <div className="flex items-baseline gap-1.5 mt-1">
+                              <span className="font-mono text-sm md:text-base font-black leading-none text-orange-100">{log.weightKg}</span>
+                              <span className="font-mono text-[9px] font-bold uppercase text-orange-300/60">KG</span>
                             </div>
                           </div>
 
                           <div className="flex items-center justify-between relative z-10">
-                            <div className="flex items-baseline gap-1">
-                              <span className="font-mono text-[7px] font-bold uppercase text-ink/50">Rs.</span>
-                              <span className="font-mono text-sm md:text-base font-black text-ink">{log.totalCost.toLocaleString()}</span>
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="font-mono text-[9px] font-bold uppercase text-orange-300/60">Rs.</span>
+                              <span className="font-mono text-base md:text-lg font-black text-orange-100">{log.totalCost.toLocaleString()}</span>
                             </div>
                           </div>
                         </div>
@@ -653,47 +689,40 @@ export default function SupplierPortal({
                 </div>
 
                 {todayPayments.length === 0 ? (
-                  <div className="py-32 text-center space-y-4 border border-dashed border-ink-faint rounded-lg">
+                  <div className="py-32 text-center space-y-4 border border-dashed border-orange-500/20 rounded-lg">
                     <span className="block font-mono text-[10px] font-bold uppercase tracking-widest opacity-20 italic">No payments recorded for this date</span>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {todayPayments.map((pay) => (
-                      <div key={pay.id} className="bg-surface border border-ink-faint p-4 group hover:border-accent/30 transition-all rounded-lg relative">
+                      <div key={pay.id}>
                         {editingPaymentId === pay.id ? (
-                          <form onSubmit={handleUpdatePaymentSubmit} className="space-y-6 animate-fade-in">
-                            <div className="grid grid-cols-1 gap-6">
+                          <form onSubmit={handleUpdatePaymentSubmit} className="bg-orange-500/10 border border-orange-400/40 p-3 rounded-lg space-y-3 animate-fade-in">
+                            <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-1">
-                                <label className="font-mono text-[8px] uppercase opacity-30">Amount (PKR)</label>
-                                <input type="number" value={editPayAmount} onChange={e => setEditPayAmount(e.target.value)} className="w-full bg-bg border border-ink-faint rounded px-3 py-2 text-xs font-mono focus:ring-1 focus:ring-accent outline-none" />
+                                <label className="font-mono text-[7px] uppercase opacity-40">Amount (PKR)</label>
+                                <input type="number" value={editPayAmount} onChange={e => setEditPayAmount(e.target.value)} className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none" />
                               </div>
                               <div className="space-y-1">
-                                <label className="font-mono text-[8px] uppercase opacity-30">Notes</label>
-                                <input type="text" value={editPayNotes} onChange={e => setEditPayNotes(e.target.value)} className="w-full bg-bg border border-ink-faint rounded px-3 py-2 text-xs font-mono focus:ring-1 focus:ring-accent outline-none" />
+                                <label className="font-mono text-[7px] uppercase opacity-40">Notes</label>
+                                <input type="text" value={editPayNotes} onChange={e => setEditPayNotes(e.target.value)} className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none" />
                               </div>
                             </div>
-                            <div className="flex gap-6">
-                              <button onClick={() => setEditingPaymentId(null)} className="font-mono text-[8px] font-bold uppercase opacity-30 hover:opacity-100 transition-all">Cancel</button>
-                              <button type="submit" className="font-mono text-[8px] font-bold uppercase text-accent border-b border-accent">Save Changes</button>
+                            <div className="flex justify-end gap-3">
+                              <button onClick={() => setEditingPaymentId(null)} className="font-mono text-[8px] uppercase opacity-40 hover:opacity-100">Cancel</button>
+                              <button type="submit" className="font-mono text-[8px] font-bold text-orange-300 border-b border-orange-300">Save</button>
                             </div>
                           </form>
                         ) : (
-                          <div className="md:flex md:justify-between md:items-center">
-                            <div className="space-y-4">
-                              <div className="flex items-center gap-4">
-                                <span className="font-mono text-[9px] font-bold uppercase tracking-widest bg-bg border border-emerald-500/20 text-emerald-400 px-3 py-1 rounded">CASH RECEIVED</span>
-                                <span className="font-mono text-xs opacity-50 truncate max-w-[200px] md:max-w-none">{pay.notes}</span>
-                              </div>
+                          <div className="bg-orange-500/5 border border-orange-500/20 p-2.5 rounded-lg flex items-center justify-between group">
+                            <div className="space-y-0.5">
+                              <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-orange-300">CASH RECEIVED</span>
+                              <span className="font-mono text-[8px] text-orange-300/60 italic block">{pay.notes}</span>
                             </div>
-                            <div className="mt-6 md:mt-0 flex items-center gap-8">
-                              <div className="text-right">
-                                <span className="block font-mono text-[8px] font-bold opacity-20 uppercase mb-1">Amount</span>
-                                <span className="font-mono text-xl font-bold text-emerald-400 tracking-tighter">Rs. {pay.amountPaid.toLocaleString()}</span>
-                              </div>
-                              <div className="flex flex-col gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => startEditingPayment(pay)} className="opacity-30 hover:opacity-100 hover:text-accent transition-all"><RefreshCw className="w-3.5 h-3.5" /></button>
-                                <button onClick={() => { if (confirm("Delete this payment?")) onDeletePayment(pay.id); }} className="opacity-30 hover:opacity-100 hover:text-accent transition-all"><X className="w-3.5 h-3.5" /></button>
-                              </div>
+                            <div className="flex items-center gap-3">
+                              <span className="font-mono text-sm font-bold text-orange-100">Rs. {pay.amountPaid.toLocaleString()}</span>
+                              <button onClick={() => startEditingPayment(pay)} className="opacity-60 hover:opacity-100 p-0.5"><RefreshCw className="w-3.5 h-3.5 text-orange-300" /></button>
+                              <button onClick={() => { if (confirm("Delete this payment?")) onDeletePayment(pay.id); }} className="text-red-400 opacity-60 hover:opacity-100 p-0.5"><X className="w-3.5 h-3.5" /></button>
                             </div>
                           </div>
                         )}

@@ -82,17 +82,17 @@ export default function HistorySection({
             <span className="font-mono text-[10px] uppercase tracking-widest">Sales Orders</span>
             <span className="ml-auto font-mono text-[10px] opacity-30">{dayOrders.length} records</span>
           </div>
-          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
             {dayOrders.length === 0 ? (
               <p className="font-mono text-[10px] opacity-30 italic text-center py-4">No sales on this date</p>
             ) : (
               dayOrders.map(order => (
-                <div key={order.id} className="bg-bg border border-ink-faint p-3 rounded flex justify-between items-center">
-                  <div className="space-y-1">
-                    <span className="font-mono text-[9px] font-bold uppercase block">{order.customerName}</span>
-                    <span className="font-mono text-[8px] opacity-40 uppercase block">{order.items.length} items</span>
+                <div key={order.id} className="bg-orange-500/5 border border-orange-500/20 p-2.5 rounded flex justify-between items-center">
+                  <div className="space-y-0.5">
+                    <span className="font-mono text-[9px] font-bold uppercase text-orange-100 block">{order.customerName}</span>
+                    <span className="font-mono text-[8px] text-orange-300/60 uppercase block">{order.items.length} items</span>
                   </div>
-                  <span className="font-mono text-sm font-bold text-ink">Rs. {order.totalAmount.toLocaleString()}</span>
+                  <span className="font-mono text-sm font-bold text-orange-100">Rs. {order.totalAmount.toLocaleString()}</span>
                 </div>
               ))
             )}
@@ -106,19 +106,19 @@ export default function HistorySection({
             <span className="font-mono text-[10px] uppercase tracking-widest">Supply Arrivals</span>
             <span className="ml-auto font-mono text-[10px] opacity-30">{daySupplies.length} records</span>
           </div>
-          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
             {daySupplies.length === 0 ? (
               <p className="font-mono text-[10px] opacity-30 italic text-center py-4">No supplies on this date</p>
             ) : (
               daySupplies.map(supply => {
                 const supplier = suppliers.find(s => s.id === supply.supplierId);
                 return (
-                  <div key={supply.id} className="bg-bg border border-ink-faint p-3 rounded flex justify-between items-center">
-                    <div className="space-y-1">
-                      <span className="font-mono text-[9px] font-bold uppercase text-accent block">{supplier?.name || "Unknown"}</span>
-                      <span className="font-mono text-[8px] opacity-40 uppercase block">{supply.weightKg}kg @ Rs.{supply.supplyRatePerKg}</span>
+                  <div key={supply.id} className="bg-orange-500/5 border border-orange-500/20 p-2.5 rounded flex justify-between items-center">
+                    <div className="space-y-0.5">
+                      <span className="font-mono text-[9px] font-bold uppercase text-orange-100 block">{supplier?.name || "Unknown"}</span>
+                      <span className="font-mono text-[8px] text-orange-300/60 uppercase block">{supply.weightKg}kg @ Rs.{supply.supplyRatePerKg}</span>
                     </div>
-                    <span className="font-mono text-sm font-bold text-ink">Rs. {supply.totalCost.toLocaleString()}</span>
+                    <span className="font-mono text-sm font-bold text-orange-100">Rs. {supply.totalCost.toLocaleString()}</span>
                   </div>
                 )
               })
@@ -133,19 +133,19 @@ export default function HistorySection({
             <span className="font-mono text-[10px] uppercase tracking-widest">Supplier Payments</span>
             <span className="ml-auto font-mono text-[10px] opacity-30">{dayPayments.length} records</span>
           </div>
-          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
             {dayPayments.length === 0 ? (
               <p className="font-mono text-[10px] opacity-30 italic text-center py-4">No payments on this date</p>
             ) : (
               dayPayments.map(payment => {
                 const supplier = suppliers.find(s => s.id === payment.supplierId);
                 return (
-                  <div key={payment.id} className="bg-bg border border-ink-faint p-3 rounded flex justify-between items-center">
-                    <div className="space-y-1">
-                      <span className="font-mono text-[9px] font-bold uppercase text-emerald-custom block">{supplier?.name || "Unknown"}</span>
-                      <span className="font-mono text-[8px] opacity-40 uppercase block truncate max-w-[150px]">{payment.notes || "Payment"}</span>
+                  <div key={payment.id} className="bg-orange-500/5 border border-orange-500/20 p-2.5 rounded flex justify-between items-center">
+                    <div className="space-y-0.5">
+                      <span className="font-mono text-[9px] font-bold uppercase text-orange-100 block">{supplier?.name || "Unknown"}</span>
+                      <span className="font-mono text-[8px] text-orange-300/60 uppercase block truncate max-w-[150px]">{payment.notes || "Payment"}</span>
                     </div>
-                    <span className="font-mono text-sm font-bold text-ink">Rs. {payment.amountPaid.toLocaleString()}</span>
+                    <span className="font-mono text-sm font-bold text-orange-100">Rs. {payment.amountPaid.toLocaleString()}</span>
                   </div>
                 )
               })
@@ -160,17 +160,17 @@ export default function HistorySection({
             <span className="font-mono text-[10px] uppercase tracking-widest">Expenses</span>
             <span className="ml-auto font-mono text-[10px] opacity-30">{dayExpenses.length} records</span>
           </div>
-          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
             {dayExpenses.length === 0 ? (
               <p className="font-mono text-[10px] opacity-30 italic text-center py-4">No expenses on this date</p>
             ) : (
               dayExpenses.map(expense => (
-                <div key={expense.id} className="bg-bg border border-ink-faint p-3 rounded flex justify-between items-center">
-                  <div className="space-y-1">
-                    <span className="font-mono text-[9px] font-bold uppercase text-red-500 block">{expense.category}</span>
-                    <span className="font-mono text-[8px] opacity-40 uppercase block truncate max-w-[150px]">{expense.notes || "Expense"}</span>
+                <div key={expense.id} className="bg-orange-500/5 border border-orange-500/20 p-2.5 rounded flex justify-between items-center">
+                  <div className="space-y-0.5">
+                    <span className="font-mono text-[9px] font-bold uppercase text-orange-100 block">{expense.category}</span>
+                    <span className="font-mono text-[8px] text-orange-300/60 uppercase block truncate max-w-[150px]">{expense.notes || "Expense"}</span>
                   </div>
-                  <span className="font-mono text-sm font-bold text-ink">Rs. {expense.amount.toLocaleString()}</span>
+                  <span className="font-mono text-sm font-bold text-orange-100">Rs. {expense.amount.toLocaleString()}</span>
                 </div>
               ))
             )}

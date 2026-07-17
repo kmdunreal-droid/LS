@@ -186,7 +186,7 @@ export default function DashboardTab({
       </div>
 
       {/* Stats Strip - Responsive Columns */}
-      <div className="grid grid-cols-3 gap-2 md:gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-6">
         {/* Sales Card */}
         <div className="bg-surface border border-ink-faint p-3 sm:p-5 md:p-6 space-y-2 md:space-y-4 rounded-2xl hover:border-ink/40 transition-all duration-300 group">
           <div className="flex justify-between items-center">
@@ -198,6 +198,17 @@ export default function DashboardTab({
           <span className="font-mono text-[6px] sm:text-[7px] md:text-[8px] uppercase tracking-widest text-ink/40 block font-bold truncate">Live Volume</span>
         </div>
         
+        {/* Delivery Card */}
+        <div className="bg-surface border border-ink-faint p-3 sm:p-5 md:p-6 space-y-2 md:space-y-4 rounded-2xl hover:border-ink/40 transition-all duration-300">
+          <div className="flex justify-between items-center">
+            <span className="font-mono text-[7px] sm:text-[8px] md:text-[10px] uppercase tracking-[0.15em] text-ink/70 font-bold">Delivery</span>
+            <Activity className="w-3 h-3 sm:w-4 sm:h-4 text-ink/40" />
+          </div>
+          <span className="font-mono text-[7px] sm:text-[10px] font-bold text-ink/40 uppercase block">Rs.</span>
+          <div className="font-mono text-xs sm:text-xl md:text-3.5xl font-black leading-none text-ink/70 tracking-tight">{todaySuppliesCost.toLocaleString()}</div>
+          <span className="font-mono text-[6px] sm:text-[7px] md:text-[8px] uppercase tracking-widest text-ink/40 block font-bold truncate">Today Cost</span>
+        </div>
+
         {/* Stock Card */}
         <div className="bg-surface border border-ink-faint p-3 sm:p-5 md:p-6 space-y-2 md:space-y-4 rounded-2xl hover:border-ink/40 transition-all duration-300">
           <div className="flex justify-between items-center">
@@ -286,7 +297,7 @@ export default function DashboardTab({
 
           <div className="space-y-3">
             <span className="font-mono text-[10px] uppercase tracking-widest opacity-50">Recent Logs</span>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div className="flex flex-col gap-1.5">
               {recentLogs.slice(0, 8).map(log => {
                 const isSupply = 'totalCost' in log;
                 const sLog = isSupply ? (log as SupplyLog) : null;
@@ -297,26 +308,24 @@ export default function DashboardTab({
                   <button
                     key={log.id}
                     onClick={() => setSelectedLog(log)}
-                    className={`bg-surface border border-ink-faint p-3 rounded-lg text-left hover:border-accent/40 transition-all cursor-pointer group ${
-                      isSupply ? "" : ""
-                    }`}
+                    className={`bg-orange-500/5 border border-orange-500/20 p-2.5 rounded-lg text-left hover:border-orange-400/40 transition-all cursor-pointer`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`font-mono text-[8px] font-bold uppercase tracking-widest text-ink/40`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`font-mono text-[8px] font-bold uppercase tracking-widest text-orange-300`}>
                         {isSupply ? "Supply" : "Payment"}
                       </span>
-                      <span className="font-mono text-[7px] opacity-30">
+                      <span className="font-mono text-[7px] text-orange-300/60">
                         {new Date(log.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                       </span>
                     </div>
-                    <div className="font-mono text-sm font-bold truncate">
+                    <div className="font-mono text-sm font-bold text-orange-100 truncate">
                       Rs. {(isSupply ? sLog!.totalCost : pLog!.amountPaid).toLocaleString()}
                     </div>
-                    <div className="font-mono text-[8px] opacity-40 truncate mt-1">
+                    <div className="font-mono text-[8px] text-orange-300/60 truncate mt-0.5">
                       {supName}
                     </div>
                     {isSupply && sLog && (
-                      <div className="font-mono text-[8px] opacity-30 mt-0.5">
+                      <div className="font-mono text-[8px] text-orange-300/40 mt-0.5">
                         {sLog.weightKg}kg × Rs.{sLog.supplyRatePerKg}
                       </div>
                     )}
