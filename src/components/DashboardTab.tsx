@@ -147,19 +147,31 @@ export default function DashboardTab({
 
   const maxVal = Math.max(...chartData.map((d) => Math.max(d.sales, d.cost, 1000)));
 
-  // Weekly & Monthly summary
-  const today = new Date();
-  const thisMonth = today.getMonth();
-  const thisYear = today.getFullYear();
+  // Weekly & Monthly summary (based on selectedDate)
+  const selectedDateObj = new Date(selectedDate + "T00:00:00");
+  const selectedMonth = selectedDateObj.getMonth();
+  const selectedYear = selectedDateObj.getFullYear();
 
-  const weekSales = last7Days.reduce((sum, d) => sum + orders.filter(o => o.date === d).reduce((s, o) => s + o.totalAmount, 0), 0);
-  const weekSupplyCost = last7Days.reduce((sum, d) => sum + filteredSupplyLogs.filter(s => s.date === d).reduce((s, l) => s + l.totalCost, 0), 0);
-  const weekExpenses = last7Days.reduce((sum, d) => sum + expenses.filter(e => e.date === d).reduce((s, e) => s + e.amount, 0), 0);
+  // Last 7 days ending at selectedDate
+  const getLast7FromDate = () => {
+    const dates = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(selectedDateObj);
+      d.setDate(d.getDate() - i);
+      dates.push(d.toISOString().split("T")[0]);
+    }
+    return dates;
+  };
+  const last7FromSelected = getLast7FromDate();
+
+  const weekSales = last7FromSelected.reduce((sum, d) => sum + orders.filter(o => o.date === d).reduce((s, o) => s + o.totalAmount, 0), 0);
+  const weekSupplyCost = last7FromSelected.reduce((sum, d) => sum + filteredSupplyLogs.filter(s => s.date === d).reduce((s, l) => s + l.totalCost, 0), 0);
+  const weekExpenses = last7FromSelected.reduce((sum, d) => sum + expenses.filter(e => e.date === d).reduce((s, e) => s + e.amount, 0), 0);
   const weekProfit = weekSales - weekSupplyCost - weekExpenses;
 
-  const monthOrders = orders.filter(o => { const d = new Date(o.date); return d.getMonth() === thisMonth && d.getFullYear() === thisYear; });
-  const monthSupplies = filteredSupplyLogs.filter(l => { const d = new Date(l.date); return d.getMonth() === thisMonth && d.getFullYear() === thisYear; });
-  const monthExpensesList = expenses.filter(e => { const d = new Date(e.date); return d.getMonth() === thisMonth && d.getFullYear() === thisYear; });
+  const monthOrders = orders.filter(o => { const d = new Date(o.date + "T00:00:00"); return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear; });
+  const monthSupplies = filteredSupplyLogs.filter(l => { const d = new Date(l.date + "T00:00:00"); return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear; });
+  const monthExpensesList = expenses.filter(e => { const d = new Date(e.date + "T00:00:00"); return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear; });
 
   const monthSales = monthOrders.reduce((s, o) => s + o.totalAmount, 0);
   const monthSupplyCost = monthSupplies.reduce((s, l) => s + l.totalCost, 0);
@@ -440,7 +452,7 @@ export default function DashboardTab({
 
             {/* Today */}
             <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
-              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">Today</span>
+              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">Today <span className="text-ink/20 normal-case font-normal">{selectedDate}</span></span>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Sales</span>
                 <span className="font-mono text-[10px] font-bold text-ink">Rs.{todaySales.toLocaleString()}</span>
@@ -461,7 +473,7 @@ export default function DashboardTab({
 
             {/* This Week */}
             <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
-              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Week</span>
+              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Week <span className="text-ink/20 normal-case font-normal">{last7FromSelected[0]} – {selectedDate}</span></span>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Sales</span>
                 <span className="font-mono text-[10px] font-bold text-ink">Rs.{weekSales.toLocaleString()}</span>
@@ -482,7 +494,7 @@ export default function DashboardTab({
 
             {/* This Month */}
             <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
-              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Month</span>
+              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Month <span className="text-ink/20 normal-case font-normal">{selectedDateObj.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span></span>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Sales</span>
                 <span className="font-mono text-[10px] font-bold text-ink">Rs.{monthSales.toLocaleString()}</span>
