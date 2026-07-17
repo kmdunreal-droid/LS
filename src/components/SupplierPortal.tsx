@@ -424,55 +424,48 @@ export default function SupplierPortal({
             </div>
             <div className="lg:col-span-12 animate-fade-in">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-surface border border-ink-faint p-5 md:p-6 flex flex-col justify-between rounded-xl">
-                  <div className="flex items-center justify-between mb-3">
+                <div className="bg-surface border border-ink-faint p-3 md:p-4 flex flex-col justify-between rounded-xl">
+                  <div className="flex items-center justify-between mb-1">
                     <span className="font-mono text-[7px] font-bold uppercase tracking-[0.2em] text-ink/50">Total Supplied (Raqam)</span>
-                    <Weight className="w-4 h-4 text-ink/30" />
+                    <Weight className="w-3 h-3 text-ink/30" />
                   </div>
                   <div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-mono text-[8px] font-bold text-ink/40 uppercase">Rs.</span>
-                       <span className="font-display text-2xl md:text-3xl font-black text-ink tracking-tight truncate">{totalSupplied.toLocaleString()}</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="font-display text-2xl md:text-3xl font-black text-ink tracking-tight truncate">{totalSupplied.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
-                <div className="bg-surface border border-ink-faint p-5 md:p-6 flex flex-col justify-between rounded-xl">
-                  <div className="flex items-center justify-between mb-3">
+                <div className="bg-surface border border-ink-faint p-3 md:p-4 flex flex-col justify-between rounded-xl">
+                  <div className="flex items-center justify-between mb-1">
                     <span className="font-mono text-[7px] font-bold uppercase tracking-[0.2em] text-ink/50">Today Delivery</span>
-                    <Activity className="w-4 h-4 text-ink/30" />
+                    <Activity className="w-3 h-3 text-ink/30" />
                   </div>
                   <div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-mono text-[8px] font-bold text-ink/40 uppercase">Rs.</span>
-                       <span className="font-display text-2xl md:text-3xl font-black text-ink tracking-tight truncate">{totalTodayCost.toLocaleString()}</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="font-display text-2xl md:text-3xl font-black text-ink tracking-tight truncate">{totalTodayCost.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
-                <div className="bg-surface border border-emerald-500/20 p-5 md:p-6 flex flex-col justify-between rounded-xl">
-                  <div className="flex items-center justify-between mb-3">
+                <div className="bg-surface border border-emerald-500/20 p-3 md:p-4 flex flex-col justify-between rounded-xl">
+                  <div className="flex items-center justify-between mb-1">
                     <span className="font-mono text-[7px] font-bold uppercase tracking-[0.2em] text-emerald-400">Total Paid (Ada Shuda)</span>
-                    <CreditCard className="w-4 h-4 text-emerald-400" />
+                    <CreditCard className="w-3 h-3 text-emerald-400" />
                   </div>
                   <div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-mono text-[8px] font-bold text-emerald-400/60 uppercase">Rs.</span>
-                       <span className="font-display text-2xl md:text-3xl font-black text-emerald-400 tracking-tight truncate">{totalPaid.toLocaleString()}</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="font-display text-2xl md:text-3xl font-black text-emerald-400 tracking-tight truncate">{totalPaid.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
-                <div className={`bg-surface border p-5 md:p-6 flex flex-col justify-between rounded-xl ${balance > 0 ? "border-red-500/20" : "border-emerald-500/20"}`}>
-                  <div className="flex items-center justify-between mb-3">
+                <div className={`bg-surface border p-3 md:p-4 flex flex-col justify-between rounded-xl ${balance > 0 ? "border-red-500/20" : "border-emerald-500/20"}`}>
+                  <div className="flex items-center justify-between mb-1">
                     <span className={`font-mono text-[7px] font-bold uppercase tracking-[0.2em] ${balance > 0 ? "text-red-400" : "text-emerald-400"}`}>Balance (Baki / Pending)</span>
-                    {balance > 0 ? <Weight className="w-4 h-4 text-red-400" /> : <CheckCircle className="w-4 h-4 text-emerald-400" />}
+                    {balance > 0 ? <Weight className="w-3 h-3 text-red-400" /> : <CheckCircle className="w-3 h-3 text-emerald-400" />}
                   </div>
                   <div>
-                    <div className="flex items-baseline gap-2">
-                      <span className={`font-mono text-[8px] font-bold uppercase ${balance > 0 ? "text-red-400/60" : "text-emerald-400/60"}`}>Rs.</span>
-                       <span className={`font-display text-2xl md:text-3xl font-black tracking-tight truncate ${balance > 0 ? "text-red-400" : "text-emerald-400"}`}>
+                    <div className="flex items-baseline gap-1">
+                      <span className={`font-display text-2xl md:text-3xl font-black tracking-tight truncate ${balance > 0 ? "text-red-400" : "text-emerald-400"}`}>
                         {Math.abs(balance).toLocaleString()}
-                      </span>
-                      <span className={`font-mono text-[8px] font-bold uppercase ${balance > 0 ? "text-red-400/60" : "text-emerald-400/60"}`}>
-                        {balance >= 0 ? "Pending" : "Excess Paid"}
                       </span>
                     </div>
                   </div>
