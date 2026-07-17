@@ -35,6 +35,7 @@ export default function DashboardTab({
   const [quickRate, setQuickRate] = useState<string>(settings.baseRawRate.toString());
   const [isUpdatingRate, setIsUpdatingRate] = useState(false);
   const [selectedLog, setSelectedLog] = useState<SupplyLog | SupplierPayment | null>(null);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     setQuickRate(settings.baseRawRate.toString());
@@ -178,6 +179,9 @@ export default function DashboardTab({
           <span className="font-mono text-[11px] font-black text-accent">{new Date(selectedDate).getDate().toString().padStart(2, "0")}</span>
         </button>
         <input ref={dateInputRef} type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="hidden" />
+        <button onClick={() => setShowReport(true)} className="px-3 py-1.5 bg-surface border border-ink-faint rounded-full font-mono text-[7px] font-bold uppercase tracking-widest text-ink/60 hover:bg-ink-faint/20 transition-all cursor-pointer shrink-0">
+          Report
+        </button>
       </div>
 
       {/* Daily Rate Editor */}
@@ -258,52 +262,6 @@ export default function DashboardTab({
           <div className="flex items-center gap-4">
             <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-ink/40 font-bold">Summary</span>
             <div className="h-px bg-ink-faint/20 flex-1" />
-          </div>
-
-          {/* Weekly & Monthly Report */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-surface border border-ink-faint p-3 rounded-xl space-y-2">
-              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Week</span>
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[7px] text-ink/40 uppercase">Sales</span>
-                  <span className="font-mono text-[10px] font-bold text-ink">Rs.{weekSales.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[7px] text-ink/40 uppercase">Delivery</span>
-                  <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{weekSupplyCost.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[7px] text-ink/40 uppercase">Expenses</span>
-                  <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{weekExpenses.toLocaleString()}</span>
-                </div>
-                <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
-                  <span className="font-mono text-[7px] text-ink/40 uppercase">Profit</span>
-                  <span className={`font-mono text-[11px] font-black ${weekProfit >= 0 ? "text-emerald-400" : "text-red-400"}`}>Rs.{weekProfit.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-            <div className="bg-surface border border-ink-faint p-3 rounded-xl space-y-2">
-              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Month</span>
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[7px] text-ink/40 uppercase">Sales</span>
-                  <span className="font-mono text-[10px] font-bold text-ink">Rs.{monthSales.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[7px] text-ink/40 uppercase">Delivery</span>
-                  <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{monthSupplyCost.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-mono text-[7px] text-ink/40 uppercase">Expenses</span>
-                  <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{monthExpensesTotal.toLocaleString()}</span>
-                </div>
-                <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
-                  <span className="font-mono text-[7px] text-ink/40 uppercase">Profit</span>
-                  <span className={`font-mono text-[11px] font-black ${monthProfit >= 0 ? "text-emerald-400" : "text-red-400"}`}>Rs.{monthProfit.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
           </div>
           </div>
 
@@ -465,6 +423,87 @@ export default function DashboardTab({
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {showReport && (
+        <div className="fixed inset-0 bg-bg/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in" onClick={() => setShowReport(false)}>
+          <div className="bg-surface border border-ink-faint rounded-xl p-5 w-full max-w-sm shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent">Day / Week / Month Report</span>
+              <button onClick={() => setShowReport(false)} className="p-1 hover:bg-ink-faint rounded transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Today */}
+            <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
+              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">Today</span>
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[7px] text-ink/40 uppercase">Sales</span>
+                <span className="font-mono text-[10px] font-bold text-ink">Rs.{todaySales.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[7px] text-ink/40 uppercase">Delivery</span>
+                <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{todaySuppliesCost.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[7px] text-ink/40 uppercase">Expenses</span>
+                <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{todayExpensesCost.toLocaleString()}</span>
+              </div>
+              <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
+                <span className="font-mono text-[7px] text-ink/40 uppercase">Profit</span>
+                <span className={`font-mono text-[11px] font-black ${todayNetProfit >= 0 ? "text-emerald-400" : "text-red-400"}`}>Rs.{todayNetProfit.toLocaleString()}</span>
+              </div>
+            </div>
+
+            {/* This Week */}
+            <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
+              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Week</span>
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[7px] text-ink/40 uppercase">Sales</span>
+                <span className="font-mono text-[10px] font-bold text-ink">Rs.{weekSales.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[7px] text-ink/40 uppercase">Delivery</span>
+                <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{weekSupplyCost.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[7px] text-ink/40 uppercase">Expenses</span>
+                <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{weekExpenses.toLocaleString()}</span>
+              </div>
+              <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
+                <span className="font-mono text-[7px] text-ink/40 uppercase">Profit</span>
+                <span className={`font-mono text-[11px] font-black ${weekProfit >= 0 ? "text-emerald-400" : "text-red-400"}`}>Rs.{weekProfit.toLocaleString()}</span>
+              </div>
+            </div>
+
+            {/* This Month */}
+            <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
+              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Month</span>
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[7px] text-ink/40 uppercase">Sales</span>
+                <span className="font-mono text-[10px] font-bold text-ink">Rs.{monthSales.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[7px] text-ink/40 uppercase">Delivery</span>
+                <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{monthSupplyCost.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[7px] text-ink/40 uppercase">Expenses</span>
+                <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{monthExpensesTotal.toLocaleString()}</span>
+              </div>
+              <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
+                <span className="font-mono text-[7px] text-ink/40 uppercase">Profit</span>
+                <span className={`font-mono text-[11px] font-black ${monthProfit >= 0 ? "text-emerald-400" : "text-red-400"}`}>Rs.{monthProfit.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <button onClick={() => setShowReport(false)} className="w-full py-2.5 bg-accent text-bg font-mono text-[9px] font-bold uppercase tracking-widest rounded hover:brightness-110 transition-all">
+              Close
+            </button>
           </div>
         </div>
       )}
