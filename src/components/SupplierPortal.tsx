@@ -597,7 +597,7 @@ export default function SupplierPortal({
                           onTouchEnd={() => { if (Date.now() - weightEditStartRef.current >= 300 && editingLogId !== log.id) { setWeightEditLog(log); setWeightEditValue(log.weightKg.toString()); } }}
                         >
                           <div className="flex items-start justify-between relative z-10">
-                            <span className="font-mono text-[10px] md:text-xs font-black uppercase tracking-widest text-orange-300">
+                            <span className="font-mono text-xs md:text-sm font-black uppercase tracking-widest text-orange-300">
                               {catKey}
                             </span>
                             <div className="flex items-center gap-2">
