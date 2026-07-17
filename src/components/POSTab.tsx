@@ -42,8 +42,12 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
   const pressStartTimeRef = React.useRef<number>(0);
   const isLongPressRef = React.useRef<boolean>(false);
   const isShortTapRef = React.useRef<boolean>(false);
+  const touchHandledRef = React.useRef<boolean>(false);
 
-  const handleButtonPressStart = (item: any) => {
+  const handleButtonPressStart = (item: any, isTouch = false) => {
+    if (isTouch) touchHandledRef.current = true;
+    else if (touchHandledRef.current) return; // mouse event after touch → ignore
+
     isLongPressRef.current = false;
     isShortTapRef.current = false;
     pressStartTimeRef.current = Date.now();
@@ -63,7 +67,10 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
     }, 300);
   };
 
-  const handleButtonPressEnd = (e: React.MouseEvent | React.TouchEvent, item: any) => {
+  const handleButtonPressEnd = (e: React.MouseEvent | React.TouchEvent, item: any, isTouch = false) => {
+    if (isTouch) touchHandledRef.current = true;
+    else if (touchHandledRef.current) { touchHandledRef.current = false; return; }
+
     const elapsed = Date.now() - pressStartTimeRef.current;
     
     if (pressTimeoutRef.current) {
@@ -258,11 +265,11 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
                   <button
                     key={item.key}
                     type="button"
-                    onMouseDown={() => handleButtonPressStart(item)}
-                    onMouseUp={(e) => handleButtonPressEnd(e, item)}
+                    onMouseDown={() => handleButtonPressStart(item, false)}
+                    onMouseUp={(e) => handleButtonPressEnd(e, item, false)}
                     onMouseLeave={handleButtonPressCancel}
-                    onTouchStart={() => handleButtonPressStart(item)}
-                    onTouchEnd={(e) => handleButtonPressEnd(e, item)}
+                    onTouchStart={(e) => { e.preventDefault(); handleButtonPressStart(item, true); }}
+                    onTouchEnd={(e) => { handleButtonPressEnd(e, item, true); }}
                     className={`bg-surface border ${theme.border} p-4 md:p-6 text-left transition-all duration-300 flex flex-col justify-between h-28 md:h-36 rounded-2xl group cursor-pointer select-none active:scale-[0.96]`}
                     style={{ WebkitTouchCallout: "none", userSelect: "none" }}
                   >

@@ -146,6 +146,25 @@ export default function DashboardTab({
 
   const maxVal = Math.max(...chartData.map((d) => Math.max(d.sales, d.cost, 1000)));
 
+  // Weekly & Monthly summary
+  const today = new Date();
+  const thisMonth = today.getMonth();
+  const thisYear = today.getFullYear();
+
+  const weekSales = last7Days.reduce((sum, d) => sum + orders.filter(o => o.date === d).reduce((s, o) => s + o.totalAmount, 0), 0);
+  const weekSupplyCost = last7Days.reduce((sum, d) => sum + filteredSupplyLogs.filter(s => s.date === d).reduce((s, l) => s + l.totalCost, 0), 0);
+  const weekExpenses = last7Days.reduce((sum, d) => sum + expenses.filter(e => e.date === d).reduce((s, e) => s + e.amount, 0), 0);
+  const weekProfit = weekSales - weekSupplyCost - weekExpenses;
+
+  const monthOrders = orders.filter(o => { const d = new Date(o.date); return d.getMonth() === thisMonth && d.getFullYear() === thisYear; });
+  const monthSupplies = filteredSupplyLogs.filter(l => { const d = new Date(l.date); return d.getMonth() === thisMonth && d.getFullYear() === thisYear; });
+  const monthExpensesList = expenses.filter(e => { const d = new Date(e.date); return d.getMonth() === thisMonth && d.getFullYear() === thisYear; });
+
+  const monthSales = monthOrders.reduce((s, o) => s + o.totalAmount, 0);
+  const monthSupplyCost = monthSupplies.reduce((s, l) => s + l.totalCost, 0);
+  const monthExpensesTotal = monthExpensesList.reduce((s, e) => s + e.amount, 0);
+  const monthProfit = monthSales - monthSupplyCost - monthExpensesTotal;
+
   return (
     <div id="dashboard-tab" className="space-y-4 animate-fade-in max-w-5xl mx-auto">
       <div className="flex flex-wrap items-center gap-2 border-b border-ink-faint/40 pb-3">
@@ -241,8 +260,52 @@ export default function DashboardTab({
             <div className="h-px bg-ink-faint/20 flex-1" />
           </div>
 
-
-        </div>
+          {/* Weekly & Monthly Report */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-surface border border-ink-faint p-3 rounded-xl space-y-2">
+              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Week</span>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[7px] text-ink/40 uppercase">Sales</span>
+                  <span className="font-mono text-[10px] font-bold text-ink">Rs.{weekSales.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[7px] text-ink/40 uppercase">Delivery</span>
+                  <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{weekSupplyCost.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[7px] text-ink/40 uppercase">Expenses</span>
+                  <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{weekExpenses.toLocaleString()}</span>
+                </div>
+                <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
+                  <span className="font-mono text-[7px] text-ink/40 uppercase">Profit</span>
+                  <span className={`font-mono text-[11px] font-black ${weekProfit >= 0 ? "text-emerald-400" : "text-red-400"}`}>Rs.{weekProfit.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+            <div className="bg-surface border border-ink-faint p-3 rounded-xl space-y-2">
+              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Month</span>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[7px] text-ink/40 uppercase">Sales</span>
+                  <span className="font-mono text-[10px] font-bold text-ink">Rs.{monthSales.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[7px] text-ink/40 uppercase">Delivery</span>
+                  <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{monthSupplyCost.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[7px] text-ink/40 uppercase">Expenses</span>
+                  <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{monthExpensesTotal.toLocaleString()}</span>
+                </div>
+                <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
+                  <span className="font-mono text-[7px] text-ink/40 uppercase">Profit</span>
+                  <span className={`font-mono text-[11px] font-black ${monthProfit >= 0 ? "text-emerald-400" : "text-red-400"}`}>Rs.{monthProfit.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          </div>
 
         {/* Right Side: Dues & Chart */}
         <div className="lg:col-span-5 space-y-4">
