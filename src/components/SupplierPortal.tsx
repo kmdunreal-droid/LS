@@ -432,7 +432,7 @@ export default function SupplierPortal({
                   <div>
                     <div className="flex items-baseline gap-2">
                       <span className="font-mono text-[8px] font-bold text-ink/40 uppercase">Rs.</span>
-                      <span className="font-display text-2xl md:text-3xl font-black text-ink tracking-tight">{totalSupplied.toLocaleString()}</span>
+                       <span className="font-display text-2xl md:text-3xl font-black text-ink tracking-tight truncate">{totalSupplied.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -444,7 +444,7 @@ export default function SupplierPortal({
                   <div>
                     <div className="flex items-baseline gap-2">
                       <span className="font-mono text-[8px] font-bold text-ink/40 uppercase">Rs.</span>
-                      <span className="font-display text-2xl md:text-3xl font-black text-ink tracking-tight">{totalTodayCost.toLocaleString()}</span>
+                       <span className="font-display text-2xl md:text-3xl font-black text-ink tracking-tight truncate">{totalTodayCost.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -456,7 +456,7 @@ export default function SupplierPortal({
                   <div>
                     <div className="flex items-baseline gap-2">
                       <span className="font-mono text-[8px] font-bold text-emerald-400/60 uppercase">Rs.</span>
-                      <span className="font-display text-2xl md:text-3xl font-black text-emerald-400 tracking-tight">{totalPaid.toLocaleString()}</span>
+                       <span className="font-display text-2xl md:text-3xl font-black text-emerald-400 tracking-tight truncate">{totalPaid.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -468,7 +468,7 @@ export default function SupplierPortal({
                   <div>
                     <div className="flex items-baseline gap-2">
                       <span className={`font-mono text-[8px] font-bold uppercase ${balance > 0 ? "text-red-400/60" : "text-emerald-400/60"}`}>Rs.</span>
-                      <span className={`font-display text-2xl md:text-3xl font-black tracking-tight ${balance > 0 ? "text-red-400" : "text-emerald-400"}`}>
+                       <span className={`font-display text-2xl md:text-3xl font-black tracking-tight truncate ${balance > 0 ? "text-red-400" : "text-emerald-400"}`}>
                         {Math.abs(balance).toLocaleString()}
                       </span>
                       <span className={`font-mono text-[8px] font-bold uppercase ${balance > 0 ? "text-red-400/60" : "text-emerald-400/60"}`}>
@@ -628,7 +628,7 @@ export default function SupplierPortal({
                           <div className="flex items-center justify-between relative z-10">
                             <div className="flex items-baseline gap-1.5">
                               <span className="font-mono text-[9px] font-bold uppercase text-orange-300/60">Rs.</span>
-                              <span className="font-mono text-base md:text-lg font-black text-orange-100">{log.totalCost.toLocaleString()}</span>
+                               <span className="font-mono text-base md:text-lg font-black text-orange-100 truncate">{log.totalCost.toLocaleString()}</span>
                             </div>
                           </div>
                         </div>
@@ -683,7 +683,7 @@ export default function SupplierPortal({
               <div className="grid grid-cols-1 gap-4">
                 <div className="bg-surface border border-ink-faint p-5 space-y-3 rounded-lg">
                   <span className="block font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest">Daily Total Payments Received</span>
-                  <span className="block font-mono text-4xl font-bold text-emerald-400 tracking-tighter">Rs. {totalTodayPayments.toLocaleString()}</span>
+                   <span className="block font-mono text-4xl font-bold text-emerald-400 tracking-tighter truncate">Rs. {totalTodayPayments.toLocaleString()}</span>
                 </div>
               </div>
 
@@ -725,7 +725,7 @@ export default function SupplierPortal({
                               <span className="font-mono text-[8px] text-orange-300/60 italic block">{pay.notes}</span>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="font-mono text-sm font-bold text-orange-100">Rs. {pay.amountPaid.toLocaleString()}</span>
+                               <span className="font-mono text-sm font-bold text-orange-100 truncate">Rs. {pay.amountPaid.toLocaleString()}</span>
                               <button onClick={() => startEditingPayment(pay)} className="opacity-60 hover:opacity-100 p-0.5"><RefreshCw className="w-3.5 h-3.5 text-orange-300" /></button>
                               <button onClick={() => { if (confirm("Delete this payment?")) onDeletePayment(pay.id); }} className="text-red-400 opacity-60 hover:opacity-100 p-0.5"><X className="w-3.5 h-3.5" /></button>
                             </div>
@@ -756,7 +756,7 @@ export default function SupplierPortal({
                 </div>
                 <div>
                   <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest block mb-1">Current Rate</span>
-                  <span className="font-display text-2xl text-accent">Rs. {settings.baseRawRate} / KG</span>
+                   <span className="font-display text-2xl text-accent truncate">Rs. {settings.baseRawRate} / KG</span>
                 </div>
               </div>
             </div>

@@ -423,7 +423,7 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
                     </div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="font-mono text-[9px] font-bold uppercase text-orange-300/60">Rs.</span>
-                      <span className="font-mono text-base md:text-lg font-black text-orange-100">{log.totalCost.toLocaleString()}</span>
+                       <span className="font-mono text-base md:text-lg font-black text-orange-100 truncate">{log.totalCost.toLocaleString()}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

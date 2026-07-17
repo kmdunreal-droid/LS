@@ -229,7 +229,7 @@ export default function DashboardTab({
             <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-ink-faint" />
           </div>
           <span className="font-mono text-[7px] sm:text-[10px] font-bold text-ink/40 uppercase block">Rs.</span>
-          <div className="font-mono text-xs sm:text-xl md:text-3.5xl font-black leading-none text-ink/70 tracking-tight">{todaySales.toLocaleString()}</div>
+          <div className="font-mono text-xs sm:text-xl md:text-3.5xl font-black leading-none text-ink/70 tracking-tight truncate">{todaySales.toLocaleString()}</div>
           <span className="font-mono text-[6px] sm:text-[7px] md:text-[8px] uppercase tracking-widest text-ink/40 block font-bold truncate">Live Volume</span>
         </div>
         
@@ -240,7 +240,7 @@ export default function DashboardTab({
             <Activity className="w-3 h-3 sm:w-4 sm:h-4 text-ink/40" />
           </div>
           <span className="font-mono text-[7px] sm:text-[10px] font-bold text-ink/40 uppercase block">Rs.</span>
-          <div className="font-mono text-xs sm:text-xl md:text-3.5xl font-black leading-none text-ink/70 tracking-tight">{todaySuppliesCost.toLocaleString()}</div>
+          <div className="font-mono text-xs sm:text-xl md:text-3.5xl font-black leading-none text-ink/70 tracking-tight truncate">{todaySuppliesCost.toLocaleString()}</div>
           <span className="font-mono text-[6px] sm:text-[7px] md:text-[8px] uppercase tracking-widest text-ink/40 block font-bold truncate">Today Cost</span>
         </div>
 
@@ -251,7 +251,7 @@ export default function DashboardTab({
             <Activity className="w-3 h-3 sm:w-4 sm:h-4 text-ink/40" />
           </div>
           <span className="font-mono text-[7px] sm:text-[10px] font-bold text-ink/40 uppercase block">KG</span>
-          <div className="font-mono text-xs sm:text-xl md:text-3.5xl font-black leading-none text-ink/70 tracking-tight">{daySupplies.reduce((s, log) => s + log.weightKg, 0).toFixed(1)}</div>
+          <div className="font-mono text-xs sm:text-xl md:text-3.5xl font-black leading-none text-ink/70 tracking-tight truncate">{daySupplies.reduce((s, log) => s + log.weightKg, 0).toFixed(1)}</div>
           <span className="font-mono text-[6px] sm:text-[7px] md:text-[8px] uppercase tracking-widest text-ink/40 block font-bold truncate">Today Weight</span>
         </div>
  
@@ -262,7 +262,7 @@ export default function DashboardTab({
             <Flame className="w-3 h-3 sm:w-4 sm:h-4 text-ink/40" />
           </div>
           <span className="font-mono text-[7px] sm:text-[10px] font-bold text-ink/40 uppercase block">Rs.</span>
-          <div className="font-mono text-xs sm:text-xl md:text-3.5xl font-black leading-none text-ink/70 tracking-tight">{todayNetProfit.toLocaleString()}</div>
+          <div className="font-mono text-xs sm:text-xl md:text-3.5xl font-black leading-none text-ink/70 tracking-tight truncate">{todayNetProfit.toLocaleString()}</div>
           <span className="font-mono text-[6px] sm:text-[7px] md:text-[8px] uppercase tracking-widest text-ink/40 block font-bold truncate">Net Operating</span>
         </div>
       </div>
@@ -288,7 +288,7 @@ export default function DashboardTab({
           <div className={`bg-surface border p-4 space-y-1.5 rounded-2xl transition-all duration-300 ${outstandingSupplierDues > 0 ? "border-red-500/20" : "border-emerald-500/20"}`}>
             <span className={`font-mono text-[9px] uppercase tracking-widest font-bold ${outstandingSupplierDues > 0 ? "text-red-400" : "text-emerald-400"}`}>Dues Balance</span>
             <span className={`font-mono text-[7px] sm:text-[10px] font-bold uppercase block ${outstandingSupplierDues > 0 ? "text-red-400/60" : "text-emerald-400/60"}`}>Rs.</span>
-            <div className={`font-mono text-3xl font-black tracking-tight ${outstandingSupplierDues > 0 ? "text-red-400" : "text-emerald-400"}`}>{outstandingSupplierDues.toLocaleString()}</div>
+            <div className={`font-mono text-3xl font-black tracking-tight truncate ${outstandingSupplierDues > 0 ? "text-red-400" : "text-emerald-400"}`}>{outstandingSupplierDues.toLocaleString()}</div>
             <span className={`font-mono text-[10px] uppercase tracking-widest block truncate font-bold ${outstandingSupplierDues > 0 ? "text-red-400/60" : "text-emerald-400/60"}`}>
               {outstandingSupplierDues > 0 ? "Pending" : "Settled"} &bull; {selectedSupplierId === "" || selectedSupplierId === "All" ? "All Vendors" : suppliers.find(s => s.id === selectedSupplierId)?.name}
             </span>
@@ -455,19 +455,19 @@ export default function DashboardTab({
               <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">Today <span className="text-ink/20 normal-case font-normal">{selectedDate}</span></span>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Sales</span>
-                <span className="font-mono text-[10px] font-bold text-ink">Rs.{todaySales.toLocaleString()}</span>
+                 <span className="font-mono text-[10px] font-bold text-ink truncate">Rs.{todaySales.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Delivery</span>
-                <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{todaySuppliesCost.toLocaleString()}</span>
+                 <span className="font-mono text-[10px] font-bold text-ink/70 truncate">Rs.{todaySuppliesCost.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Expenses</span>
-                <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{todayExpensesCost.toLocaleString()}</span>
+                 <span className="font-mono text-[10px] font-bold text-ink/70 truncate">Rs.{todayExpensesCost.toLocaleString()}</span>
               </div>
               <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Profit</span>
-                <span className={`font-mono text-[11px] font-black ${todayNetProfit >= 0 ? "text-emerald-400" : "text-red-400"}`}>Rs.{todayNetProfit.toLocaleString()}</span>
+                 <span className={`font-mono text-[11px] font-black ${todayNetProfit >= 0 ? "text-emerald-400" : "text-red-400"} truncate`}>Rs.{todayNetProfit.toLocaleString()}</span>
               </div>
             </div>
 
@@ -476,19 +476,19 @@ export default function DashboardTab({
               <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Week <span className="text-ink/20 normal-case font-normal">{last7FromSelected[0]} – {selectedDate}</span></span>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Sales</span>
-                <span className="font-mono text-[10px] font-bold text-ink">Rs.{weekSales.toLocaleString()}</span>
+                 <span className="font-mono text-[10px] font-bold text-ink truncate">Rs.{weekSales.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Delivery</span>
-                <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{weekSupplyCost.toLocaleString()}</span>
+                 <span className="font-mono text-[10px] font-bold text-ink/70 truncate">Rs.{weekSupplyCost.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Expenses</span>
-                <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{weekExpenses.toLocaleString()}</span>
+                 <span className="font-mono text-[10px] font-bold text-ink/70 truncate">Rs.{weekExpenses.toLocaleString()}</span>
               </div>
               <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Profit</span>
-                <span className={`font-mono text-[11px] font-black ${weekProfit >= 0 ? "text-emerald-400" : "text-red-400"}`}>Rs.{weekProfit.toLocaleString()}</span>
+                 <span className={`font-mono text-[11px] font-black ${weekProfit >= 0 ? "text-emerald-400" : "text-red-400"} truncate`}>Rs.{weekProfit.toLocaleString()}</span>
               </div>
             </div>
 
@@ -497,19 +497,19 @@ export default function DashboardTab({
               <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Month <span className="text-ink/20 normal-case font-normal">{selectedDateObj.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span></span>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Sales</span>
-                <span className="font-mono text-[10px] font-bold text-ink">Rs.{monthSales.toLocaleString()}</span>
+                 <span className="font-mono text-[10px] font-bold text-ink truncate">Rs.{monthSales.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Delivery</span>
-                <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{monthSupplyCost.toLocaleString()}</span>
+                 <span className="font-mono text-[10px] font-bold text-ink/70 truncate">Rs.{monthSupplyCost.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Expenses</span>
-                <span className="font-mono text-[10px] font-bold text-ink/70">Rs.{monthExpensesTotal.toLocaleString()}</span>
+                 <span className="font-mono text-[10px] font-bold text-ink/70 truncate">Rs.{monthExpensesTotal.toLocaleString()}</span>
               </div>
               <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
                 <span className="font-mono text-[7px] text-ink/40 uppercase">Profit</span>
-                <span className={`font-mono text-[11px] font-black ${monthProfit >= 0 ? "text-emerald-400" : "text-red-400"}`}>Rs.{monthProfit.toLocaleString()}</span>
+                 <span className={`font-mono text-[11px] font-black ${monthProfit >= 0 ? "text-emerald-400" : "text-red-400"} truncate`}>Rs.{monthProfit.toLocaleString()}</span>
               </div>
             </div>
 

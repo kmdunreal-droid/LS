@@ -282,7 +282,7 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
                       </span>
                       <div className="flex items-baseline gap-1">
                         <span className={`font-mono text-[9px] md:text-[10px] uppercase font-bold ${theme.accentText}`}>Rs.</span>
-                        <span className="font-mono text-lg md:text-2xl font-black leading-none text-white">{currentPrice}</span>
+                         <span className="font-mono text-lg md:text-2xl font-black leading-none text-white truncate">{currentPrice}</span>
                       </div>
                     </div>
                   </button>
@@ -336,7 +336,7 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
                         </span>
                         <div className="flex items-baseline gap-2">
                           <span className="font-mono text-base font-bold leading-none">{item.quantity}<span className="text-[10px] ml-1 opacity-30 font-normal uppercase">KG</span></span>
-                          <span className="font-mono text-[10px] opacity-30 uppercase">@ {item.price}</span>
+                           <span className="font-mono text-[10px] opacity-30 uppercase truncate">@ {item.price}</span>
                         </div>
                       </div>
                       
@@ -414,7 +414,7 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
                     <span className="font-mono text-[8px] uppercase tracking-widest opacity-30">Grand Total</span>
                     <div className="flex items-baseline gap-2">
                       <span className="font-mono text-[10px] opacity-30 uppercase">Rs.</span>
-                      <span className="font-mono text-4xl font-bold tracking-tighter">
+                       <span className="font-mono text-4xl font-bold tracking-tighter truncate">
                         {cartTotal.toLocaleString()}
                       </span>
                     </div>
@@ -476,7 +476,7 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
                       <td className="py-4 px-3 font-mono text-[10px] opacity-40 uppercase tracking-wide">
                         {order.items.map((it) => `${it.name} (${it.quantity}Kg)`).join(", ")}
                       </td>
-                      <td className="py-4 px-3 font-mono text-base font-bold">
+                       <td className="py-4 px-3 font-mono text-base font-bold truncate">
                         Rs. {order.totalAmount.toLocaleString()}
                       </td>
                       <td className="py-4 px-3 text-center">
@@ -542,7 +542,7 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
                     <div className="flex justify-between items-center border-t border-ink-faint pt-4">
                       <div className="flex items-baseline gap-1">
                         <span className="font-mono text-[10px] opacity-30 uppercase">Rs.</span>
-                        <span className="font-mono text-xl font-bold">{order.totalAmount.toLocaleString()}</span>
+                         <span className="font-mono text-xl font-bold truncate">{order.totalAmount.toLocaleString()}</span>
                       </div>
                       <button
                         type="button"
@@ -804,7 +804,7 @@ export default function POSTab({ settings, orders, onAddOrder, onUpdateStatus, o
                       <span className="font-mono text-[8px] font-bold text-accent uppercase tracking-widest">Total Bill</span>
                       <div className="flex items-baseline gap-1">
                         <span className="font-mono text-[9px] opacity-30 uppercase">Rs.</span>
-                        <span className="font-mono text-2xl md:text-3xl font-bold leading-none tracking-tighter">
+                         <span className="font-mono text-2xl md:text-3xl font-bold leading-none tracking-tighter truncate">
                           {calculatedTotalPrice.toLocaleString()}
                         </span>
                       </div>

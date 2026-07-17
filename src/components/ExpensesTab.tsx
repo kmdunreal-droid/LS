@@ -297,7 +297,7 @@ export default function ExpensesTab({ expenses, onAddExpense, onUpdateExpense, o
                         <p className="font-mono text-[8px] text-orange-300/60 uppercase italic">{e.notes}</p>
                         <div className="flex items-baseline gap-1">
                           <span className="font-mono text-[7px] font-bold text-orange-300/60 uppercase">Rs.</span>
-                          <span className="font-display text-base font-black text-orange-100">{e.amount.toLocaleString()}</span>
+                           <span className="font-display text-base font-black text-orange-100 truncate">{e.amount.toLocaleString()}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">

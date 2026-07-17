@@ -414,7 +414,7 @@ export default function PaymentsTab({ payments, supplyLogs, suppliers, onAddPaym
                         <p className="font-mono text-[10px] text-orange-100 uppercase italic">{p.notes || "Supplier Payment"}</p>
                         <div className="flex items-baseline gap-1">
                           <span className="font-mono text-[7px] font-bold text-orange-300/60 uppercase">Rs.</span>
-                          <span className="font-display text-base font-black text-orange-100">{p.amountPaid.toLocaleString()}</span>
+                           <span className="font-display text-base font-black text-orange-100 truncate">{p.amountPaid.toLocaleString()}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
