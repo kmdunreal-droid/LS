@@ -417,6 +417,11 @@ export default function SupplierPortal({
                 )}
               </div>
             </div>
+            <div className="lg:col-span-12 flex items-center justify-end gap-2">
+              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">Report Date</span>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+                className="w-auto bg-bg/80 border border-ink-faint rounded px-2 py-1 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none appearance-none cursor-pointer" />
+            </div>
             <div className="lg:col-span-12 animate-fade-in">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-surface border border-ink-faint p-5 md:p-6 flex flex-col justify-between rounded-xl">
