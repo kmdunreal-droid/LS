@@ -582,52 +582,52 @@ export default function SupplierPortal({
 
                   {/* Today */}
                   <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
-                    <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">Today <span className="text-ink/20 normal-case font-normal">{date}</span></span>
+                    <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-ink/40">Today <span className="text-ink/20 normal-case font-normal">{date}</span></span>
                     <div className="flex justify-between items-center">
-                      <span className="font-mono text-[7px] text-ink/40 uppercase">Supplied</span>
-                      <span className="font-mono text-[10px] font-bold text-ink truncate">{totalTodayCost.toLocaleString()}</span>
+                      <span className="font-mono text-[8px] text-ink/40 uppercase">Supplied</span>
+                      <span className="font-mono text-xs md:text-sm font-bold text-ink">{totalTodayCost.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="font-mono text-[7px] text-ink/40 uppercase">Paid</span>
-                      <span className="font-mono text-[10px] font-bold text-ink/70 truncate">{totalTodayPayments.toLocaleString()}</span>
+                      <span className="font-mono text-[8px] text-ink/40 uppercase">Paid</span>
+                      <span className="font-mono text-xs md:text-sm font-bold text-ink/70">{totalTodayPayments.toLocaleString()}</span>
                     </div>
                     <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
-                      <span className="font-mono text-[7px] text-ink/40 uppercase">Balance</span>
-                      <span className={`font-mono text-[11px] font-black ${(totalTodayCost - totalTodayPayments) >= 0 ? "text-red-400" : "text-emerald-400"} truncate`}>{(totalTodayCost - totalTodayPayments).toLocaleString()}</span>
+                      <span className="font-mono text-[8px] text-ink/40 uppercase">Balance</span>
+                      <span className={`font-mono text-sm md:text-base font-black ${(totalTodayCost - totalTodayPayments) >= 0 ? "text-red-400" : "text-emerald-400"}`}>{(totalTodayCost - totalTodayPayments).toLocaleString()}</span>
                     </div>
                   </div>
 
                   {/* This Week */}
                   <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
-                    <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Week <span className="text-ink/20 normal-case font-normal">{last7FromSelected[0]} – {date}</span></span>
+                    <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-ink/40">This Week <span className="text-ink/20 normal-case font-normal">{last7FromSelected[0]} – {date}</span></span>
                     <div className="flex justify-between items-center">
-                      <span className="font-mono text-[7px] text-ink/40 uppercase">Supplied</span>
-                      <span className="font-mono text-[10px] font-bold text-ink truncate">{weekSupplied.toLocaleString()}</span>
+                      <span className="font-mono text-[8px] text-ink/40 uppercase">Supplied</span>
+                      <span className="font-mono text-xs md:text-sm font-bold text-ink">{weekSupplied.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="font-mono text-[7px] text-ink/40 uppercase">Paid</span>
-                      <span className="font-mono text-[10px] font-bold text-ink/70 truncate">{weekPaid.toLocaleString()}</span>
+                      <span className="font-mono text-[8px] text-ink/40 uppercase">Paid</span>
+                      <span className="font-mono text-xs md:text-sm font-bold text-ink/70">{weekPaid.toLocaleString()}</span>
                     </div>
                     <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
-                      <span className="font-mono text-[7px] text-ink/40 uppercase">Balance</span>
-                      <span className={`font-mono text-[11px] font-black ${weekBalance >= 0 ? "text-red-400" : "text-emerald-400"} truncate`}>{weekBalance.toLocaleString()}</span>
+                      <span className="font-mono text-[8px] text-ink/40 uppercase">Balance</span>
+                      <span className={`font-mono text-sm md:text-base font-black ${weekBalance >= 0 ? "text-red-400" : "text-emerald-400"}`}>{weekBalance.toLocaleString()}</span>
                     </div>
                   </div>
 
                   {/* This Month */}
                   <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
-                    <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">This Month <span className="text-ink/20 normal-case font-normal">{reportDateObj.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span></span>
+                    <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-ink/40">This Month <span className="text-ink/20 normal-case font-normal">{reportDateObj.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span></span>
                     <div className="flex justify-between items-center">
-                      <span className="font-mono text-[7px] text-ink/40 uppercase">Supplied</span>
-                      <span className="font-mono text-[10px] font-bold text-ink truncate">{monthSupplied.toLocaleString()}</span>
+                      <span className="font-mono text-[8px] text-ink/40 uppercase">Supplied</span>
+                      <span className="font-mono text-xs md:text-sm font-bold text-ink">{monthSupplied.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="font-mono text-[7px] text-ink/40 uppercase">Paid</span>
-                      <span className="font-mono text-[10px] font-bold text-ink/70 truncate">{monthPaid.toLocaleString()}</span>
+                      <span className="font-mono text-[8px] text-ink/40 uppercase">Paid</span>
+                      <span className="font-mono text-xs md:text-sm font-bold text-ink/70">{monthPaid.toLocaleString()}</span>
                     </div>
                     <div className="border-t border-ink-faint/20 pt-1 flex justify-between items-center">
-                      <span className="font-mono text-[7px] text-ink/40 uppercase">Balance</span>
-                      <span className={`font-mono text-[11px] font-black ${monthBalance >= 0 ? "text-red-400" : "text-emerald-400"} truncate`}>{monthBalance.toLocaleString()}</span>
+                      <span className="font-mono text-[8px] text-ink/40 uppercase">Balance</span>
+                      <span className={`font-mono text-sm md:text-base font-black ${monthBalance >= 0 ? "text-red-400" : "text-emerald-400"}`}>{monthBalance.toLocaleString()}</span>
                     </div>
                   </div>
 

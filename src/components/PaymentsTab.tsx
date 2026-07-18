@@ -338,7 +338,7 @@ export default function PaymentsTab({ payments, supplyLogs, suppliers, onAddPaym
                           <div className="space-y-3">
                             {day.payments.map((p) => (
                               <div key={p.id} className="flex justify-between items-baseline gap-4">
-                                <span className="font-mono text-[10px] opacity-30 uppercase italic truncate max-w-[60%]">{p.notes || "CASH_REMITTANCE"}</span>
+                                <span className="font-mono text-xs md:text-sm opacity-30 uppercase italic truncate max-w-[60%]">{p.notes || "CASH_REMITTANCE"}</span>
                                 <span className="font-mono text-xs md:text-sm font-bold text-emerald-custom whitespace-nowrap">Rs. {p.amountPaid.toLocaleString()}</span>
                               </div>
                             ))}
@@ -408,13 +408,13 @@ export default function PaymentsTab({ payments, supplyLogs, suppliers, onAddPaym
                   ) : (
                     <div className="bg-orange-500/5 border border-orange-500/20 p-2.5 rounded-lg flex items-center justify-between group">
                       <div className="space-y-0.5">
-                        <span className="font-mono text-[8px] font-bold text-orange-300/60 uppercase">
+                        <span className="font-mono text-[9px] font-bold text-orange-300/60 uppercase">
                           {new Date(p.date).toLocaleDateString("en-US", { day: "2-digit", month: "short" })}
                         </span>
-                        <p className="font-mono text-[10px] text-orange-100 uppercase italic">{p.notes || "Supplier Payment"}</p>
+                        <p className="font-mono text-xs md:text-sm text-orange-100 uppercase italic">{p.notes || "Supplier Payment"}</p>
                         <div className="flex items-baseline gap-1">
                           <span className="font-mono text-[7px] font-bold text-orange-300/60 uppercase">Rs.</span>
-                           <span className="font-display text-base font-black text-orange-100 truncate">{p.amountPaid.toLocaleString()}</span>
+                           <span className="font-display text-base font-black text-orange-100">{p.amountPaid.toLocaleString()}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">

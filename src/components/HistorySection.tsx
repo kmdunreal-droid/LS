@@ -143,7 +143,7 @@ export default function HistorySection({
                   <div key={payment.id} className="bg-orange-500/5 border border-orange-500/20 p-2.5 rounded flex justify-between items-center">
                     <div className="space-y-0.5">
                       <span className="font-mono text-[9px] font-bold uppercase text-orange-100 block">{supplier?.name || "Unknown"}</span>
-                      <span className="font-mono text-[8px] text-orange-300/60 uppercase block truncate max-w-[150px]">{payment.notes || "Payment"}</span>
+                      <span className="font-mono text-[9px] text-orange-300/60 uppercase block truncate max-w-[180px]">{payment.notes || "Payment"}</span>
                     </div>
                     <span className="font-mono text-sm font-bold text-orange-100">Rs. {payment.amountPaid.toLocaleString()}</span>
                   </div>
@@ -168,7 +168,7 @@ export default function HistorySection({
                 <div key={expense.id} className="bg-orange-500/5 border border-orange-500/20 p-2.5 rounded flex justify-between items-center">
                   <div className="space-y-0.5">
                     <span className="font-mono text-[9px] font-bold uppercase text-orange-100 block">{expense.category}</span>
-                    <span className="font-mono text-[8px] text-orange-300/60 uppercase block truncate max-w-[150px]">{expense.notes || "Expense"}</span>
+                    <span className="font-mono text-[9px] text-orange-300/60 uppercase block truncate max-w-[180px]">{expense.notes || "Expense"}</span>
                   </div>
                   <span className="font-mono text-sm font-bold text-orange-100">Rs. {expense.amount.toLocaleString()}</span>
                 </div>
