@@ -12,7 +12,8 @@ import {
   LayoutDashboard,
   Settings,
   Flame,
-  Activity
+  Activity,
+  Menu
 } from "lucide-react";
 import { useAuth } from "./AuthGate";
 
@@ -163,6 +164,9 @@ export default function SupplierPortal({
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinError, setPinError] = useState("");
   const [showReport, setShowReport] = useState(false);
+  const [showRateModal, setShowRateModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleAddLog = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -397,94 +401,76 @@ export default function SupplierPortal({
         <div className="flex-1 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 p-3 md:p-4">
         {activeTab === "dashboard" ? (
           <>
-            {/* Rate Editor Bar */}
-            <div className="bg-bg/50 border border-ink-faint rounded-xl px-3 md:px-4 py-2 lg:col-span-12">
-              <div className="w-full flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-ink-faint/20 text-ink/50 rounded-lg">
-                    <Flame className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="font-mono text-[9px] uppercase tracking-widest text-ink/70 font-bold">Daily Rate</span>
-                    <p className="font-mono text-[8px] text-ink/40">Update today's chicken rate</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 flex-wrap justify-center">
-                  <div className="flex items-center gap-1">
-                    <span className="font-mono text-xs font-bold text-ink/40">Rs.</span>
-                    <input
-                      type="number"
-                      value={proposedRate}
-                      onChange={(e) => setProposedRate(e.target.value)}
-                      className="w-20 bg-transparent border-b-2 border-ink-faint text-lg font-display font-black text-ink text-center focus:outline-none focus:border-accent transition-all py-0.5"
-                      placeholder="000"
-                    />
-                  </div>
-                  <button
-                    onClick={handleUpdateGlobalRate}
-                    disabled={isUpdatingRate || parseFloat(proposedRate) === settings.baseRawRate}
-                    className="font-mono text-[8px] font-bold uppercase tracking-widest px-3 py-1.5 border border-ink-faint text-ink/60 rounded-lg hover:bg-accent hover:text-bg hover:border-accent transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    {isUpdatingRate ? "Updating..." : "Update Rate"}
-                  </button>
-                </div>
-                {rateSuccessMsg && (
-                  <span className="font-mono text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-emerald-custom animate-fade-in">{rateSuccessMsg}</span>
-                )}
+            {/* Row 1: Menu (mobile) + Rate / Exit */}
+            <div className="lg:col-span-12 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-1.5 bg-surface border border-ink-faint rounded-lg text-ink active:scale-90 transition-all cursor-pointer">
+                  <Menu className="w-4 h-4" />
+                </button>
+                <button onClick={() => setShowRateModal(true)} className="px-3 py-1.5 bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20 rounded-lg font-mono text-[7px] font-bold uppercase tracking-widest text-accent hover:from-accent/20 hover:to-accent/10 transition-all cursor-pointer shrink-0 flex items-center gap-1.5 shadow-sm">
+                  <Flame className="w-3.5 h-3.5 text-accent" />
+                  <span>Rs. {settings.baseRawRate}</span>
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={onExit} className="p-1.5 rounded-lg hover:bg-rose-500/10 text-ink/30 hover:text-rose-400 transition-all cursor-pointer" title="Exit">
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
             </div>
-            <div className="lg:col-span-12 flex items-center justify-end gap-2">
-              <button onClick={() => setShowReport(true)} className="px-2.5 py-1 bg-surface border border-ink-faint rounded font-mono text-[7px] font-bold uppercase tracking-widest text-ink/60 hover:bg-ink-faint/20 transition-all cursor-pointer shrink-0">
-                Report
-              </button>
-              <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/40">Report Date</span>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-                className="w-auto bg-bg/80 border border-ink-faint rounded px-2 py-1 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none appearance-none cursor-pointer" />
-              <button onClick={onExit} className="md:hidden p-1.5 rounded-lg hover:bg-rose-500/10 text-ink/30 hover:text-rose-400 transition-all cursor-pointer" title="Exit">
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
             <div className="lg:col-span-12 animate-fade-in">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-surface border border-ink-faint p-3 md:p-4 flex flex-col justify-between rounded-xl">
-                  <div className="flex items-center justify-between mb-1">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                <div className="group relative bg-surface/80 backdrop-blur-sm border border-ink-faint/50 p-3 md:p-4 flex flex-col justify-between rounded-xl hover:border-accent/20 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-br from-accent/[0.02] to-transparent rounded-xl pointer-events-none" />
+                  <div className="flex items-center justify-between mb-1.5 relative z-10">
                     <span className="font-mono text-[7px] font-bold uppercase tracking-[0.2em] text-ink/50">Total Supplied (Raqam)</span>
-                    <Weight className="w-3 h-3 text-ink/30" />
+                    <div className="p-1.5 rounded-lg bg-accent/5 group-hover:bg-accent/10 transition-colors">
+                      <Weight className="w-3 h-3 text-accent/60 group-hover:text-accent transition-colors" />
+                    </div>
                   </div>
-                  <div>
+                  <div className="relative z-10">
                     <div className="flex items-baseline gap-1">
                       <span className="font-display text-2xl md:text-3xl font-black text-ink tracking-tight truncate">{totalSupplied.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
-                <div className="bg-surface border border-ink-faint p-3 md:p-4 flex flex-col justify-between rounded-xl">
-                  <div className="flex items-center justify-between mb-1">
+                <div className="group relative bg-surface/80 backdrop-blur-sm border border-ink-faint/50 p-3 md:p-4 flex flex-col justify-between rounded-xl hover:border-blue-500/20 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-transparent rounded-xl pointer-events-none" />
+                  <div className="flex items-center justify-between mb-1.5 relative z-10">
                     <span className="font-mono text-[7px] font-bold uppercase tracking-[0.2em] text-ink/50">Today Delivery</span>
-                    <Activity className="w-3 h-3 text-ink/30" />
+                    <div className="p-1.5 rounded-lg bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors">
+                      <Activity className="w-3 h-3 text-blue-400/60 group-hover:text-blue-400 transition-colors" />
+                    </div>
                   </div>
-                  <div>
+                  <div className="relative z-10">
                     <div className="flex items-baseline gap-1">
                       <span className="font-display text-2xl md:text-3xl font-black text-ink tracking-tight truncate">{totalTodayCost.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
-                <div className="bg-surface border border-emerald-500/20 p-3 md:p-4 flex flex-col justify-between rounded-xl">
-                  <div className="flex items-center justify-between mb-1">
+                <div className="group relative bg-surface/80 backdrop-blur-sm border border-emerald-500/20 p-3 md:p-4 flex flex-col justify-between rounded-xl hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/[0.03] to-transparent rounded-xl pointer-events-none" />
+                  <div className="flex items-center justify-between mb-1.5 relative z-10">
                     <span className="font-mono text-[7px] font-bold uppercase tracking-[0.2em] text-emerald-400">Total Paid (Ada Shuda)</span>
-                    <CreditCard className="w-3 h-3 text-emerald-400" />
+                    <div className="p-1.5 rounded-lg bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors">
+                      <CreditCard className="w-3 h-3 text-emerald-400/60 group-hover:text-emerald-400 transition-colors" />
+                    </div>
                   </div>
-                  <div>
+                  <div className="relative z-10">
                     <div className="flex items-baseline gap-1">
                       <span className="font-display text-2xl md:text-3xl font-black text-emerald-400 tracking-tight truncate">{totalPaid.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
-                <div className={`bg-surface border p-3 md:p-4 flex flex-col justify-between rounded-xl ${balance > 0 ? "border-red-500/20" : "border-emerald-500/20"}`}>
-                  <div className="flex items-center justify-between mb-1">
+                <div className={`group relative bg-surface/80 backdrop-blur-sm border p-3 md:p-4 flex flex-col justify-between rounded-xl transition-all duration-300 hover:shadow-lg ${balance > 0 ? "border-red-500/20 hover:border-red-500/40 hover:shadow-red-500/5" : "border-emerald-500/20 hover:border-emerald-500/40 hover:shadow-emerald-500/5"}`}>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${balance > 0 ? "from-red-500/[0.03]" : "from-emerald-500/[0.03]"} to-transparent rounded-xl pointer-events-none`} />
+                  <div className="flex items-center justify-between mb-1.5 relative z-10">
                     <span className={`font-mono text-[7px] font-bold uppercase tracking-[0.2em] ${balance > 0 ? "text-red-400" : "text-emerald-400"}`}>Balance (Baki / Pending)</span>
-                    {balance > 0 ? <Weight className="w-3 h-3 text-red-400" /> : <CheckCircle className="w-3 h-3 text-emerald-400" />}
+                    <div className={`p-1.5 rounded-lg transition-colors ${balance > 0 ? "bg-red-500/5 group-hover:bg-red-500/10" : "bg-emerald-500/5 group-hover:bg-emerald-500/10"}`}>
+                      {balance > 0 ? <Weight className="w-3 h-3 text-red-400/60 group-hover:text-red-400 transition-colors" /> : <CheckCircle className="w-3 h-3 text-emerald-400/60 group-hover:text-emerald-400 transition-colors" />}
+                    </div>
                   </div>
-                  <div>
+                  <div className="relative z-10">
                     <div className="flex items-baseline gap-1">
                       <span className={`font-display text-2xl md:text-3xl font-black tracking-tight truncate ${balance > 0 ? "text-red-400" : "text-emerald-400"}`}>
                         {Math.abs(balance).toLocaleString()}
@@ -494,6 +480,94 @@ export default function SupplierPortal({
                 </div>
               </div>
             </div>
+
+            {/* Report below cards */}
+            <div className="lg:col-span-12 flex flex-col sm:flex-row items-center justify-center md:justify-end gap-2">
+              <div className="flex items-center gap-1.5 bg-surface/60 border border-ink-faint/50 rounded-xl px-3 py-1.5 backdrop-blur-sm">
+                <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-ink/30">Date</span>
+                <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+                  className="w-32 bg-transparent border-none font-mono text-[10px] text-ink/70 focus:outline-none cursor-pointer appearance-none [&::-webkit-calendar-picker-indicator]:opacity-40 [&::-webkit-calendar-picker-indicator]:hover:opacity-70 [&::-webkit-calendar-picker-indicator]:cursor-pointer" />
+              </div>
+              <button onClick={() => setShowReport(true)} className="group relative px-5 py-2.5 bg-gradient-to-r from-accent to-accent/80 rounded-xl font-mono text-[8px] font-bold uppercase tracking-[0.2em] text-white hover:from-accent/90 hover:to-accent shadow-lg shadow-accent/20 hover:shadow-xl hover:shadow-accent/30 transition-all duration-300 cursor-pointer shrink-0 flex items-center gap-2 overflow-hidden">
+                <span className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:250%_250%] group-hover:bg-[position:100%_0] transition-all duration-700" />
+                <span className="relative z-10 flex items-center gap-2">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                  Generate Report
+                </span>
+              </button>
+            </div>
+
+            {/* Mobile Menu Overlay */}
+            {isMobileMenuOpen && (
+              <div className="fixed inset-0 z-50 md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+                <div className="absolute inset-0 bg-bg/80 backdrop-blur-sm" />
+                <div className="absolute left-0 top-0 bottom-0 w-64 bg-surface border-r border-ink-faint shadow-2xl animate-slide-in" onClick={(e) => e.stopPropagation()}>
+                  <div className="p-4 border-b border-ink-faint flex items-center justify-between">
+                    <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-ink/40">Menu</span>
+                    <button onClick={() => setIsMobileMenuOpen(false)} className="p-1.5 rounded-lg hover:bg-ink-faint/10 text-ink/30 hover:text-ink transition-all cursor-pointer">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <nav className="p-3 space-y-1">
+                    {navItems.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => { setActiveTab(item.id); setIsMobileMenuOpen(false); }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                          activeTab === item.id
+                            ? "bg-accent text-bg shadow-lg shadow-accent/20"
+                            : "text-ink/50 hover:bg-ink-faint/10 hover:text-ink"
+                        }`}
+                      >
+                        <item.icon className="w-4 h-4" />
+                        <span className="font-mono text-[10px] font-bold uppercase tracking-widest">{item.label}</span>
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+              </div>
+            )}
+
+            {/* Rate Modal */}
+            {showRateModal && (
+              <div className="fixed inset-0 bg-bg/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in" onClick={() => setShowRateModal(false)}>
+                <div className="bg-surface border border-ink-faint rounded-xl p-5 w-full max-w-sm shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent">Update Daily Rate</span>
+                    <button onClick={() => setShowRateModal(false)} className="p-1 hover:bg-ink-faint rounded transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-xs font-bold text-ink/40">Rs.</span>
+                      <input
+                        type="number"
+                        value={proposedRate}
+                        onChange={(e) => setProposedRate(e.target.value)}
+                        className="flex-1 bg-bg border border-ink-faint rounded px-3 py-2 text-lg font-display font-black text-ink text-center focus:outline-none focus:border-accent transition-all"
+                        placeholder="000"
+                        autoFocus
+                      />
+                      <span className="font-mono text-[10px] font-bold text-ink/40">/KG</span>
+                    </div>
+                    <button
+                      onClick={() => { handleUpdateGlobalRate(); if (!isUpdatingRate) setShowRateModal(false); }}
+                      disabled={isUpdatingRate || parseFloat(proposedRate) === settings.baseRawRate}
+                      className="w-full bg-accent text-bg font-mono text-[9px] font-bold uppercase tracking-widest py-3 rounded-lg hover:brightness-110 transition-all disabled:opacity-30"
+                    >
+                      {isUpdatingRate ? "Updating..." : "Update Rate"}
+                    </button>
+                    {rateSuccessMsg && (
+                      <span className="block text-center font-mono text-[8px] font-bold uppercase tracking-widest text-emerald-custom">{rateSuccessMsg}</span>
+                    )}
+                  </div>
+                  <button onClick={() => setShowRateModal(false)} className="w-full py-2 font-mono text-[8px] opacity-40 hover:opacity-80 uppercase tracking-widest rounded transition-all">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Report Modal */}
             {showReport && (
@@ -570,30 +644,30 @@ export default function SupplierPortal({
             <div className="lg:col-span-12 space-y-8 animate-fade-in">
               {successMessage && <div className="bg-emerald-custom/10 border border-emerald-custom/20 text-emerald-custom p-6 font-mono text-sm animate-fade-in rounded-lg">{successMessage}</div>}
 
-              <div className="bg-surface border border-ink-faint p-3 md:p-4 space-y-3 rounded-2xl">
+              <div className="bg-surface border border-emerald-500/20 p-3 md:p-5 space-y-4 rounded-2xl">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink/70 font-bold">Add Stock</span>
-                  <Weight className="w-4 h-4 text-ink/40" />
+                  <span className="font-mono text-xs md:text-sm uppercase tracking-[0.2em] text-emerald-400 font-bold">Add Stock</span>
+                  <Weight className="w-5 h-5 text-emerald-400/60" />
                 </div>
 
                 <div className="space-y-2">
                   <div className="space-y-1">
-                    <span className="font-mono text-[7px] font-bold opacity-40 uppercase tracking-widest">Entry Date</span>
+                    <span className="font-mono text-[8px] font-bold opacity-40 uppercase tracking-widest">Entry Date</span>
                     <input type="date" required value={date} onChange={(e) => setDate(e.target.value)}
                       className="w-full bg-bg/80 border border-ink-faint rounded px-3 py-2 font-mono text-xs focus:ring-1 focus:ring-accent outline-none appearance-none" />
                   </div>
 
                   <div className="space-y-1">
-                    <span className="font-mono text-[7px] font-bold opacity-40 uppercase tracking-widest">Stock Category</span>
+                    <span className="font-mono text-[8px] font-bold opacity-40 uppercase tracking-widest">Stock Category</span>
                     {isNewCategory ? (
                       <div className="animate-fade-in">
                         <input type="text" required placeholder="CATEGORY_NAME" value={customCategoryName}
                           onChange={(e) => { setCustomCategoryName(e.target.value); setCategory(e.target.value); }}
-                          className="w-full bg-bg/80 border border-accent/20 rounded px-3 py-2 font-mono text-xs text-accent outline-none appearance-none" />
+                          className="w-full bg-bg/80 border border-emerald-400/20 rounded px-3 py-2 font-mono text-xs text-emerald-400 outline-none appearance-none" />
                         <div className="flex items-center gap-2 mt-2">
                           <button type="button" onClick={() => { setWeightModalCat(customCategoryName.trim()); setWeightModalWeight(""); }}
                             disabled={!customCategoryName.trim()}
-                            className="flex-1 bg-accent text-bg rounded-lg px-3 py-2 font-mono text-[8px] font-bold uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-30 cursor-pointer"
+                            className="flex-1 bg-emerald-500 text-bg rounded-lg px-3 py-2 font-mono text-[8px] font-bold uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-30 cursor-pointer"
                           >Add Weight →</button>
                           <button type="button" onClick={() => { setIsNewCategory(false); setCategory(uniqueCategories[0] || ""); }}
                             className="font-mono text-[7px] text-rose-400/60 hover:text-rose-400 uppercase tracking-widest"
@@ -610,20 +684,20 @@ export default function SupplierPortal({
                               key={cat}
                               type="button"
                               onClick={() => { setWeightModalCat(cat); setWeightModalWeight(""); }}
-                              className={`bg-surface border ${isSelected ? "border-accent ring-2 ring-accent/20" : "border-ink-faint hover:border-ink/40"} p-2.5 md:p-3 rounded-xl text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] cursor-pointer ${isSelected ? "scale-[1.02]" : "opacity-70 hover:opacity-100"}`}
+                              className={`bg-surface border ${isSelected ? "border-emerald-400 ring-2 ring-emerald-400/20" : "border-emerald-500/20 hover:border-emerald-400/40"} p-3 md:p-4 rounded-xl text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] cursor-pointer ${isSelected ? "scale-[1.02]" : "opacity-70 hover:opacity-100"}`}
                             >
-                              <span className="font-mono text-[10px] md:text-xs font-bold uppercase tracking-widest block text-ink/70 mb-1">{cat.toUpperCase()}</span>
-                              <span className="font-mono text-xs md:text-sm font-black text-ink leading-none">Rs.{estimatedRate}<span className="text-[8px] font-normal opacity-50">/KG</span></span>
+                              <span className="font-mono text-xs md:text-sm font-bold uppercase tracking-widest block text-emerald-400 mb-1">{cat.toUpperCase()}</span>
+                              <span className="font-mono text-sm md:text-base font-black text-emerald-100 leading-none">Rs.{estimatedRate}<span className="text-[9px] font-normal opacity-50">/KG</span></span>
                             </button>
                           );
                         })}
                         <button
                           type="button"
                           onClick={() => setIsNewCategory(true)}
-                          className="bg-bg/40 border border-dashed border-ink-faint p-2.5 md:p-3 rounded-xl text-center transition-all hover:border-accent/40 hover:bg-accent/5 cursor-pointer flex flex-col items-center justify-center min-h-[64px]"
+                          className="bg-bg/40 border border-dashed border-emerald-500/20 p-3 md:p-4 rounded-xl text-center transition-all hover:border-emerald-400/40 hover:bg-emerald-500/5 cursor-pointer flex flex-col items-center justify-center min-h-[80px]"
                         >
-                          <span className="font-mono text-lg font-bold text-accent/60 leading-none">+</span>
-                          <span className="font-mono text-[10px] md:text-xs font-bold uppercase tracking-widest text-accent/40">New</span>
+                          <span className="font-mono text-lg font-bold text-emerald-400/60 leading-none">+</span>
+                          <span className="font-mono text-xs md:text-sm font-bold uppercase tracking-widest text-emerald-400/40">New</span>
                         </button>
                       </div>
                     )}
@@ -639,7 +713,7 @@ export default function SupplierPortal({
                 </div>
 
                 {todayLogs.length === 0 ? (
-                  <div className="py-12 text-center border border-dashed border-orange-500/20 rounded-lg">
+                  <div className="py-12 text-center border border-dashed border-ink-faint rounded-lg">
                     <p className="font-mono text-[10px] font-bold uppercase tracking-widest opacity-20 italic">No entries recorded</p>
                   </div>
                 ) : (
@@ -647,9 +721,9 @@ export default function SupplierPortal({
                     {todayLogs.map((log, idx) => {
                       const catKey = (log.category || "UNCLASSIFIED").replace(/\s+/g, "_").toUpperCase();
                       return editingLogId === log.id ? (
-                        <div className="bg-orange-500/10 border border-orange-400/40 p-3 rounded-2xl animate-fade-in">
+                        <div className="bg-surface border border-emerald-400/40 p-3 rounded-2xl animate-fade-in">
                           <form onSubmit={handleUpdateLogSubmit} className="space-y-3">
-                            <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-orange-300">Edit Entry</span>
+                            <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-emerald-300">Edit Entry</span>
                             <div className="space-y-2">
                               <div>
                                 <span className="font-mono text-[6px] font-bold opacity-40 uppercase tracking-widest">Weight (KG)</span>
@@ -666,14 +740,14 @@ export default function SupplierPortal({
                             </div>
                             <div className="flex items-center justify-end gap-3">
                               <button type="button" onClick={() => setEditingLogId(null)} className="font-mono text-[7px] uppercase opacity-40 hover:opacity-80">Cancel</button>
-                              <button type="submit" className="font-mono text-[7px] font-bold uppercase text-orange-300 border-b border-orange-300">Save</button>
+                              <button type="submit" className="font-mono text-[7px] font-bold uppercase text-emerald-300 border-b border-emerald-300">Save</button>
                             </div>
                           </form>
                         </div>
                       ) : (
                         <div
                           key={log.id}
-                          className={`bg-orange-500/5 border border-orange-500/20 hover:border-orange-400/40 p-2.5 md:p-3 transition-all duration-300 flex flex-col justify-between rounded-2xl group cursor-pointer select-none active:scale-[0.96] relative overflow-hidden`}
+                          className={`bg-surface border border-emerald-500/20 hover:border-emerald-400/40 p-3 md:p-4 transition-all duration-300 flex flex-col justify-between rounded-2xl group cursor-pointer select-none active:scale-[0.96] relative overflow-hidden`}
                           style={{ WebkitTouchCallout: "none", userSelect: "none" as const }}
                           onMouseDown={() => { weightEditStartRef.current = Date.now(); }}
                           onMouseUp={() => { if (Date.now() - weightEditStartRef.current >= 300 && editingLogId !== log.id) { setWeightEditLog(log); setWeightEditValue(log.weightKg.toString()); } }}
@@ -681,7 +755,7 @@ export default function SupplierPortal({
                           onTouchEnd={() => { if (Date.now() - weightEditStartRef.current >= 300 && editingLogId !== log.id) { setWeightEditLog(log); setWeightEditValue(log.weightKg.toString()); } }}
                         >
                           <div className="flex items-start justify-between relative z-10">
-                            <span className="font-mono text-xs md:text-sm font-black uppercase tracking-widest text-orange-300">
+                            <span className="font-mono text-lg md:text-xl font-black uppercase tracking-widest text-emerald-400">
                               {catKey}
                             </span>
                             <div className="flex items-center gap-2">
@@ -690,7 +764,7 @@ export default function SupplierPortal({
                                 onClick={(e) => { e.stopPropagation(); setEditingLogId(log.id); setEditWeight(log.weightKg.toString()); setEditRate(log.supplyRatePerKg.toString()); setEditCategory(log.category || ""); setEditNotes(log.notes || ""); }}
                                 className="opacity-60 hover:opacity-100 transition-all p-0.5"
                               >
-                                <RefreshCw className="w-3.5 h-3.5 text-orange-300" />
+                                <RefreshCw className="w-3.5 h-3.5 text-emerald-300" />
                               </button>
                               <button
                                 type="button"
@@ -704,15 +778,15 @@ export default function SupplierPortal({
 
                           <div className="space-y-1 relative z-10">
                             <div className="flex items-baseline gap-1.5 mt-1">
-                              <span className="font-mono text-sm md:text-base font-black leading-none text-orange-100">{log.weightKg}</span>
-                              <span className="font-mono text-[9px] font-bold uppercase text-orange-300/60">KG</span>
+                              <span className="font-mono text-base md:text-lg font-black leading-none text-emerald-100">{log.weightKg}</span>
+                              <span className="font-mono text-[10px] font-bold uppercase text-emerald-300/60">KG</span>
                             </div>
                           </div>
 
                           <div className="flex items-center justify-between relative z-10">
                             <div className="flex items-baseline gap-1.5">
-                              <span className="font-mono text-[9px] font-bold uppercase text-orange-300/60">Rs.</span>
-                               <span className="font-mono text-base md:text-lg font-black text-orange-100 truncate">{log.totalCost.toLocaleString()}</span>
+                              <span className="font-mono text-[10px] font-bold uppercase text-emerald-300/60">Rs.</span>
+                               <span className="font-mono text-lg md:text-xl font-black text-emerald-100 truncate">{log.totalCost.toLocaleString()}</span>
                             </div>
                           </div>
                         </div>
@@ -731,6 +805,10 @@ export default function SupplierPortal({
                 <div className="flex items-center gap-4">
                   <span className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50 shrink-0">Add Payment Received</span>
                   <div className="h-px bg-ink-faint flex-1" />
+                  <button onClick={() => setShowPaymentModal(true)} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-bg font-mono text-[9px] font-bold uppercase tracking-widest rounded-xl shadow-lg shadow-emerald-500/20 transition-all cursor-pointer shrink-0 flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                    Quick Receive
+                  </button>
                 </div>
 
                 {successMessage && <div className="bg-emerald-custom/10 border border-emerald-custom/20 text-emerald-custom p-6 font-mono text-sm animate-fade-in rounded-lg">{successMessage}</div>}
@@ -821,6 +899,37 @@ export default function SupplierPortal({
                 )}
               </div>
             </div>
+
+            {/* Quick Receive Modal */}
+            {showPaymentModal && (
+              <div className="fixed inset-0 bg-bg/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in" onClick={() => setShowPaymentModal(false)}>
+                <div className="bg-surface border border-ink-faint rounded-xl p-5 w-full max-w-sm shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-emerald-400">Quick Receive Payment</span>
+                    <button onClick={() => setShowPaymentModal(false)} className="p-1 hover:bg-ink-faint rounded transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <form onSubmit={(e) => { handleAddPaymentSubmit(e); setShowPaymentModal(false); }}>
+                    <div className="space-y-3">
+                      <div>
+                        <span className="font-mono text-[7px] font-bold opacity-40 uppercase tracking-widest">Amount (PKR)</span>
+                        <input type="number" min="1" required value={payAmount} onChange={(e) => setPayAmount(e.target.value)}
+                          className="w-full bg-bg/80 border border-ink-faint rounded px-3 py-3 font-mono text-lg font-bold text-accent focus:ring-1 focus:ring-accent outline-none mt-1" placeholder="Enter amount" autoFocus />
+                      </div>
+                      <div>
+                        <span className="font-mono text-[7px] font-bold opacity-40 uppercase tracking-widest">Notes (optional)</span>
+                        <input type="text" value={payNotes} onChange={(e) => setPayNotes(e.target.value)}
+                          className="w-full bg-bg/80 border border-ink-faint rounded px-3 py-2 font-mono text-xs opacity-60 focus:opacity-100 focus:ring-1 focus:ring-accent outline-none mt-1" placeholder="e.g. Cash" />
+                      </div>
+                    </div>
+                    <button type="submit" className="w-full mt-4 py-3 bg-emerald-500 text-bg font-mono text-[9px] font-bold uppercase tracking-widest rounded-xl shadow-lg shadow-emerald-500/20 hover:brightness-110 transition-all cursor-pointer">
+                      Receive Payment
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
           </>
         ) : activeTab === "settings" ? (
           <div className="lg:col-span-12 animate-fade-in">

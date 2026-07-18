@@ -39,6 +39,8 @@ import SettingsTab from "./components/SettingsTab";
 import AuthGate, { AuthProvider, useAuth } from "./components/AuthGate";
 import SupplierPortal from "./components/SupplierPortal";
 
+
+
 import { 
   Flame, 
   LayoutDashboard, 
@@ -62,8 +64,8 @@ import {
 } from "lucide-react";
 
 export function AppContent() {
-  const { user, isGuest, isSupplier, logout } = useAuth();
-  const userName = isSupplier ? "Supplier Mode" : (isGuest ? "Guest User" : (user?.displayName || user?.email?.split("@")[0] || "Staff"));
+  const { user, isGuest, isSupplier, isOwner, logout } = useAuth();
+  const userName = isOwner ? "Owner" : (isSupplier ? "Supplier Mode" : (isGuest ? "Guest User" : (user?.displayName || user?.email?.split("@")[0] || "Staff")));
   const userPhoto = !isSupplier && !isGuest && user?.photoURL ? user.photoURL : null;
 
   const [activeTab, setActiveTab] = useState<string>("dashboard");
@@ -93,11 +95,19 @@ export function AppContent() {
 
   // Initialize data and listeners
   useEffect(() => {
-    // 1. Load formula settings
+    // Load from localStorage first (instant), then try Supabase in background
+    try {
+      const localSettings = localStorage.getItem("tikka_settings");
+      if (localSettings) {
+        setSettings(JSON.parse(localSettings));
+      }
+    } catch {}
+    setLoading(false); // Always hide loading immediately
+
+    // Try Supabase in background (won't block UI)
     getFormulaSettings().then((res) => {
       setSettings(res);
-      setLoading(false);
-    });
+    }).catch(() => {});
 
     // Check Supabase status
     setIsDbLive(isSupabaseActive());
@@ -106,11 +116,20 @@ export function AppContent() {
     const unsubscribeSync = subscribeSyncStatus((status) => setSyncStatus(status));
 
     // 2. Real-time Subscribers
-    const unsubscribeSupplies = subscribeSupplyLogs((logs) => setSupplyLogs(logs));
-    const unsubscribePayments = subscribePayments((p) => setPayments(p));
-    const unsubscribeExpenses = subscribeExpenses((e) => setExpenses(e));
-    const unsubscribeOrders = subscribeOrders((o) => setOrders(o));
-    const unsubscribeSuppliers = subscribeSuppliers((s) => setSuppliers(s));
+    let unsubscribeSupplies = () => {};
+    let unsubscribePayments = () => {};
+    let unsubscribeExpenses = () => {};
+    let unsubscribeOrders = () => {};
+    let unsubscribeSuppliers = () => {};
+    try {
+      unsubscribeSupplies = subscribeSupplyLogs((logs) => setSupplyLogs(logs));
+      unsubscribePayments = subscribePayments((p) => setPayments(p));
+      unsubscribeExpenses = subscribeExpenses((e) => setExpenses(e));
+      unsubscribeOrders = subscribeOrders((o) => setOrders(o));
+      unsubscribeSuppliers = subscribeSuppliers((s) => setSuppliers(s));
+    } catch (e) {
+      console.warn("Supabase subscriptions failed (offline mode):", e);
+    }
 
     return () => {
       unsubscribeSync();
@@ -866,7 +885,7 @@ export function AppContent() {
               </div>
               <div className="user-info min-w-0">
                 <span className="block text-xs font-black truncate leading-tight text-white">{userName}</span>
-                <span className="block text-[10px] text-ink/70 font-bold uppercase tracking-widest truncate leading-tight">{isSupplier ? 'Supplier' : 'System Owner'}</span>
+                <span className="block text-[10px] text-ink/70 font-bold uppercase tracking-widest truncate leading-tight">{isOwner ? 'System Owner' : (isSupplier ? 'Supplier' : 'System Owner')}</span>
               </div>
             </div>
 

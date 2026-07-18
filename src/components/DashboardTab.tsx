@@ -344,7 +344,7 @@ export default function DashboardTab({
                     className={`bg-orange-500/5 border border-orange-500/20 p-2.5 rounded-lg text-left hover:border-orange-400/40 transition-all cursor-pointer`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`font-mono text-[8px] font-bold uppercase tracking-widest text-orange-300`}>
+                      <span className={`font-mono text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-emerald-400`}>
                         {isSupply ? "Supply" : "Payment"}
                       </span>
                       <span className="font-mono text-[7px] text-orange-300/60">
@@ -391,7 +391,7 @@ export default function DashboardTab({
                   </div>
                   <div className="flex justify-between border-b border-ink-faint pb-2">
                     <span className="font-mono text-[9px] opacity-40">Category</span>
-                    <span className="font-mono text-[9px] font-bold">{selectedLog.category || 'Raw Chicken'}</span>
+                    <span className="font-mono text-[11px] md:text-xs font-bold text-emerald-400">{selectedLog.category || 'Raw Chicken'}</span>
                   </div>
                   <div className="flex justify-between border-b border-ink-faint pb-2">
                     <span className="font-mono text-[9px] opacity-40">Weight</span>

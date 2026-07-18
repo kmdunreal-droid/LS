@@ -346,7 +346,7 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
                         onClick={() => { setWeightModalCat(cat); setWeightModalWeight(""); }}
                         className={`bg-surface border ${isSelected ? "border-accent ring-2 ring-accent/20" : "border-ink-faint hover:border-ink/40"} p-2.5 rounded-xl text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] cursor-pointer ${isSelected ? "scale-[1.02]" : "opacity-70 hover:opacity-100"}`}
                       >
-                        <span className="font-mono text-[9px] md:text-[11px] font-bold uppercase tracking-widest block text-ink/70">{cat.toUpperCase()}</span>
+                        <span className="font-mono text-[10px] md:text-xs font-bold uppercase tracking-widest block text-emerald-400">{cat.toUpperCase()}</span>
                         <span className="font-mono text-xs md:text-sm font-black text-ink leading-none">Rs.{estimatedRate}<span className="text-[8px] font-normal opacity-50">/KG</span></span>
                       </button>
                     );
@@ -414,7 +414,7 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
                   className="bg-orange-500/5 border border-orange-500/20 p-3 rounded-lg flex items-center justify-between group"
                 >
                   <div className="space-y-1">
-                    <span className="font-mono text-[10px] md:text-xs font-black uppercase tracking-widest text-orange-300">
+                    <span className="font-mono text-xs md:text-sm font-black uppercase tracking-widest text-emerald-400">
                       {catKey}
                     </span>
                     <div className="flex items-baseline gap-1.5">

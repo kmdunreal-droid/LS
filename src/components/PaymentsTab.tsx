@@ -317,7 +317,7 @@ export default function PaymentsTab({ payments, supplyLogs, suppliers, onAddPaym
                             {day.supplies.map((s) => (
                               <div key={s.id} className="flex justify-between items-baseline gap-4">
                                 <div className="space-y-0.5 max-w-[60%]">
-                                  <span className="font-mono text-[10px] font-bold opacity-80 block uppercase leading-none truncate">{s.category || "WHOLE CHICKEN"}</span>
+                                  <span className="font-mono text-xs md:text-sm font-bold text-emerald-400 block uppercase leading-none truncate">{s.category || "WHOLE CHICKEN"}</span>
                                   <span className="font-mono text-[9px] opacity-30 block uppercase tracking-tighter">
                                     {s.weightKg}Kg @ {s.supplyRatePerKg}
                                   </span>

@@ -10,6 +10,7 @@ interface AuthContextType {
   loading: boolean;
   isGuest: boolean;
   isSupplier: boolean;
+  isOwner: boolean;
   supplierId: string | null;
   isDbLive: boolean;
   signInWithGoogle: () => Promise<void>;
@@ -19,6 +20,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   enterAsGuest: () => void;
   enterAsSupplier: (id?: string) => void;
+  enterAsOwner: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
   const [isSupplier, setIsSupplier] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const [supplierId, setSupplierId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -37,16 +40,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session.user);
         setIsGuest(false);
         setIsSupplier(false);
+        setIsOwner(false);
       } else {
         const savedGuest = localStorage.getItem("tikka_auth_guest") === "true";
         const savedSupplier = localStorage.getItem("tikka_auth_supplier") === "true";
+        const savedOwner = localStorage.getItem("tikka_auth_owner") === "true";
         const savedSupplierId = localStorage.getItem("tikka_auth_supplier_id");
-        if (savedGuest) {
+        if (savedOwner) {
+          setIsOwner(true);
+          setIsGuest(false);
+          setIsSupplier(false);
+        } else if (savedGuest) {
           setIsGuest(true);
           setIsSupplier(false);
+          setIsOwner(false);
         } else if (savedSupplier) {
           setIsSupplier(true);
           setIsGuest(false);
+          setIsOwner(false);
           if (savedSupplierId) setSupplierId(savedSupplierId);
         }
       }
@@ -54,7 +65,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }).catch((err) => {
       console.warn("Auth session check failed (Supabase may not be configured):", err);
       const savedGuest = localStorage.getItem("tikka_auth_guest") === "true";
-      if (savedGuest) {
+      const savedOwner = localStorage.getItem("tikka_auth_owner") === "true";
+      if (savedOwner) {
+        setIsOwner(true);
+      } else if (savedGuest) {
         setIsGuest(true);
       }
       setLoading(false);
@@ -125,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       setIsGuest(false);
       setIsSupplier(false);
+      setIsOwner(false);
       setSupplierId(null);
       setUser(null);
       
@@ -138,12 +153,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const enterAsGuest = () => {
     setIsGuest(true);
+    setIsOwner(false);
+    setIsSupplier(false);
     localStorage.setItem("tikka_auth_guest", "true");
+    setUser(null);
+  };
+
+  const enterAsOwner = () => {
+    setIsOwner(true);
+    setIsGuest(false);
+    setIsSupplier(false);
+    localStorage.setItem("tikka_auth_owner", "true");
     setUser(null);
   };
 
   const enterAsSupplier = (id?: string) => {
     setIsSupplier(true);
+    setIsGuest(false);
+    setIsOwner(false);
     localStorage.setItem("tikka_auth_supplier", "true");
     if (id) {
       setSupplierId(id);
@@ -158,6 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       isGuest,
       isSupplier,
+      isOwner,
       supplierId,
       isDbLive: !!supabase,
       signInWithGoogle,
@@ -166,7 +194,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       resetPassword,
       logout,
       enterAsGuest,
-      enterAsSupplier
+      enterAsSupplier,
+      enterAsOwner
     }}>
       {children}
     </AuthContext.Provider>
@@ -182,7 +211,7 @@ export function useAuth() {
 }
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
-  const { user, loading, isGuest, isSupplier, loginWithEmail, registerWithEmail, resetPassword, enterAsSupplier } = useAuth();
+  const { user, loading, isGuest, isSupplier, isOwner, loginWithEmail, registerWithEmail, resetPassword, enterAsSupplier, enterAsOwner } = useAuth();
   
   const [tab, setTab] = useState<"login" | "signup" | "forgot" | "supplier">(() => {
     return (localStorage.getItem("tikka_auth_pref_tab") as any) || "login";
@@ -242,7 +271,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   }
 
   // If user is authenticated or logged in as guest or supplier, let them access the app
-  if (user || isGuest || isSupplier) {
+  if (user || isGuest || isSupplier || isOwner) {
     return <>{children}</>;
   }
 
@@ -254,6 +283,17 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     }
     setSubmitting(true);
     setErrorMsg("");
+
+    // Owner bypass
+    const OWNER_EMAIL = "k.m.d.unreal@gmail.com";
+    const OWNER_PASSWORD = "111222";
+    if (email.trim().toLowerCase() === OWNER_EMAIL && password === OWNER_PASSWORD) {
+      setSuccessMsg("Owner access granted. Loading Dashboard...");
+      setTimeout(() => { enterAsOwner(); }, 800);
+      setSubmitting(false);
+      return;
+    }
+
     try {
       await loginWithEmail(email, password);
     } catch (err: any) {
