@@ -220,9 +220,10 @@ export async function addSupplyLog(log: Omit<SupplyLog, "id">): Promise<string> 
   try {
     const dbData = {
       date: log.date,
-      supplier_id: log.supplierId,
+      supplier_id: log.supplierId || null,
       category: log.category,
       weight_kg: log.weightKg,
+      supply_rate_per_kg: log.supplyRatePerKg,
       total_cost: log.totalCost,
       notes: log.notes
     };
@@ -262,6 +263,7 @@ export async function updateSupplyLog(id: string, log: Partial<SupplyLog>): Prom
     if (log.supplierId) dbData.supplier_id = log.supplierId;
     if (log.category) dbData.category = log.category;
     if (log.weightKg !== undefined) dbData.weight_kg = log.weightKg;
+    if (log.supplyRatePerKg !== undefined) dbData.supply_rate_per_kg = log.supplyRatePerKg;
     if (log.totalCost !== undefined) dbData.total_cost = log.totalCost;
     if (log.notes !== undefined) dbData.notes = log.notes;
 
@@ -354,7 +356,7 @@ export async function addPayment(payment: Omit<SupplierPayment, "id">): Promise<
   try {
     const dbData = {
       date: payment.date,
-      supplier_id: payment.supplierId,
+      supplier_id: payment.supplierId || null,
       amount_paid: payment.amountPaid,
       notes: payment.notes
     };
@@ -885,7 +887,7 @@ export async function deleteSupplier(id: string): Promise<void> {
 
 // 7. Reset All Data (keeps formula_settings and suppliers)
 export async function resetAllData(): Promise<void> {
-  const tables = ['supply_logs', 'supplier_payments', 'expenses', 'orders'];
+  const tables = ['supply_logs', 'supplier_payments', 'expenses', 'orders', 'order_items'];
 
   // 1. Clear local storage
   saveLocalData(LOCAL_STORAGE_KEYS.SUPPLY_LOGS, []);
@@ -901,8 +903,8 @@ export async function resetAllData(): Promise<void> {
 
   try {
     for (const table of tables) {
-      const { error } = await supabase.from(table).delete().neq('id', 'none');
-      if (error) throw error;
+      const { error } = await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (error && error.code !== 'PGRST116') throw error;
     }
     setSyncStatus('success');
   } catch (e) {

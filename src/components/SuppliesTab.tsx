@@ -64,13 +64,18 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
     }
   };
 
-  // New multi-supplier inputs
+  // Supplier info
   const [extraNotes, setExtraNotes] = useState("");
+  const isSelfPurchase = selectedSupplierId === "SELF_PURCHASE";
 
   // Weight entry popup state
   const [weightModalCat, setWeightModalCat] = useState<string | null>(null);
   const [weightModalWeight, setWeightModalWeight] = useState("");
   const [weightModalSaving, setWeightModalSaving] = useState(false);
+
+  // Supplier picker state (when no supplier selected)
+  const [showSupplierPicker, setShowSupplierPicker] = useState(false);
+  const [pendingWeightData, setPendingWeightData] = useState<{ cat: string; weight: number } | null>(null);
 
   // New multi-category inputs
   const [isNewCategory, setIsNewCategory] = useState(false);
@@ -192,8 +197,8 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
     const finalCategory = isNewCategory ? customCategoryName.trim() : category.trim();
     const rateNum = getEstimatedRateForCategory(finalCategory);
 
-    if (!selectedSupplierId) {
-      alert("Please select a supplier from the Dashboard first.");
+    if (!selectedSupplierId || selectedSupplierId === "All") {
+      alert("Please select a source (Supplier or Self Purchase) from the Dashboard first.");
       return;
     }
 
@@ -216,8 +221,8 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
         weightKg: weightNum,
         supplyRatePerKg: rateNum,
         totalCost,
-        supplierId: selectedSupplierId,
-        notes: extraNotes.trim(),
+        supplierId: isSelfPurchase ? "" : selectedSupplierId,
+        notes: isSelfPurchase ? "Self Purchase (Owner)" : extraNotes.trim(),
         category: finalCategory,
       });
 
@@ -306,7 +311,12 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
       {/* Add Stock Form */}
       <div className="bg-surface border border-ink-faint p-2 space-y-2 rounded-2xl">
         <div className="flex items-center justify-between">
-          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-teal-300 font-bold">Add Stock</span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-teal-300 font-bold">Add Stock</span>
+            <span className="font-mono text-[7px] uppercase tracking-widest text-ink/30 bg-ink-faint/20 px-2 py-0.5 rounded-full">
+              {isSelfPurchase ? "Self Purchase" : selectedSupplierId ? "Via Supplier" : "Select Source"}
+            </span>
+          </div>
           <Package className="w-3.5 h-3.5 text-teal-400" />
         </div>
 
@@ -449,6 +459,70 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
         )}
       </div>
 
+      {/* Supplier Picker Modal */}
+      {showSupplierPicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in" onClick={() => { setShowSupplierPicker(false); setPendingWeightData(null); }}>
+          <div className="bg-surface border border-ink-faint rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent">Select Supplier</span>
+                <button type="button" onClick={() => { setShowSupplierPicker(false); setPendingWeightData(null); }} className="opacity-40 hover:opacity-100 transition-opacity">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </div>
+              {pendingWeightData && (
+                <div className="bg-bg/60 border border-ink-faint rounded-xl p-3 space-y-1 text-center">
+                  <span className="font-mono text-[8px] opacity-40 uppercase tracking-widest block">{pendingWeightData.cat}</span>
+                  <span className="font-mono text-lg font-black text-ink">{pendingWeightData.weight} KG</span>
+                </div>
+              )}
+              <div className="space-y-1 max-h-60 overflow-y-auto">
+                {suppliers.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={async () => {
+                      if (!pendingWeightData) return;
+                      const rate = getEstimatedRateForCategory(pendingWeightData.cat);
+                      setWeightModalSaving(true);
+                      setShowSupplierPicker(false);
+                      try {
+                        await onAddLog({
+                          date: new Date().toISOString().split("T")[0],
+                          weightKg: pendingWeightData.weight,
+                          supplyRatePerKg: rate,
+                          totalCost: pendingWeightData.weight * rate,
+                          supplierId: s.id,
+                          notes: "",
+                          category: pendingWeightData.cat,
+                        });
+                        setPendingWeightData(null);
+                      } catch (err) {
+                        console.error(err);
+                        alert("Failed to save.");
+                      } finally {
+                        setWeightModalSaving(false);
+                      }
+                    }}
+                    className="w-full text-left bg-bg/60 border border-ink-faint hover:border-accent/40 p-3 rounded-xl transition-all cursor-pointer group"
+                  >
+                    <span className="font-mono text-xs font-bold text-ink group-hover:text-accent transition-colors">{s.name}</span>
+                    {s.category && <span className="font-mono text-[8px] text-ink/40 block">{s.category}</span>}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => { setShowSupplierPicker(false); setPendingWeightData(null); }}
+                className="w-full py-2 font-mono text-[8px] opacity-40 hover:opacity-80 uppercase tracking-widest rounded transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Weight Entry Modal */}
       {weightModalCat && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in" onClick={() => setWeightModalCat(null)}>
@@ -495,6 +569,13 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
                   onClick={async () => {
                     const w = parseFloat(weightModalWeight);
                     if (!weightModalCat || isNaN(w) || w <= 0) return;
+                    if (!selectedSupplierId || selectedSupplierId === "All") {
+                      setPendingWeightData({ cat: weightModalCat, weight: w });
+                      setWeightModalCat(null);
+                      setWeightModalWeight("");
+                      setShowSupplierPicker(true);
+                      return;
+                    }
                     setWeightModalSaving(true);
                     try {
                       const rate = getEstimatedRateForCategory(weightModalCat);
@@ -503,8 +584,8 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
                         weightKg: w,
                         supplyRatePerKg: rate,
                         totalCost: w * rate,
-                        supplierId: selectedSupplierId,
-                        notes: "",
+                        supplierId: isSelfPurchase ? "" : selectedSupplierId,
+                        notes: isSelfPurchase ? "Self Purchase (Owner)" : "",
                         category: weightModalCat,
                       });
                       setWeightModalCat(null);

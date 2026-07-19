@@ -3,7 +3,13 @@ import { Order, SupplyLog, SupplierPayment, Expense, FormulaSettings, Supplier }
 import { 
   Flame,
   Activity,
-  X
+  X,
+  Trash2,
+  RefreshCw,
+  Weight,
+  CreditCard,
+  Package,
+  CheckCircle
 } from "lucide-react";
 import { evaluate } from "mathjs";
 
@@ -18,6 +24,11 @@ interface DashboardTabProps {
   onSupplierSelect: (id: string) => void;
   onSaveSettings: (settings: FormulaSettings) => Promise<void>;
   onNavigateToSales?: () => void;
+  onUpdateSupplyLog?: (id: string, log: Partial<SupplyLog>) => Promise<void>;
+  onDeleteSupplyLog?: (id: string) => Promise<void>;
+  onAddPayment?: (payment: Omit<SupplierPayment, "id">) => Promise<string>;
+  onUpdatePayment?: (id: string, payment: Partial<SupplierPayment>) => Promise<void>;
+  onDeletePayment?: (id: string) => Promise<void>;
 }
 
 export default function DashboardTab({ 
@@ -30,7 +41,12 @@ export default function DashboardTab({
   selectedSupplierId,
   onSupplierSelect,
   onSaveSettings,
-  onNavigateToSales
+  onNavigateToSales,
+  onUpdateSupplyLog,
+  onDeleteSupplyLog,
+  onAddPayment,
+  onUpdatePayment,
+  onDeletePayment
 }: DashboardTabProps) {
   const [quickRate, setQuickRate] = useState<string>(settings.baseRawRate.toString());
   const [isUpdatingRate, setIsUpdatingRate] = useState(false);
@@ -91,9 +107,32 @@ export default function DashboardTab({
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const dateInputRef = React.useRef<HTMLInputElement>(null);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [supplierDetailTab, setSupplierDetailTab] = useState<"supplies" | "payments" | "ledger">("ledger");
+
+  // Editing state for supplies
+  const [editSupplyId, setEditSupplyId] = useState<string | null>(null);
+  const [editSupplyWeight, setEditSupplyWeight] = useState("");
+  const [editSupplyRate, setEditSupplyRate] = useState("");
+  const [editSupplyCategory, setEditSupplyCategory] = useState("");
+  const [editSupplyNotes, setEditSupplyNotes] = useState("");
+
+  // Editing state for payments
+  const [editPaymentId, setEditPaymentId] = useState<string | null>(null);
+  const [editPayAmount, setEditPayAmount] = useState("");
+  const [editPayDate, setEditPayDate] = useState("");
+  const [editPayNotes, setEditPayNotes] = useState("");
+
+  // Quick add payment modal
+  const [showQuickPay, setShowQuickPay] = useState(false);
+  const [quickPayAmount, setQuickPayAmount] = useState("");
+
+  const isSpecificSupplier = selectedSupplierId !== "" && selectedSupplierId !== "All" && selectedSupplierId !== "SELF_PURCHASE";
+  const selectedSupplier = isSpecificSupplier ? suppliers.find(s => s.id === selectedSupplierId) : null;
 
   const currentSupplierName = selectedSupplierId === "" || selectedSupplierId === "All"
     ? "All Suppliers"
+    : selectedSupplierId === "SELF_PURCHASE"
+    ? "Self Purchase (Owner)"
     : suppliers.find(s => s.id === selectedSupplierId)?.name || "Unknown";
 
   // Filter everything by selected supplier if active
@@ -177,6 +216,95 @@ export default function DashboardTab({
   const monthSupplyCost = monthSupplies.reduce((s, l) => s + l.totalCost, 0);
   const monthExpensesTotal = monthExpensesList.reduce((s, e) => s + e.amount, 0);
   const monthProfit = monthSales - monthSupplyCost - monthExpensesTotal;
+
+  // Edit supply handlers
+  const startEditSupply = (log: SupplyLog) => {
+    setEditSupplyId(log.id);
+    setEditSupplyWeight(log.weightKg.toString());
+    setEditSupplyRate(log.supplyRatePerKg.toString());
+    setEditSupplyCategory(log.category || "");
+    setEditSupplyNotes(log.notes || "");
+  };
+
+  const cancelEditSupply = () => setEditSupplyId(null);
+
+  const handleUpdateSupply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editSupplyId || !onUpdateSupplyLog) return;
+    const w = parseFloat(editSupplyWeight);
+    const r = parseFloat(editSupplyRate);
+    if (isNaN(w) || isNaN(r)) return;
+    try {
+      await onUpdateSupplyLog(editSupplyId, {
+        weightKg: w,
+        supplyRatePerKg: r,
+        totalCost: w * r,
+        category: editSupplyCategory,
+        notes: editSupplyNotes,
+      });
+      setEditSupplyId(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Edit payment handlers
+  const startEditPayment = (p: SupplierPayment) => {
+    setEditPaymentId(p.id);
+    setEditPayAmount(p.amountPaid.toString());
+    setEditPayDate(p.date);
+    setEditPayNotes(p.notes || "");
+  };
+
+  const cancelEditPayment = () => setEditPaymentId(null);
+
+  const handleUpdatePayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editPaymentId || !onUpdatePayment) return;
+    const a = parseFloat(editPayAmount);
+    if (isNaN(a) || a <= 0) return;
+    try {
+      await onUpdatePayment(editPaymentId, {
+        amountPaid: a,
+        date: editPayDate,
+        notes: editPayNotes,
+      });
+      setEditPaymentId(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleQuickPay = async () => {
+    const a = parseFloat(quickPayAmount);
+    if (isNaN(a) || a <= 0 || !onAddPayment || !selectedSupplier) return;
+    try {
+      await onAddPayment({
+        date: new Date().toISOString().split("T")[0],
+        amountPaid: a,
+        notes: `Payment to ${selectedSupplier.name}`,
+        supplierId: selectedSupplier.id,
+      });
+      setQuickPayAmount("");
+      setShowQuickPay(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Build running ledger for selected supplier
+  const buildSupplierLedger = () => {
+    const allDates = new Set<string>();
+    filteredSupplyLogs.forEach(l => allDates.add(l.date));
+    filteredPayments.forEach(p => allDates.add(p.date));
+    return Array.from(allDates).sort((a, b) => b.localeCompare(a)).map(d => {
+      const daySupplies = filteredSupplyLogs.filter(l => l.date === d);
+      const dayPayments = filteredPayments.filter(p => p.date === d);
+      const supplyTotal = daySupplies.reduce((s, l) => s + l.totalCost, 0);
+      const payTotal = dayPayments.reduce((s, p) => s + p.amountPaid, 0);
+      return { date: d, supplies: daySupplies, payments: dayPayments, supplyTotal, payTotal, net: supplyTotal - payTotal };
+    });
+  };
 
   return (
     <div id="dashboard-tab" className="space-y-4 animate-fade-in max-w-5xl mx-auto">
@@ -265,12 +393,294 @@ export default function DashboardTab({
 
       {/* Main Content Split */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Reports Side */}
+        {/* Left Side: Supplier Detail or Summary */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="flex items-center gap-4">
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-ink/40 font-bold">Summary</span>
-            <div className="h-px bg-ink-faint/20 flex-1" />
-          </div>
+          {isSpecificSupplier && selectedSupplier ? (
+            <>
+              {/* Supplier Header */}
+              <div className="bg-surface border border-ink-faint p-4 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-accent/10 rounded-lg">
+                      <Package className="w-5 h-5 text-accent" />
+                    </div>
+                    <div>
+                      <span className="font-mono text-[9px] uppercase tracking-widest text-ink/40 font-bold">Supplier</span>
+                      <h3 className="font-display text-lg uppercase tracking-tight font-black">{selectedSupplier.name}</h3>
+                    </div>
+                  </div>
+                  <button onClick={() => setShowQuickPay(true)} className="px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-bg font-mono text-[8px] font-bold uppercase tracking-widest rounded-lg transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-emerald-500/20">
+                    <CreditCard className="w-3.5 h-3.5" />
+                    Quick Pay
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 gap-3 pt-2 border-t border-ink-faint/40">
+                  <div>
+                    <span className="font-mono text-[7px] uppercase tracking-widest text-ink/40">Total Supplied</span>
+                    <span className="block font-mono text-sm font-black text-ink">Rs. {totalSuppliesCost.toLocaleString()}</span>
+                  </div>
+                  <div>
+                    <span className="font-mono text-[7px] uppercase tracking-widest text-emerald-400/60">Total Paid</span>
+                    <span className="block font-mono text-sm font-black text-emerald-400">Rs. {totalPaidToSupplier.toLocaleString()}</span>
+                  </div>
+                  <div>
+                    <span className="font-mono text-[7px] uppercase tracking-widest text-red-400/60">Pending</span>
+                    <span className={`block font-mono text-sm font-black ${outstandingSupplierDues > 0 ? "text-red-400" : "text-emerald-400"}`}>
+                      Rs. {outstandingSupplierDues.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tab Switcher */}
+              <div className="flex gap-1 bg-surface/60 border border-ink-faint/40 p-1 rounded-xl">
+                {(["ledger", "supplies", "payments"] as const).map(tab => (
+                  <button key={tab} onClick={() => setSupplierDetailTab(tab)}
+                    className={`flex-1 py-2 rounded-lg font-mono text-[8px] font-bold uppercase tracking-widest transition-all cursor-pointer ${
+                      supplierDetailTab === tab ? "bg-accent text-bg shadow-lg" : "text-ink/40 hover:text-ink/70"
+                    }`}
+                  >
+                    {tab === "ledger" ? "Ledger" : tab === "supplies" ? "Supplies" : "Payments"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Supplies Tab */}
+              {supplierDetailTab === "supplies" && (
+                <div className="space-y-2">
+                  <span className="font-mono text-[8px] uppercase tracking-widest text-ink/30 font-bold">All Supply Records</span>
+                  {filteredSupplyLogs.length === 0 ? (
+                    <div className="py-8 text-center border border-dashed border-ink-faint rounded-lg">
+                      <p className="font-mono text-[9px] uppercase tracking-widest opacity-20 italic">No supplies recorded</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1.5 max-h-[400px] overflow-y-auto">
+                      {filteredSupplyLogs.map(log => (
+                        editSupplyId === log.id ? (
+                          <form key={log.id} onSubmit={handleUpdateSupply} className="bg-orange-500/10 border border-orange-400/40 p-3 rounded-xl space-y-2">
+                            <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-orange-300">Edit Supply</span>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <span className="font-mono text-[6px] opacity-40 uppercase">Weight (KG)</span>
+                                <input type="number" step="0.01" value={editSupplyWeight} onChange={e => setEditSupplyWeight(e.target.value)}
+                                  className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none" />
+                              </div>
+                              <div>
+                                <span className="font-mono text-[6px] opacity-40 uppercase">Rate (Rs/KG)</span>
+                                <input type="number" value={editSupplyRate} onChange={e => setEditSupplyRate(e.target.value)}
+                                  className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none" />
+                              </div>
+                            </div>
+                            <div>
+                              <span className="font-mono text-[6px] opacity-40 uppercase">Notes</span>
+                              <input type="text" value={editSupplyNotes} onChange={e => setEditSupplyNotes(e.target.value)}
+                                className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none" />
+                            </div>
+                            <div className="flex justify-end gap-3 pt-1">
+                              <button type="button" onClick={cancelEditSupply} className="font-mono text-[7px] uppercase opacity-40 hover:opacity-80">Cancel</button>
+                              <button type="submit" className="font-mono text-[7px] font-bold uppercase text-orange-300 border-b border-orange-300">Save</button>
+                            </div>
+                          </form>
+                        ) : (
+                          <div key={log.id} className="bg-surface border border-ink-faint p-3 rounded-xl flex items-center justify-between group hover:border-ink/30 transition-all">
+                            <div className="space-y-0.5">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-[10px] md:text-xs font-bold uppercase tracking-widest text-emerald-400">{log.category || "RAW_CHICKEN"}</span>
+                                <span className="font-mono text-[7px] text-ink/30">{log.date}</span>
+                                {log.notes?.startsWith("PENDING:") && (
+                                  <span className="font-mono text-[6px] font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded-full">Pending</span>
+                                )}
+                              </div>
+                              <div className="flex items-baseline gap-1">
+                                <span className="font-mono text-sm font-black text-ink">{log.weightKg}</span>
+                                <span className="font-mono text-[7px] font-bold uppercase text-ink/40">KG</span>
+                                <span className="font-mono text-[8px] text-ink/30 ml-2">@ Rs.{log.supplyRatePerKg}</span>
+                              </div>
+                              <span className="font-mono text-sm font-black text-accent">Rs. {log.totalCost.toLocaleString()}</span>
+                              {log.notes && <span className="font-mono text-[7px] text-ink/30 block">{log.notes.replace(/^PENDING:/, "")}</span>}
+                            </div>
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {log.notes?.startsWith("PENDING:") && onUpdateSupplyLog && (
+                                <button type="button" onClick={async () => {
+                                  try {
+                                    await onUpdateSupplyLog(log.id, { notes: log.notes.replace("PENDING:", "RECEIVED:") });
+                                  } catch (err) { console.error(err); }
+                                }} className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-bg rounded-lg font-mono text-[7px] font-bold uppercase tracking-widest transition-all cursor-pointer shadow-lg shadow-emerald-500/20">
+                                  Receive
+                                </button>
+                              )}
+                              {onUpdateSupplyLog && (
+                                <button type="button" onClick={() => startEditSupply(log)} className="p-1 hover:bg-ink-faint/20 rounded transition-colors cursor-pointer">
+                                  <RefreshCw className="w-3.5 h-3.5 text-ink/40" />
+                                </button>
+                              )}
+                              {onDeleteSupplyLog && (
+                                <button type="button" onClick={() => { if (confirm("Delete this supply record?")) onDeleteSupplyLog(log.id); }} className="p-1 hover:bg-red-500/20 rounded transition-colors cursor-pointer">
+                                  <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Payments Tab */}
+              {supplierDetailTab === "payments" && (
+                <div className="space-y-2">
+                  <span className="font-mono text-[8px] uppercase tracking-widest text-ink/30 font-bold">All Payment Records</span>
+                  {filteredPayments.length === 0 ? (
+                    <div className="py-8 text-center border border-dashed border-ink-faint rounded-lg">
+                      <p className="font-mono text-[9px] uppercase tracking-widest opacity-20 italic">No payments recorded</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1.5 max-h-[400px] overflow-y-auto">
+                      {filteredPayments.map(p => (
+                        editPaymentId === p.id ? (
+                          <form key={p.id} onSubmit={handleUpdatePayment} className="bg-emerald-500/10 border border-emerald-400/40 p-3 rounded-xl space-y-2">
+                            <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-emerald-300">Edit Payment</span>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <span className="font-mono text-[6px] opacity-40 uppercase">Amount</span>
+                                <input type="number" value={editPayAmount} onChange={e => setEditPayAmount(e.target.value)}
+                                  className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none" />
+                              </div>
+                              <div>
+                                <span className="font-mono text-[6px] opacity-40 uppercase">Date</span>
+                                <input type="date" value={editPayDate} onChange={e => setEditPayDate(e.target.value)}
+                                  className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none" />
+                              </div>
+                            </div>
+                            <div>
+                              <span className="font-mono text-[6px] opacity-40 uppercase">Notes</span>
+                              <input type="text" value={editPayNotes} onChange={e => setEditPayNotes(e.target.value)}
+                                className="w-full bg-bg border border-ink-faint rounded px-2 py-1.5 font-mono text-[10px] focus:ring-1 focus:ring-accent outline-none" />
+                            </div>
+                            <div className="flex justify-end gap-3 pt-1">
+                              <button type="button" onClick={cancelEditPayment} className="font-mono text-[7px] uppercase opacity-40 hover:opacity-80">Cancel</button>
+                              <button type="submit" className="font-mono text-[7px] font-bold uppercase text-emerald-300 border-b border-emerald-300">Save</button>
+                            </div>
+                          </form>
+                        ) : (
+                          <div key={p.id} className="bg-surface border border-ink-faint p-3 rounded-xl flex items-center justify-between group hover:border-ink/30 transition-all">
+                            <div className="space-y-0.5">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-emerald-400">Payment</span>
+                                <span className="font-mono text-[7px] text-ink/30">{p.date}</span>
+                              </div>
+                              <span className="font-mono text-sm font-black text-emerald-400">Rs. {p.amountPaid.toLocaleString()}</span>
+                              {p.notes && <span className="font-mono text-[7px] text-ink/30 block">{p.notes}</span>}
+                            </div>
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {onUpdatePayment && (
+                                <button type="button" onClick={() => startEditPayment(p)} className="p-1 hover:bg-ink-faint/20 rounded transition-colors cursor-pointer">
+                                  <RefreshCw className="w-3.5 h-3.5 text-ink/40" />
+                                </button>
+                              )}
+                              {onDeletePayment && (
+                                <button type="button" onClick={() => { if (confirm("Delete this payment record?")) onDeletePayment(p.id); }} className="p-1 hover:bg-red-500/20 rounded transition-colors cursor-pointer">
+                                  <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Ledger Tab */}
+              {supplierDetailTab === "ledger" && (
+                <div className="space-y-2">
+                  <span className="font-mono text-[8px] uppercase tracking-widest text-ink/30 font-bold">Running Ledger</span>
+                  {(() => {
+                    const ledger = buildSupplierLedger();
+                    if (ledger.length === 0) return (
+                      <div className="py-8 text-center border border-dashed border-ink-faint rounded-lg">
+                        <p className="font-mono text-[9px] uppercase tracking-widest opacity-20 italic">No activity found</p>
+                      </div>
+                    );
+                    return (
+                      <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto">
+                        {ledger.map(day => (
+                          <div key={day.date} className="bg-surface border border-ink-faint p-3 rounded-xl space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-ink/40">
+                                {new Date(day.date).toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" })}
+                              </span>
+                              <span className={`font-mono text-[8px] font-bold uppercase tracking-widest ${day.net > 0 ? "text-red-400" : day.net < 0 ? "text-emerald-400" : "text-ink/20"}`}>
+                                {day.net > 0 ? `Dues: Rs. ${day.net.toLocaleString()}` : day.net < 0 ? `Excess: Rs. ${Math.abs(day.net).toLocaleString()}` : "Settled"}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              {day.supplies.length > 0 && (
+                                <div className="space-y-1">
+                                  <span className="font-mono text-[6px] uppercase tracking-widest text-emerald-400/60 font-bold">Supplies</span>
+                                  {day.supplies.map(s => (
+                                    <div key={s.id} className="flex justify-between items-center">
+                                      <span className="font-mono text-[8px] text-ink/60 truncate max-w-[60%]">{s.category || "CHICKEN"} {s.weightKg}kg</span>
+                                      <span className="font-mono text-[8px] font-bold text-ink">Rs.{s.totalCost.toLocaleString()}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {day.payments.length > 0 && (
+                                <div className="space-y-1">
+                                  <span className="font-mono text-[6px] uppercase tracking-widest text-orange-400/60 font-bold">Payments</span>
+                                  {day.payments.map(p => (
+                                    <div key={p.id} className="flex justify-between items-center">
+                                      <span className="font-mono text-[8px] text-ink/60 truncate max-w-[60%]">{p.notes || "Payment"}</span>
+                                      <span className="font-mono text-[8px] font-bold text-emerald-400">Rs.{p.amountPaid.toLocaleString()}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Quick Pay Modal */}
+              {showQuickPay && (
+                <div className="fixed inset-0 bg-bg/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in" onClick={() => setShowQuickPay(false)}>
+                  <div className="bg-surface border border-ink-faint rounded-xl p-5 w-full max-w-sm shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent">Quick Pay — {selectedSupplier.name}</span>
+                      <button onClick={() => setShowQuickPay(false)} className="p-1 hover:bg-ink-faint rounded transition-colors">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div>
+                      <span className="font-mono text-[7px] font-bold opacity-40 uppercase tracking-widest block mb-1">Amount (Rs.)</span>
+                      <input type="number" min="1" placeholder="0" value={quickPayAmount} onChange={e => setQuickPayAmount(e.target.value)}
+                        className="w-full bg-bg border border-ink-faint rounded px-4 py-4 font-mono text-3xl font-bold text-ink focus:ring-1 focus:ring-accent outline-none" autoFocus />
+                    </div>
+                    <div className="text-right space-x-3">
+                      <button onClick={() => setShowQuickPay(false)} className="px-4 py-2 font-mono text-[8px] uppercase tracking-widest opacity-40 hover:opacity-80">Cancel</button>
+                      <button onClick={handleQuickPay} disabled={!quickPayAmount || parseFloat(quickPayAmount) <= 0}
+                        className="px-6 py-2 bg-emerald-500 text-bg rounded-lg font-mono text-[8px] font-bold uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-30 cursor-pointer">
+                        Pay Rs. {parseFloat(quickPayAmount || "0").toLocaleString()}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex items-center gap-4">
+              <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-ink/40 font-bold">Summary</span>
+              <div className="h-px bg-ink-faint/20 flex-1" />
+            </div>
+          )}
           </div>
 
         {/* Right Side: Dues & Chart */}
@@ -286,7 +696,7 @@ export default function DashboardTab({
             <span className={`font-mono text-[7px] sm:text-[10px] font-bold uppercase block ${outstandingSupplierDues > 0 ? "text-red-400/60" : "text-emerald-400/60"}`}>Rs.</span>
             <div className={`font-mono text-3xl font-black tracking-tight truncate ${outstandingSupplierDues > 0 ? "text-red-400" : "text-emerald-400"}`}>{outstandingSupplierDues.toLocaleString()}</div>
             <span className={`font-mono text-[10px] uppercase tracking-widest block truncate font-bold ${outstandingSupplierDues > 0 ? "text-red-400/60" : "text-emerald-400/60"}`}>
-              {outstandingSupplierDues > 0 ? "Pending" : "Settled"} &bull; {selectedSupplierId === "" || selectedSupplierId === "All" ? "All Vendors" : suppliers.find(s => s.id === selectedSupplierId)?.name}
+              {outstandingSupplierDues > 0 ? "Pending" : "Settled"} &bull; {selectedSupplierId === "" || selectedSupplierId === "All" ? "All Vendors" : selectedSupplierId === "SELF_PURCHASE" ? "Self Purchase" : suppliers.find(s => s.id === selectedSupplierId)?.name}
             </span>
           </div>
 
@@ -331,8 +741,8 @@ export default function DashboardTab({
                 const isSupply = 'totalCost' in log;
                 const sLog = isSupply ? (log as SupplyLog) : null;
                 const pLog = !isSupply ? (log as SupplierPayment) : null;
-                const sup = suppliers.find(s => s.id === log.supplierId);
-                const supName = sup?.name || log.notes?.split(' ')[0] || 'Unknown';
+                const sup = log.supplierId ? suppliers.find(s => s.id === log.supplierId) : null;
+                const supName = sup?.name || (!log.supplierId ? "Self Purchase (Owner)" : log.notes?.split(' ')[0] || 'Unknown');
                 return (
                   <button
                     key={log.id}
@@ -529,6 +939,9 @@ export default function DashboardTab({
             <div className="space-y-1 max-h-60 overflow-y-auto">
               <button onClick={() => { onSupplierSelect("All"); setShowSupplierModal(false); }} className={`w-full text-left px-3 py-2.5 rounded-lg font-mono text-[11px] font-bold uppercase tracking-widest transition-all cursor-pointer ${selectedSupplierId === "" || selectedSupplierId === "All" ? "bg-accent text-bg" : "hover:bg-ink-faint/20 text-ink/70"}`}>
                 All Suppliers
+              </button>
+              <button onClick={() => { onSupplierSelect("SELF_PURCHASE"); setShowSupplierModal(false); }} className={`w-full text-left px-3 py-2.5 rounded-lg font-mono text-[11px] font-bold uppercase tracking-widest transition-all cursor-pointer ${selectedSupplierId === "SELF_PURCHASE" ? "bg-accent text-bg" : "hover:bg-ink-faint/20 text-ink/70"}`}>
+                Self Purchase (Owner)
               </button>
               {suppliers.map(s => (
                 <button key={s.id} onClick={() => { onSupplierSelect(s.id); setShowSupplierModal(false); }} className={`w-full text-left px-3 py-2.5 rounded-lg font-mono text-[11px] font-bold uppercase tracking-widest transition-all cursor-pointer ${selectedSupplierId === s.id ? "bg-accent text-bg" : "hover:bg-ink-faint/20 text-ink/70"}`}>

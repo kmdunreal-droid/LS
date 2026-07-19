@@ -699,7 +699,7 @@ export default function SettingsTab({
           {showResetSection && (
             <div className="p-4 md:p-6 space-y-4 border-t border-red-500/20">
               <p className="font-mono text-[10px] text-red-300/60 uppercase tracking-wider leading-relaxed">
-                This will permanently delete all supply logs, payments, expenses, and orders. Formula settings and suppliers will be preserved. This action cannot be undone.
+                Is se <b className="text-red-200">saara data delete ho jaye ga</b> — inventory (kg, raqam), supplier payments, daily expenses, aur POS orders. Sirf <b className="text-red-200">formula settings</b> aur <b className="text-red-200">suppliers</b> bach jayein ge. Yeh action <b className="text-red-200">wapas nahi ho sakta</b>.
               </p>
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
                 <input

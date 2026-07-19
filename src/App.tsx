@@ -390,8 +390,8 @@ export function AppContent() {
   };
 
   // Derived values
-  const selectedSupplierObj = suppliers.find(s => s.id === selectedSupplierId);
-  const selectedSupplierName = selectedSupplierObj?.name || "All Suppliers";
+  const selectedSupplierObj = selectedSupplierId === "SELF_PURCHASE" ? null : suppliers.find(s => s.id === selectedSupplierId);
+  const selectedSupplierName = selectedSupplierId === "SELF_PURCHASE" ? "Self Purchase (Owner)" : (selectedSupplierObj?.name || "All Suppliers");
 
   // Stats Calculations
   const todayString = new Date().toISOString().split("T")[0];
@@ -422,10 +422,14 @@ export function AppContent() {
 
     const filteredSupplyLogs = selectedSupplierId === "" || selectedSupplierId === "All"
       ? supplyLogs
+      : selectedSupplierId === "SELF_PURCHASE"
+      ? supplyLogs.filter(s => !s.supplierId || s.supplierId === "")
       : supplyLogs.filter(s => s.supplierId === selectedSupplierId);
 
     const filteredPayments = selectedSupplierId === "" || selectedSupplierId === "All"
       ? payments
+      : selectedSupplierId === "SELF_PURCHASE"
+      ? payments.filter(p => !p.supplierId || p.supplierId === "")
       : payments.filter(p => p.supplierId === selectedSupplierId);
 
     switch (activeTab) {
@@ -442,6 +446,11 @@ export function AppContent() {
             onSupplierSelect={setSelectedSupplierId}
             onSaveSettings={handleSaveSettings}
             onNavigateToSales={() => setActiveTab("pos")}
+            onUpdateSupplyLog={handleUpdateSupplyLog}
+            onDeleteSupplyLog={handleDeleteSupplyLog}
+            onAddPayment={handleAddPayment}
+            onUpdatePayment={handleUpdatePayment}
+            onDeletePayment={handleDeletePayment}
           />
         );
       case "pos":

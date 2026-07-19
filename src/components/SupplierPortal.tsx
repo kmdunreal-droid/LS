@@ -186,7 +186,7 @@ export default function SupplierPortal({
         weightKg: weightNum,
         supplyRatePerKg: rateNum,
         totalCost: weightNum * rateNum,
-        notes: notes.trim() || "Raw Chicken Supply",
+        notes: notes.trim() || "PENDING:Raw Chicken Supply",
         category: finalCategory,
         supplierId: currentSupplier!.id,
       });
@@ -1138,7 +1138,7 @@ export default function SupplierPortal({
                         supplyRatePerKg: rate,
                         totalCost: w * rate,
                         category: weightModalCat,
-                        notes: "",
+                        notes: "PENDING:Quick Add",
                         supplierId: currentSupplier?.id || "",
                       });
                       setWeightModalCat(null);
