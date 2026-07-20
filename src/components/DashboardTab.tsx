@@ -58,6 +58,8 @@ export default function DashboardTab({
   const [isUpdatingRate, setIsUpdatingRate] = useState(false);
   const [selectedLog, setSelectedLog] = useState<SupplyLog | SupplierPayment | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const dateInputRef = React.useRef<HTMLInputElement>(null);
   const [showRateModal, setShowRateModal] = useState(false);
   const [rateModalDate, setRateModalDate] = useState(selectedDate);
   const [updateExistingSupplies, setUpdateExistingSupplies] = useState(false);
@@ -128,8 +130,6 @@ export default function DashboardTab({
     }
   };
 
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
-  const dateInputRef = React.useRef<HTMLInputElement>(null);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [supplierDetailTab, setSupplierDetailTab] = useState<"supplies" | "payments" | "ledger">("ledger");
 
