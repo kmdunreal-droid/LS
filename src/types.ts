@@ -64,6 +64,11 @@ export interface Order {
   status: 'Paid' | 'Unpaid';
 }
 
+export interface DailyRate {
+  date: string;
+  rate: number;
+}
+
 export interface Expense {
   id: string;
   date: string; // YYYY-MM-DD

@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabase";
-import { SupplyLog, SupplierPayment, FormulaSettings, Order, Expense, Supplier } from "../types";
+import { SupplyLog, SupplierPayment, FormulaSettings, Order, Expense, Supplier, DailyRate } from "../types";
 import { DEFAULT_FORMULA_SETTINGS } from "../constants";
 
 // ---------------- SYNC STATUS TRACKING ----------------
@@ -160,7 +160,69 @@ export async function saveFormulaSettings(settings: FormulaSettings): Promise<vo
   }
 }
 
-// 2. Supply Logs DB Methods
+// 2. Daily Rates DB Methods
+const DAILY_RATES_KEY = "tikka_daily_rates";
+
+export function subscribeDailyRates(onUpdate: (rates: Record<string, number>) => void): () => void {
+  const fetchRates = async () => {
+    const { data } = await supabase
+      .from('daily_rates')
+      .select('*')
+      .order('date', { ascending: false });
+    
+    if (data) {
+      const ratesMap: Record<string, number> = {};
+      (data as any[]).forEach(d => { ratesMap[d.date] = Number(d.rate); });
+      saveLocalData(DAILY_RATES_KEY, ratesMap);
+      onUpdate(ratesMap);
+    } else {
+      const local = getLocalData<Record<string, number>>(DAILY_RATES_KEY, {});
+      onUpdate(local);
+    }
+  };
+  fetchRates();
+  return () => {};
+}
+
+export async function getDailyRate(date: string): Promise<number | null> {
+  const { data } = await supabase
+    .from('daily_rates')
+    .select('rate')
+    .eq('date', date)
+    .single();
+  if (data) return Number(data.rate);
+  return null;
+}
+
+export async function saveDailyRate(date: string, rate: number): Promise<void> {
+  const localRates = getLocalData<Record<string, number>>(DAILY_RATES_KEY, {});
+  localRates[date] = rate;
+  saveLocalData(DAILY_RATES_KEY, localRates);
+  notifyDataSubscribers('settings', { dailyRates: localRates } as any);
+
+  setSyncStatus('syncing');
+  try {
+    const { error } = await supabase
+      .from('daily_rates')
+      .upsert({ date, rate }, { onConflict: 'date' });
+    if (error) throw error;
+    setSyncStatus('success');
+  } catch (e: any) {
+    console.error("Failed to save daily rate:", e.message || e);
+    setSyncStatus('error');
+  }
+}
+
+export function getLocalDailyRate(date: string): number | null {
+  const rates = getLocalData<Record<string, number>>(DAILY_RATES_KEY, {});
+  return rates[date] ?? null;
+}
+
+export function getAllLocalDailyRates(): Record<string, number> {
+  return getLocalData<Record<string, number>>(DAILY_RATES_KEY, {});
+}
+
+// 3. Supply Logs DB Methods
 export function subscribeSupplyLogs(onUpdate: (logs: SupplyLog[]) => void): () => void {
   const uniqueId = Math.random().toString(36).substring(2, 9);
   
@@ -301,7 +363,7 @@ export async function deleteSupplyLog(id: string): Promise<void> {
   }
 }
 
-// 3. Payments DB Methods
+// 4. Payments DB Methods
 export function subscribePayments(onUpdate: (payments: SupplierPayment[]) => void): () => void {
   const uniqueId = Math.random().toString(36).substring(2, 9);
 
@@ -429,7 +491,7 @@ export async function deletePayment(id: string): Promise<void> {
   }
 }
 
-// 4. Expenses DB Methods
+// 5. Expenses DB Methods
 export function subscribeExpenses(onUpdate: (expenses: Expense[]) => void): () => void {
   const uniqueId = Math.random().toString(36).substring(2, 9);
 
@@ -557,7 +619,7 @@ export async function deleteExpense(id: string): Promise<void> {
   }
 }
 
-// 5. Orders DB Methods
+// 6. Orders DB Methods
 export function subscribeOrders(onUpdate: (orders: Order[]) => void): () => void {
   const uniqueId = Math.random().toString(36).substring(2, 9);
   
@@ -725,7 +787,7 @@ export async function updateOrderStatus(id: string, status: 'Paid' | 'Unpaid'): 
   }
 }
 
-// 6. Suppliers DB Methods
+// 7. Suppliers DB Methods
 export function subscribeSuppliers(onUpdate: (suppliers: Supplier[]) => void): () => void {
   const uniqueId = Math.random().toString(36).substring(2, 9);
 
@@ -885,7 +947,7 @@ export async function deleteSupplier(id: string): Promise<void> {
   }
 }
 
-// 7. Reset All Data (keeps formula_settings and suppliers)
+// 8. Reset All Data (keeps formula_settings and suppliers)
 export async function resetAllData(): Promise<void> {
   const tables = ['supply_logs', 'supplier_payments', 'expenses', 'orders', 'order_items'];
 

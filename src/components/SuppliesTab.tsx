@@ -13,9 +13,11 @@ interface SuppliesTabProps {
   onDeleteLog: (id: string) => Promise<void>;
   onSaveSettings: (settings: FormulaSettings) => Promise<void>;
   onNavigateToSales?: () => void;
+  dailyRates?: Record<string, number>;
+  getEffectiveRate?: (date: string) => number;
 }
 
-export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedSupplierId, onAddLog, onUpdateLog, onDeleteLog, onSaveSettings, onNavigateToSales }: SuppliesTabProps) {
+export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedSupplierId, onAddLog, onUpdateLog, onDeleteLog, onSaveSettings, onNavigateToSales, dailyRates, getEffectiveRate }: SuppliesTabProps) {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [weightKg, setWeightKg] = useState<string>("");
 
@@ -101,9 +103,10 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
 
   // Derived unique categories are declared at the component start
 
-  // Smart rate calculator based on selected category & settings
-  const getEstimatedRateForCategory = (cat: string) => {
-    const base = baseRawRate;
+  // Smart rate calculator based on selected category & date-specific rate
+  const getEstimatedRateForCategory = (cat: string, forDate?: string) => {
+    const dateRate = forDate && getEffectiveRate ? getEffectiveRate(forDate) : null;
+    const base = dateRate ?? baseRawRate;
     // Find matching formula item in settings
     const formulaItem = Object.values(settings.items || {}).find(
       (it) => it.name.toLowerCase() === cat.toLowerCase()
@@ -195,7 +198,7 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
     e.preventDefault();
     const weightNum = parseFloat(weightKg);
     const finalCategory = isNewCategory ? customCategoryName.trim() : category.trim();
-    const rateNum = getEstimatedRateForCategory(finalCategory);
+    const rateNum = getEstimatedRateForCategory(finalCategory, date);
 
     if (!selectedSupplierId || selectedSupplierId === "All") {
       alert("Please select a source (Supplier or Self Purchase) from the Dashboard first.");
@@ -346,7 +349,7 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
               <>
                 <div className="grid grid-cols-2 gap-1.5 mt-1.5">
                   {uniqueCategories.map((cat) => {
-                    const estimatedRate = getEstimatedRateForCategory(cat);
+                    const estimatedRate = getEstimatedRateForCategory(cat, date);
                     const isSelected = category === cat;
                     const colorIdx = uniqueCategories.indexOf(cat) % 5;
                     return (
@@ -483,7 +486,7 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
                     type="button"
                     onClick={async () => {
                       if (!pendingWeightData) return;
-                      const rate = getEstimatedRateForCategory(pendingWeightData.cat);
+                      const rate = getEstimatedRateForCategory(pendingWeightData.cat, new Date().toISOString().split("T")[0]);
                       setWeightModalSaving(true);
                       setShowSupplierPicker(false);
                       try {
@@ -549,11 +552,11 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
                 <div className="bg-bg/60 border border-ink-faint rounded-xl p-4 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="font-mono text-[8px] opacity-40 uppercase tracking-widest">Rate</span>
-                    <span className="font-mono text-sm font-bold text-ink">Rs. {getEstimatedRateForCategory(weightModalCat!).toLocaleString()}/KG</span>
+                    <span className="font-mono text-sm font-bold text-ink">Rs. {getEstimatedRateForCategory(weightModalCat!, new Date().toISOString().split("T")[0]).toLocaleString()}/KG</span>
                   </div>
                   <div className="flex justify-between items-center border-t border-ink-faint/40 pt-2">
                     <span className="font-mono text-[8px] opacity-40 uppercase tracking-widest">Total Raqam</span>
-                    <span className="font-display text-xl font-black text-accent">Rs. {(parseFloat(weightModalWeight) * getEstimatedRateForCategory(weightModalCat!)).toLocaleString()}</span>
+                    <span className="font-display text-xl font-black text-accent">Rs. {(parseFloat(weightModalWeight) * getEstimatedRateForCategory(weightModalCat!, new Date().toISOString().split("T")[0])).toLocaleString()}</span>
                   </div>
                 </div>
               )}
@@ -578,7 +581,7 @@ export default function SuppliesTab({ settings, supplyLogs, suppliers, selectedS
                     }
                     setWeightModalSaving(true);
                     try {
-                      const rate = getEstimatedRateForCategory(weightModalCat);
+                      const rate = getEstimatedRateForCategory(weightModalCat, new Date().toISOString().split("T")[0]);
                       await onAddLog({
                         date: new Date().toISOString().split("T")[0],
                         weightKg: w,

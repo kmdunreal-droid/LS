@@ -17,6 +17,13 @@ CREATE TABLE IF NOT EXISTS public.formula_settings (
     last_updated TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Daily Rates (date-specific rate history)
+CREATE TABLE IF NOT EXISTS public.daily_rates (
+    date DATE PRIMARY KEY,
+    rate NUMERIC NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Suppliers
 CREATE TABLE IF NOT EXISTS public.suppliers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -84,6 +91,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.supplier_payments;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.expenses;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.formula_settings;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.daily_rates;
 
 -- 3. RLS Management (Disabled as requested)
 ALTER TABLE public.formula_settings DISABLE ROW LEVEL SECURITY;
@@ -92,3 +100,4 @@ ALTER TABLE public.supply_logs DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.supplier_payments DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.daily_rates DISABLE ROW LEVEL SECURITY;

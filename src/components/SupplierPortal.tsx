@@ -31,6 +31,8 @@ interface SupplierPortalProps {
   onSaveSettings?: (settings: FormulaSettings) => Promise<void>;
   onExit: () => void;
   isLockedOnly?: boolean;
+  dailyRates?: Record<string, number>;
+  getEffectiveRate?: (date: string) => number;
 }
 
 export default function SupplierPortal({ 
@@ -46,7 +48,9 @@ export default function SupplierPortal({
   onDeletePayment,
   onSaveSettings,
   onExit,
-  isLockedOnly = false
+  isLockedOnly = false,
+  dailyRates,
+  getEffectiveRate
 }: SupplierPortalProps) {
   const { isSupplier, supplierId } = useAuth();
   
@@ -122,8 +126,9 @@ export default function SupplierPortal({
     .filter(it => it.name && it.name.trim() !== "" && it.expression && it.expression.trim() !== "")
     .map(it => it.name);
 
-  const getEstimatedRateForCategory = (cat: string) => {
-    const base = settings.baseRawRate;
+  const getEstimatedRateForCategory = (cat: string, forDate?: string) => {
+    const dateRate = forDate && getEffectiveRate ? getEffectiveRate(forDate) : null;
+    const base = dateRate ?? settings.baseRawRate;
     const formulaItem = Object.values(settings.items || {}).find(
       (it) => it.name.toLowerCase() === cat.toLowerCase()
     );
@@ -407,9 +412,10 @@ export default function SupplierPortal({
                 <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-1.5 bg-surface border border-ink-faint rounded-lg text-ink active:scale-90 transition-all cursor-pointer">
                   <Menu className="w-4 h-4" />
                 </button>
-                <button onClick={() => setShowRateModal(true)} className="px-3 py-1.5 bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20 rounded-lg font-mono text-[7px] font-bold uppercase tracking-widest text-accent hover:from-accent/20 hover:to-accent/10 transition-all cursor-pointer shrink-0 flex items-center gap-1.5 shadow-sm">
-                  <Flame className="w-3.5 h-3.5 text-accent" />
-                  <span>Rs. {settings.baseRawRate}</span>
+                <button onClick={() => setShowRateModal(true)} className="px-5 py-3 bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20 rounded-xl font-mono text-sm font-bold uppercase tracking-widest text-accent hover:from-accent/20 hover:to-accent/10 transition-all cursor-pointer shrink-0 flex items-center gap-2 shadow-md">
+                  <Flame className="w-5 h-5 text-accent" />
+                  <span className="text-lg">Rs. {settings.baseRawRate}</span>
+                  <span className="text-[9px] text-ink/40 uppercase">/KG</span>
                 </button>
               </div>
               <div className="flex items-center gap-2">
@@ -539,6 +545,11 @@ export default function SupplierPortal({
                     </button>
                   </div>
                   <div className="space-y-4">
+                    <div>
+                      <span className="font-mono text-[8px] text-ink/40 uppercase tracking-widest block mb-1">Date</span>
+                      <input type="date" value={date} onChange={e => setDate(e.target.value)}
+                        className="w-full bg-bg border border-ink-faint rounded px-3 py-2 font-mono text-sm focus:ring-1 focus:ring-accent outline-none" />
+                    </div>
                     <div className="flex items-center gap-3">
                       <span className="font-mono text-xs font-bold text-ink/40">Rs.</span>
                       <input
@@ -677,7 +688,7 @@ export default function SupplierPortal({
                     ) : (
                       <div className="grid grid-cols-2 gap-1.5">
                         {uniqueCategories.map((cat) => {
-                          const estimatedRate = getEstimatedRateForCategory(cat);
+                          const estimatedRate = getEstimatedRateForCategory(cat, date);
                           const isSelected = category === cat;
                           return (
                             <button
@@ -1109,11 +1120,11 @@ export default function SupplierPortal({
                 <div className="bg-bg/60 border border-ink-faint rounded-xl p-4 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="font-mono text-[8px] opacity-40 uppercase tracking-widest">Rate</span>
-                    <span className="font-mono text-sm font-bold text-ink">Rs. {getEstimatedRateForCategory(weightModalCat!).toLocaleString()}/KG</span>
+                    <span className="font-mono text-sm font-bold text-ink">Rs. {getEstimatedRateForCategory(weightModalCat!, date).toLocaleString()}/KG</span>
                   </div>
                   <div className="flex justify-between items-center border-t border-ink-faint/40 pt-2">
                     <span className="font-mono text-[8px] opacity-40 uppercase tracking-widest">Total Raqam</span>
-                    <span className="font-display text-xl font-black text-accent">Rs. {(parseFloat(weightModalWeight) * getEstimatedRateForCategory(weightModalCat!)).toLocaleString()}</span>
+                    <span className="font-display text-xl font-black text-accent">Rs. {(parseFloat(weightModalWeight) * getEstimatedRateForCategory(weightModalCat!, date)).toLocaleString()}</span>
                   </div>
                 </div>
               )}
@@ -1131,7 +1142,7 @@ export default function SupplierPortal({
                     if (!weightModalCat || isNaN(w) || w <= 0) return;
                     setWeightModalSaving(true);
                     try {
-                      const rate = getEstimatedRateForCategory(weightModalCat);
+                      const rate = getEstimatedRateForCategory(weightModalCat, date);
                       await onAddLog({
                         date,
                         weightKg: w,

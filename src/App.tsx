@@ -25,6 +25,10 @@ import {
   resetAllData,
   isSupabaseActive,
   subscribeSyncStatus,
+  subscribeDailyRates,
+  getLocalDailyRate,
+  getAllLocalDailyRates,
+  saveDailyRate,
   SyncStatus
 } from "./db/supabase";
 import { FormulaSettings, SupplyLog, SupplierPayment, Expense, Order, Supplier } from "./types";
@@ -86,6 +90,7 @@ export function AppContent() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [dailyRates, setDailyRates] = useState<Record<string, number>>({});
 
   // Indicators
   const [isDbLive, setIsDbLive] = useState(false);
@@ -131,6 +136,11 @@ export function AppContent() {
       console.warn("Supabase subscriptions failed (offline mode):", e);
     }
 
+    // Load daily rates (local first, then remote)
+    const localRates = getAllLocalDailyRates();
+    if (Object.keys(localRates).length > 0) setDailyRates(localRates);
+    subscribeDailyRates((rates) => setDailyRates(rates));
+
     return () => {
       unsubscribeSync();
       unsubscribeSupplies();
@@ -140,6 +150,16 @@ export function AppContent() {
       unsubscribeSuppliers();
     };
   }, []);
+
+  // Helper: get effective rate for a date (daily rate > global baseRawRate)
+  const getEffectiveRate = React.useCallback((date: string): number => {
+    return dailyRates[date] ?? settings.baseRawRate;
+  }, [dailyRates, settings.baseRawRate]);
+
+  const handleSaveDailyRate = async (date: string, rate: number) => {
+    await saveDailyRate(date, rate);
+    setDailyRates(prev => ({ ...prev, [date]: rate }));
+  };
 
   // Sync / Action Handlers
   const handleSaveSettings = async (newSettings: FormulaSettings) => {
@@ -451,6 +471,9 @@ export function AppContent() {
             onAddPayment={handleAddPayment}
             onUpdatePayment={handleUpdatePayment}
             onDeletePayment={handleDeletePayment}
+            dailyRates={dailyRates}
+            onSaveDailyRate={handleSaveDailyRate}
+            getEffectiveRate={getEffectiveRate}
           />
         );
       case "pos":
@@ -483,6 +506,8 @@ export function AppContent() {
             onDeleteLog={handleDeleteSupplyLog}
             onSaveSettings={handleSaveSettings}
             onNavigateToSales={() => setActiveTab("pos")}
+            dailyRates={dailyRates}
+            getEffectiveRate={getEffectiveRate}
           />
         );
       case "payments":
@@ -701,6 +726,8 @@ export function AppContent() {
         onUpdatePayment={handleUpdatePayment}
         onDeletePayment={handleDeletePayment}
         onSaveSettings={handleSaveSettings}
+        dailyRates={dailyRates}
+        getEffectiveRate={getEffectiveRate}
         onExit={async () => {
           if (isSupplier) {
             localStorage.setItem("tikka_auth_pref_tab", "supplier");

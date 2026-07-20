@@ -29,6 +29,9 @@ interface DashboardTabProps {
   onAddPayment?: (payment: Omit<SupplierPayment, "id">) => Promise<string>;
   onUpdatePayment?: (id: string, payment: Partial<SupplierPayment>) => Promise<void>;
   onDeletePayment?: (id: string) => Promise<void>;
+  dailyRates?: Record<string, number>;
+  onSaveDailyRate?: (date: string, rate: number) => Promise<void>;
+  getEffectiveRate?: (date: string) => number;
 }
 
 export default function DashboardTab({ 
@@ -46,12 +49,18 @@ export default function DashboardTab({
   onDeleteSupplyLog,
   onAddPayment,
   onUpdatePayment,
-  onDeletePayment
+  onDeletePayment,
+  dailyRates,
+  onSaveDailyRate,
+  getEffectiveRate
 }: DashboardTabProps) {
   const [quickRate, setQuickRate] = useState<string>(settings.baseRawRate.toString());
   const [isUpdatingRate, setIsUpdatingRate] = useState(false);
   const [selectedLog, setSelectedLog] = useState<SupplyLog | SupplierPayment | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const [showRateModal, setShowRateModal] = useState(false);
+  const [rateModalDate, setRateModalDate] = useState(selectedDate);
+  const [updateExistingSupplies, setUpdateExistingSupplies] = useState(false);
 
   useEffect(() => {
     setQuickRate(settings.baseRawRate.toString());
@@ -62,7 +71,8 @@ export default function DashboardTab({
     .filter(it => it.name && it.name.trim() !== "" && it.expression && it.expression.trim() !== "")
     .map(it => it.name);
 
-  const getEstimatedRateForCategory = (cat: string, base: number) => {
+  const getEstimatedRateForCategory = (cat: string, base?: number) => {
+    const effectiveBase = base ?? (getEffectiveRate ? getEffectiveRate(selectedDate) : settings.baseRawRate);
     const formulaItem = Object.values(settings.items || {}).find(
       (it) => it.name.toLowerCase() === cat.toLowerCase()
     );
@@ -70,7 +80,7 @@ export default function DashboardTab({
     if (formulaItem) {
       if (formulaItem.expression) {
         try {
-          const cleanExpression = formulaItem.expression.toLowerCase().replace(/supply/g, base.toString());
+          const cleanExpression = formulaItem.expression.toLowerCase().replace(/supply/g, effectiveBase.toString());
           const result = evaluate(cleanExpression);
           return Math.round(Number(result));
         } catch (err) {
@@ -78,13 +88,13 @@ export default function DashboardTab({
         }
       }
       if (formulaItem.multiplier !== undefined) {
-        return Math.round(base * formulaItem.multiplier + (formulaItem.markup || 0));
+        return Math.round(effectiveBase * formulaItem.multiplier + (formulaItem.markup || 0));
       }
     }
-    return base;
+    return effectiveBase;
   };
 
-  const currentTempRate = parseFloat(quickRate) || settings.baseRawRate;
+  const currentTempRate = parseFloat(quickRate) || (getEffectiveRate ? getEffectiveRate(selectedDate) : settings.baseRawRate);
 
   const handleQuickRateUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +107,20 @@ export default function DashboardTab({
         ...settings,
         baseRawRate: rate
       });
+      if (onSaveDailyRate) {
+        await onSaveDailyRate(rateModalDate, rate);
+      }
+      if (updateExistingSupplies && onUpdateSupplyLog) {
+        const dateSupplies = supplyLogs.filter(s => s.date === rateModalDate);
+        for (const log of dateSupplies) {
+          await onUpdateSupplyLog(log.id, {
+            supplyRatePerKg: rate,
+            totalCost: log.weightKg * rate,
+          });
+        }
+      }
+      setShowRateModal(false);
+      setUpdateExistingSupplies(false);
     } catch (err) {
       console.error(err);
     } finally {
@@ -324,29 +348,18 @@ export default function DashboardTab({
         </button>
       </div>
 
-      {/* Daily Rate Editor */}
-      <div className="bg-surface border border-ink-faint border-l-4 border-l-accent p-4 md:p-5 flex flex-col gap-3 rounded-lg">
-        <h3 className="font-display text-base uppercase tracking-tight">Daily Rate</h3>
-        <form onSubmit={handleQuickRateUpdate} className="flex flex-row gap-2 items-center">
-          <div className="relative flex-1">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-xs opacity-30">Rs.</span>
-            <input 
-              type="number" 
-              value={quickRate}
-              onChange={(e) => setQuickRate(e.target.value)}
-              className="w-full bg-bg border border-ink-faint rounded px-8 py-2 md:py-3 font-mono text-lg md:text-xl focus:ring-1 focus:ring-accent outline-none transition-all"
-              placeholder="000"
-            />
-          </div>
-          <button 
-            type="submit"
-            disabled={isUpdatingRate || parseFloat(quickRate) === settings.baseRawRate}
-            className="px-4 py-2 bg-accent text-bg font-mono font-bold text-[9px] uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 cursor-pointer shrink-0"
-          >
-            {isUpdatingRate ? "..." : "Update"}
-          </button>
-        </form>
-      </div>
+      {/* Daily Rate Button */}
+      <button onClick={() => { setQuickRate((getEffectiveRate ? getEffectiveRate(selectedDate) : settings.baseRawRate).toString()); setRateModalDate(selectedDate); setShowRateModal(true); }} className="w-full bg-surface border border-ink-faint border-l-4 border-l-accent px-4 py-3 flex items-center justify-between rounded-lg hover:bg-ink-faint/10 transition-all cursor-pointer group">
+        <div className="flex items-center gap-3">
+          <h3 className="font-display text-sm uppercase tracking-tight">Daily Rate</h3>
+          <span className="font-mono text-[8px] text-ink/30 uppercase tracking-widest">{selectedDate}</span>
+        </div>
+        <div className="flex items-baseline gap-1.5">
+          <span className="font-mono text-[10px] text-ink/40 font-bold">Rs.</span>
+          <span className="font-display text-xl md:text-2xl font-black text-accent tracking-tight">{getEffectiveRate ? getEffectiveRate(selectedDate) : settings.baseRawRate}</span>
+          <span className="font-mono text-[8px] text-ink/30">/KG</span>
+        </div>
+      </button>
 
       {/* Stats Strip - Responsive Columns */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-6">
@@ -922,6 +935,61 @@ export default function DashboardTab({
             <button onClick={() => setShowReport(false)} className="w-full py-2.5 bg-accent text-bg font-mono text-[9px] font-bold uppercase tracking-widest rounded hover:brightness-110 transition-all">
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Rate Edit Modal */}
+      {showRateModal && (
+        <div className="fixed inset-0 bg-bg/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in" onClick={() => setShowRateModal(false)}>
+          <div className="bg-surface border border-ink-faint rounded-xl p-5 w-full max-w-sm shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent">Update Daily Rate</span>
+              <button onClick={() => setShowRateModal(false)} className="p-1 hover:bg-ink-faint rounded transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleQuickRateUpdate} className="space-y-4">
+              <div>
+                <span className="font-mono text-[8px] text-ink/40 uppercase tracking-widest block mb-1">Date</span>
+                <input type="date" value={rateModalDate} onChange={e => setRateModalDate(e.target.value)}
+                  className="w-full bg-bg border border-ink-faint rounded px-3 py-2 font-mono text-sm focus:ring-1 focus:ring-accent outline-none" />
+              </div>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-mono text-sm opacity-30">Rs.</span>
+                <input
+                  type="number"
+                  value={quickRate}
+                  onChange={(e) => setQuickRate(e.target.value)}
+                  className="w-full bg-bg border border-ink-faint rounded px-10 py-4 font-mono text-3xl font-bold focus:ring-1 focus:ring-accent outline-none transition-all"
+                  placeholder="000"
+                  autoFocus
+                />
+              </div>
+              {dailyRates && dailyRates[rateModalDate] && (
+                <div className="font-mono text-[8px] text-ink/40">
+                  Previously saved: <span className="font-bold text-accent">Rs.{dailyRates[rateModalDate]}</span> for {rateModalDate}
+                </div>
+              )}
+              {supplyLogs.some(s => s.date === rateModalDate) && (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={updateExistingSupplies} onChange={e => setUpdateExistingSupplies(e.target.checked)} className="accent-accent w-4 h-4" />
+                  <span className="font-mono text-[9px] text-ink/60">Update existing supplies for this date with new rate</span>
+                </label>
+              )}
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowRateModal(false)} className="flex-1 py-3 font-mono text-[9px] uppercase tracking-widest opacity-40 hover:opacity-80 rounded transition-all cursor-pointer">
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdatingRate || !quickRate || parseFloat(quickRate) <= 0}
+                  className="flex-1 py-3 bg-accent text-bg font-mono font-bold text-[9px] uppercase tracking-widest rounded transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 cursor-pointer"
+                >
+                  {isUpdatingRate ? "Updating..." : "Update Rate"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
