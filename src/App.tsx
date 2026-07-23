@@ -14,6 +14,7 @@ import {
   subscribeOrders, 
   addOrder, 
   deleteOrder,
+  updateOrder,
   updateOrderStatus,
   subscribeSuppliers,
   addSupplier,
@@ -354,6 +355,17 @@ export function AppContent() {
     }
   };
 
+  const handleUpdateOrder = async (id: string, order: Partial<Order>) => {
+    try {
+      await updateOrder(id, order);
+      setDbError(null);
+    } catch (err: any) {
+      console.error(err);
+      setDbError(err.message || String(err));
+      throw err;
+    }
+  };
+
   const handleAddSupplier = async (supplier: Omit<Supplier, "id">) => {
     try {
       const res = await addSupplier(supplier);
@@ -471,6 +483,7 @@ export function AppContent() {
             onAddPayment={handleAddPayment}
             onUpdatePayment={handleUpdatePayment}
             onDeletePayment={handleDeletePayment}
+            onUpdateOrder={handleUpdateOrder}
             dailyRates={dailyRates}
             onSaveDailyRate={handleSaveDailyRate}
             getEffectiveRate={getEffectiveRate}

@@ -765,6 +765,48 @@ export async function deleteOrder(id: string): Promise<void> {
   }
 }
 
+export async function updateOrder(id: string, order: Partial<Order>): Promise<void> {
+  const currentOrders = getLocalData<Order[]>(LOCAL_STORAGE_KEYS.ORDERS, []);
+  const updatedOrders = currentOrders.map(o => o.id === id ? { ...o, ...order } : o);
+  saveLocalData(LOCAL_STORAGE_KEYS.ORDERS, updatedOrders);
+  notifyDataSubscribers('orders', updatedOrders);
+
+  setSyncStatus('syncing');
+
+  try {
+    const dbData: any = {};
+    if (order.items) {
+      dbData.items = order.items;
+      dbData.total_amount = order.totalAmount;
+    }
+    if (order.status) dbData.status = order.status;
+    if (order.customerName !== undefined) dbData.customer_name = order.customerName;
+
+    const { error } = await supabase
+      .from('orders')
+      .update(dbData)
+      .eq('id', id);
+    if (error) throw error;
+
+    if (order.items) {
+      await supabase.from('order_items').delete().eq('order_id', id);
+      const orderItems = order.items.map(item => ({
+        order_id: id,
+        item_name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+        subtotal: item.total
+      }));
+      await supabase.from('order_items').insert(orderItems);
+    }
+
+    setSyncStatus('success');
+  } catch (e) {
+    console.error("Supabase updateOrder failed", e);
+    setSyncStatus('error');
+  }
+}
+
 export async function updateOrderStatus(id: string, status: 'Paid' | 'Unpaid'): Promise<void> {
   // 1. Local
   const currentOrders = getLocalData<Order[]>(LOCAL_STORAGE_KEYS.ORDERS, []);

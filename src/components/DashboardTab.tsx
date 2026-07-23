@@ -13,6 +13,25 @@ import {
 } from "lucide-react";
 import { evaluate } from "mathjs";
 
+function recalculateOrderItems(items: Order['items'], settings: FormulaSettings, newRate: number): { items: Order['items']; totalAmount: number } {
+  const newItems = items.map(item => {
+    const formula = settings.items?.[item.itemKey];
+    if (formula?.expression) {
+      try {
+        const expr = formula.expression.toLowerCase().replace(/supply/g, newRate.toString());
+        const newPrice = Math.round(Number(evaluate(expr)));
+        return { ...item, price: newPrice, total: Math.round(newPrice * item.quantity) };
+      } catch {}
+    } else if (formula?.multiplier !== undefined && formula?.markup !== undefined) {
+      const newPrice = Math.round((newRate * formula.multiplier) + formula.markup);
+      return { ...item, price: newPrice, total: Math.round(newPrice * item.quantity) };
+    }
+    return item;
+  });
+  const totalAmount = newItems.reduce((sum, it) => sum + it.total, 0);
+  return { items: newItems, totalAmount };
+}
+
 interface DashboardTabProps {
   settings: FormulaSettings;
   orders: Order[];
@@ -29,6 +48,7 @@ interface DashboardTabProps {
   onAddPayment?: (payment: Omit<SupplierPayment, "id">) => Promise<string>;
   onUpdatePayment?: (id: string, payment: Partial<SupplierPayment>) => Promise<void>;
   onDeletePayment?: (id: string) => Promise<void>;
+  onUpdateOrder?: (id: string, order: Partial<Order>) => Promise<void>;
   dailyRates?: Record<string, number>;
   onSaveDailyRate?: (date: string, rate: number) => Promise<void>;
   getEffectiveRate?: (date: string) => number;
@@ -50,6 +70,7 @@ export default function DashboardTab({
   onAddPayment,
   onUpdatePayment,
   onDeletePayment,
+  onUpdateOrder,
   dailyRates,
   onSaveDailyRate,
   getEffectiveRate
@@ -63,6 +84,7 @@ export default function DashboardTab({
   const [showRateModal, setShowRateModal] = useState(false);
   const [rateModalDate, setRateModalDate] = useState(selectedDate);
   const [updateExistingSupplies, setUpdateExistingSupplies] = useState(false);
+  const [updateExistingOrders, setUpdateExistingOrders] = useState(false);
 
   useEffect(() => {
     setQuickRate(settings.baseRawRate.toString());
@@ -121,8 +143,19 @@ export default function DashboardTab({
           });
         }
       }
+      if (updateExistingOrders && onUpdateOrder) {
+        const dateOrders = orders.filter(o => o.date === rateModalDate);
+        for (const order of dateOrders) {
+          const recalculated = recalculateOrderItems(order.items, settings, rate);
+          await onUpdateOrder(order.id, {
+            items: recalculated.items,
+            totalAmount: recalculated.totalAmount,
+          });
+        }
+      }
       setShowRateModal(false);
       setUpdateExistingSupplies(false);
+      setUpdateExistingOrders(false);
     } catch (err) {
       console.error(err);
     } finally {
@@ -470,8 +503,8 @@ export default function DashboardTab({
                     <div className="flex flex-col gap-1.5 max-h-[400px] overflow-y-auto">
                       {filteredSupplyLogs.map(log => (
                         editSupplyId === log.id ? (
-                          <form key={log.id} onSubmit={handleUpdateSupply} className="bg-orange-500/10 border border-orange-400/40 p-3 rounded-xl space-y-2">
-                            <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-orange-300">Edit Supply</span>
+                          <form key={log.id} onSubmit={handleUpdateSupply} className="bg-sky-500/10 border border-sky-400/40 p-3 rounded-xl space-y-2">
+                            <span className="font-mono text-[7px] font-bold uppercase tracking-widest text-sky-300">Edit Supply</span>
                             <div className="grid grid-cols-2 gap-2">
                               <div>
                                 <span className="font-mono text-[6px] opacity-40 uppercase">Weight (KG)</span>
@@ -491,14 +524,14 @@ export default function DashboardTab({
                             </div>
                             <div className="flex justify-end gap-3 pt-1">
                               <button type="button" onClick={cancelEditSupply} className="font-mono text-[7px] uppercase opacity-40 hover:opacity-80">Cancel</button>
-                              <button type="submit" className="font-mono text-[7px] font-bold uppercase text-orange-300 border-b border-orange-300">Save</button>
+                              <button type="submit" className="font-mono text-[7px] font-bold uppercase text-sky-300 border-b border-sky-300">Save</button>
                             </div>
                           </form>
                         ) : (
                           <div key={log.id} className="bg-surface border border-ink-faint p-3 rounded-xl flex items-center justify-between group hover:border-ink/30 transition-all">
                             <div className="space-y-0.5">
                               <div className="flex items-center gap-2">
-                                <span className="font-mono text-[10px] md:text-xs font-bold uppercase tracking-widest text-emerald-400">{log.category || "RAW_CHICKEN"}</span>
+                                <span className="font-mono text-[10px] md:text-xs font-bold uppercase tracking-widest text-sky-400">{log.category || "RAW_CHICKEN"}</span>
                                 <span className="font-mono text-[7px] text-ink/30">{log.date}</span>
                                 {log.notes?.startsWith("PENDING:") && (
                                   <span className="font-mono text-[6px] font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded-full">Pending</span>
@@ -509,7 +542,7 @@ export default function DashboardTab({
                                 <span className="font-mono text-[7px] font-bold uppercase text-ink/40">KG</span>
                                 <span className="font-mono text-[8px] text-ink/30 ml-2">@ Rs.{log.supplyRatePerKg}</span>
                               </div>
-                              <span className="font-mono text-sm font-black text-accent">Rs. {log.totalCost.toLocaleString()}</span>
+                              <span className="font-mono text-sm font-black text-sky-400">Rs. {log.totalCost.toLocaleString()}</span>
                               {log.notes && <span className="font-mono text-[7px] text-ink/30 block">{log.notes.replace(/^PENDING:/, "")}</span>}
                             </div>
                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -518,7 +551,7 @@ export default function DashboardTab({
                                   try {
                                     await onUpdateSupplyLog(log.id, { notes: log.notes.replace("PENDING:", "RECEIVED:") });
                                   } catch (err) { console.error(err); }
-                                }} className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-bg rounded-lg font-mono text-[7px] font-bold uppercase tracking-widest transition-all cursor-pointer shadow-lg shadow-emerald-500/20">
+                                }} className="px-2.5 py-1.5 bg-sky-500 hover:bg-sky-400 text-bg rounded-lg font-mono text-[7px] font-bold uppercase tracking-widest transition-all cursor-pointer shadow-lg shadow-sky-500/20">
                                   Receive
                                 </button>
                               )}
@@ -633,7 +666,7 @@ export default function DashboardTab({
                             <div className="grid grid-cols-2 gap-2">
                               {day.supplies.length > 0 && (
                                 <div className="space-y-1">
-                                  <span className="font-mono text-[6px] uppercase tracking-widest text-emerald-400/60 font-bold">Supplies</span>
+                                  <span className="font-mono text-[6px] uppercase tracking-widest text-sky-400/60 font-bold">Supplies</span>
                                   {day.supplies.map(s => (
                                     <div key={s.id} className="flex justify-between items-center">
                                       <span className="font-mono text-[8px] text-ink/60 truncate max-w-[60%]">{s.category || "CHICKEN"} {s.weightKg}kg</span>
@@ -644,7 +677,7 @@ export default function DashboardTab({
                               )}
                               {day.payments.length > 0 && (
                                 <div className="space-y-1">
-                                  <span className="font-mono text-[6px] uppercase tracking-widest text-orange-400/60 font-bold">Payments</span>
+                                  <span className="font-mono text-[6px] uppercase tracking-widest text-emerald-400/60 font-bold">Payments</span>
                                   {day.payments.map(p => (
                                     <div key={p.id} className="flex justify-between items-center">
                                       <span className="font-mono text-[8px] text-ink/60 truncate max-w-[60%]">{p.notes || "Payment"}</span>
@@ -777,7 +810,7 @@ export default function DashboardTab({
                       {supName}
                     </div>
                     {isSupply && sLog && (
-                      <div className="font-mono text-[8px] text-orange-300/40 mt-0.5">
+                      <div className="font-mono text-[8px] text-sky-300/40 mt-0.5">
                         {sLog.weightKg}kg × Rs.{sLog.supplyRatePerKg}
                       </div>
                     )}
@@ -810,7 +843,7 @@ export default function DashboardTab({
                   </div>
                   <div className="flex justify-between border-b border-ink-faint pb-2">
                     <span className="font-mono text-[9px] opacity-40">Category</span>
-                    <span className="font-mono text-[11px] md:text-xs font-bold text-emerald-400">{selectedLog.category || 'Raw Chicken'}</span>
+                    <span className="font-mono text-[11px] md:text-xs font-bold text-sky-400">{selectedLog.category || 'Raw Chicken'}</span>
                   </div>
                   <div className="flex justify-between border-b border-ink-faint pb-2">
                     <span className="font-mono text-[9px] opacity-40">Weight</span>
@@ -822,7 +855,7 @@ export default function DashboardTab({
                   </div>
                   <div className="flex justify-between border-b border-ink-faint pb-2">
                     <span className="font-mono text-[9px] opacity-40">Total Cost</span>
-                    <span className="font-mono text-[9px] font-bold text-accent">Rs. {selectedLog.totalCost.toLocaleString()}</span>
+                    <span className="font-mono text-[9px] font-bold text-sky-400">Rs. {selectedLog.totalCost.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-mono text-[9px] opacity-40">Notes</span>
@@ -839,7 +872,7 @@ export default function DashboardTab({
                   </div>
                   <div className="flex justify-between border-b border-ink-faint pb-2">
                     <span className="font-mono text-[9px] opacity-40">Amount Paid</span>
-                    <span className="font-mono text-[9px] font-bold text-ink/40">Rs. {selectedLog.amountPaid.toLocaleString()}</span>
+                    <span className="font-mono text-[9px] font-bold text-emerald-400">Rs. {selectedLog.amountPaid.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-mono text-[9px] opacity-40">Notes</span>
@@ -975,6 +1008,12 @@ export default function DashboardTab({
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={updateExistingSupplies} onChange={e => setUpdateExistingSupplies(e.target.checked)} className="accent-accent w-4 h-4" />
                   <span className="font-mono text-[9px] text-ink/60">Update existing supplies for this date with new rate</span>
+                </label>
+              )}
+              {orders.some(o => o.date === rateModalDate) && (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={updateExistingOrders} onChange={e => setUpdateExistingOrders(e.target.checked)} className="accent-accent w-4 h-4" />
+                  <span className="font-mono text-[9px] text-ink/60">Update existing orders (bills) for this date with new rate</span>
                 </label>
               )}
               <div className="flex gap-3">
