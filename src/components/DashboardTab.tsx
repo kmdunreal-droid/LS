@@ -796,7 +796,7 @@ export default function DashboardTab({
                     className={`bg-orange-500/5 border border-orange-500/20 p-2.5 rounded-lg text-left hover:border-orange-400/40 transition-all cursor-pointer`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`font-mono text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-emerald-400`}>
+                      <span className={`font-mono text-[9px] md:text-[10px] font-bold uppercase tracking-widest ${isSupply ? "text-sky-400" : "text-emerald-400"}`}>
                         {isSupply ? "Supply" : "Payment"}
                       </span>
                       <span className="font-mono text-[7px] text-orange-300/60">
