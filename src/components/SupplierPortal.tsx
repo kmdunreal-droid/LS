@@ -489,6 +489,28 @@ export default function SupplierPortal({
               </div>
             </div>
 
+            {/* Quick Actions */}
+            <div className="lg:col-span-12">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <button onClick={() => setActiveTab("deliveries")} className="flex items-center gap-2 px-4 py-3 bg-sky-500/10 border border-sky-500/30 rounded-xl font-mono text-[9px] font-bold uppercase tracking-widest text-sky-400 hover:bg-sky-500/20 transition-all cursor-pointer">
+                  <Weight className="w-4 h-4" />
+                  <span>Add Stock</span>
+                </button>
+                <button onClick={() => setActiveTab("payments")} className="flex items-center gap-2 px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl font-mono text-[9px] font-bold uppercase tracking-widest text-emerald-400 hover:bg-emerald-500/20 transition-all cursor-pointer">
+                  <CreditCard className="w-4 h-4" />
+                  <span>Record Payment</span>
+                </button>
+                <button onClick={() => setShowReport(true)} className="flex items-center gap-2 px-4 py-3 bg-accent/10 border border-accent/30 rounded-xl font-mono text-[9px] font-bold uppercase tracking-widest text-accent hover:bg-accent/20 transition-all cursor-pointer md:hidden">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                  <span>Report</span>
+                </button>
+                <button onClick={() => setShowRateModal(true)} className="flex items-center gap-2 px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-xl font-mono text-[9px] font-bold uppercase tracking-widest text-amber-400 hover:bg-amber-500/20 transition-all cursor-pointer">
+                  <Flame className="w-4 h-4" />
+                  <span>Update Rate</span>
+                </button>
+              </div>
+            </div>
+
             {/* Report below cards */}
             <div className="lg:col-span-12 flex flex-col sm:flex-row items-center justify-center md:justify-end gap-2">
               <div className="flex items-center gap-1.5 bg-surface/60 border border-ink-faint/50 rounded-xl px-3 py-1.5 backdrop-blur-sm">
@@ -986,7 +1008,7 @@ export default function SupplierPortal({
                 </div>
 
                 {todayPayments.length === 0 ? (
-                  <div className="py-32 text-center space-y-4 border border-dashed border-orange-500/20 rounded-lg">
+                  <div className="py-32 text-center space-y-4 border border-dashed border-emerald-500/20 rounded-lg">
                     <span className="block font-mono text-[10px] font-bold uppercase tracking-widest opacity-20 italic">No payments recorded for this date</span>
                   </div>
                 ) : (
@@ -994,7 +1016,7 @@ export default function SupplierPortal({
                     {todayPayments.map((pay) => (
                       <div key={pay.id}>
                         {editingPaymentId === pay.id ? (
-                          <form onSubmit={handleUpdatePaymentSubmit} className="bg-orange-500/10 border border-orange-400/40 p-3 rounded-lg space-y-3 animate-fade-in">
+                          <form onSubmit={handleUpdatePaymentSubmit} className="bg-emerald-500/10 border border-emerald-400/40 p-3 rounded-lg space-y-3 animate-fade-in">
                             <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-1">
                                 <label className="font-mono text-[7px] uppercase opacity-40">Amount (PKR)</label>
@@ -1007,18 +1029,18 @@ export default function SupplierPortal({
                             </div>
                             <div className="flex justify-end gap-3">
                               <button onClick={() => setEditingPaymentId(null)} className="font-mono text-[8px] uppercase opacity-40 hover:opacity-100">Cancel</button>
-                              <button type="submit" className="font-mono text-[8px] font-bold text-orange-300 border-b border-orange-300">Save</button>
+                              <button type="submit" className="font-mono text-[8px] font-bold text-emerald-300 border-b border-emerald-300">Save</button>
                             </div>
                           </form>
                         ) : (
-                          <div className="bg-orange-500/5 border border-orange-500/20 p-2.5 rounded-lg flex items-center justify-between group">
+                          <div className="bg-emerald-500/5 border border-emerald-500/20 p-2.5 rounded-lg flex items-center justify-between group">
                             <div className="space-y-0.5">
-                              <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-orange-300">CASH RECEIVED</span>
-                              <span className="font-mono text-[8px] text-orange-300/60 italic block">{pay.notes}</span>
+                              <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-emerald-400">CASH RECEIVED</span>
+                              <span className="font-mono text-[8px] text-emerald-400/60 italic block">{pay.notes}</span>
                             </div>
                             <div className="flex items-center gap-3">
-                               <span className="font-mono text-sm font-bold text-orange-100 truncate">Rs. {pay.amountPaid.toLocaleString()}</span>
-                              <button onClick={() => startEditingPayment(pay)} className="opacity-60 hover:opacity-100 p-0.5"><RefreshCw className="w-3.5 h-3.5 text-orange-300" /></button>
+                               <span className="font-mono text-sm font-bold text-emerald-100 truncate">Rs. {pay.amountPaid.toLocaleString()}</span>
+                              <button onClick={() => startEditingPayment(pay)} className="opacity-60 hover:opacity-100 p-0.5"><RefreshCw className="w-3.5 h-3.5 text-emerald-300" /></button>
                               <button onClick={() => { if (confirm("Delete this payment?")) onDeletePayment(pay.id); }} className="text-red-400 opacity-60 hover:opacity-100 p-0.5"><X className="w-3.5 h-3.5" /></button>
                             </div>
                           </div>
@@ -1068,18 +1090,38 @@ export default function SupplierPortal({
                 <Settings className="w-5 h-5 text-accent" />
                 <span className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50">Supplier Settings</span>
               </div>
-              <div className="space-y-4">
-                <div>
-                  <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest block mb-1">Supplier Name</span>
-                  <span className="font-display text-lg uppercase text-ink">{currentSupplier?.name || "N/A"}</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest block mb-1">Supplier Name</span>
+                    <span className="font-display text-lg uppercase text-ink">{currentSupplier?.name || "N/A"}</span>
+                  </div>
+                  <div>
+                    <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest block mb-1">Username</span>
+                    <span className="font-mono text-sm text-ink/70">{settings.supplierUsername || "N/A"}</span>
+                  </div>
+                  <div>
+                    <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest block mb-1">Current Rate</span>
+                     <span className="font-display text-2xl text-accent truncate">Rs. {settings.baseRawRate} / KG</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest block mb-1">Username</span>
-                  <span className="font-mono text-sm text-ink/70">{settings.supplierUsername || "N/A"}</span>
-                </div>
-                <div>
-                  <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest block mb-1">Current Rate</span>
-                   <span className="font-display text-2xl text-accent truncate">Rs. {settings.baseRawRate} / KG</span>
+                <div className="space-y-4">
+                  <div>
+                    <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest block mb-1">Total Deliveries</span>
+                     <span className="font-display text-xl text-sky-400 truncate">{relevantLogs.length}</span>
+                  </div>
+                  <div>
+                    <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest block mb-1">Total Amount Supplied</span>
+                     <span className="font-display text-xl text-sky-400 truncate">Rs. {totalSupplied.toLocaleString()}</span>
+                  </div>
+                  <div>
+                    <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest block mb-1">Total Payments Received</span>
+                     <span className="font-display text-xl text-emerald-400 truncate">Rs. {totalPaid.toLocaleString()}</span>
+                  </div>
+                  <div>
+                    <span className="font-mono text-[8px] font-bold opacity-30 uppercase tracking-widest block mb-1">Balance</span>
+                     <span className={`font-display text-xl ${balance >= 0 ? "text-red-400" : "text-emerald-400"} truncate`}>Rs. {Math.abs(balance).toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1101,7 +1143,7 @@ export default function SupplierPortal({
       </div>
 
       {/* Mobile Bottom Navigation Bar for Supplier Portal */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-ink-faint grid grid-cols-3 py-2 z-40">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-ink-faint grid grid-cols-4 py-2 z-40">
         <button
           onClick={() => setActiveTab("dashboard")}
           className={`flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-300 transform ${
@@ -1117,7 +1159,7 @@ export default function SupplierPortal({
           }`}>
             <LayoutDashboard className={`w-5 h-5 transition-transform ${activeTab === 'dashboard' ? 'stroke-[2.5px] scale-110' : ''}`} />
           </div>
-          <span className={`text-[9px] font-mono font-bold uppercase tracking-widest ${activeTab === 'dashboard' ? 'text-accent' : 'text-ink/50'}`}>Dashboard</span>
+          <span className={`text-[7px] font-mono font-bold uppercase tracking-widest ${activeTab === 'dashboard' ? 'text-accent' : 'text-ink/50'}`}>Dashboard</span>
         </button>
         <button
           onClick={() => setActiveTab("deliveries")}
@@ -1134,7 +1176,7 @@ export default function SupplierPortal({
           }`}>
             <Weight className={`w-5 h-5 transition-transform ${activeTab === 'deliveries' ? 'stroke-[2.5px] scale-110' : ''}`} />
           </div>
-          <span className={`text-[9px] font-mono font-bold uppercase tracking-widest ${activeTab === 'deliveries' ? 'text-accent' : 'text-ink/50'}`}>Deliveries</span>
+          <span className={`text-[7px] font-mono font-bold uppercase tracking-widest ${activeTab === 'deliveries' ? 'text-accent' : 'text-ink/50'}`}>Deliveries</span>
         </button>
         <button
           onClick={() => setActiveTab("payments")}
@@ -1151,7 +1193,24 @@ export default function SupplierPortal({
           }`}>
             <CreditCard className={`w-5 h-5 transition-transform ${activeTab === 'payments' ? 'stroke-[2.5px] scale-110' : ''}`} />
           </div>
-          <span className={`text-[9px] font-mono font-bold uppercase tracking-widest ${activeTab === 'payments' ? 'text-accent' : 'text-ink/50'}`}>Payments</span>
+          <span className={`text-[7px] font-mono font-bold uppercase tracking-widest ${activeTab === 'payments' ? 'text-accent' : 'text-ink/50'}`}>Payments</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("settings")}
+          className={`flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-300 transform ${
+            activeTab === "settings" 
+              ? "text-accent scale-112 font-bold opacity-100" 
+              : "text-ink/40 hover:text-ink/70 hover:scale-105"
+          }`}
+        >
+          <div className={`p-2.5 rounded-xl transition-all duration-300 ${
+            activeTab === 'settings' 
+              ? 'bg-accent text-bg' 
+              : 'bg-ink-faint/10 text-ink/50 hover:bg-ink-faint/20'
+          }`}>
+            <Settings className={`w-5 h-5 transition-transform ${activeTab === 'settings' ? 'stroke-[2.5px] scale-110' : ''}`} />
+          </div>
+          <span className={`text-[7px] font-mono font-bold uppercase tracking-widest ${activeTab === 'settings' ? 'text-accent' : 'text-ink/50'}`}>Settings</span>
         </button>
       </nav>
 
