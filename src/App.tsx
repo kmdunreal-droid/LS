@@ -732,6 +732,7 @@ export function AppContent() {
         supplyLogs={supplyLogs}
         suppliers={suppliers}
         payments={payments}
+        orders={orders}
         onAddLog={handleAddSupplyLog}
         onUpdateLog={handleUpdateSupplyLog}
         onDeleteLog={handleDeleteSupplyLog}

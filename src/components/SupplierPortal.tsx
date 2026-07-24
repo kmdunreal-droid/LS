@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { evaluate } from "mathjs";
-import { FormulaSettings, SupplyLog, Supplier, SupplierPayment } from "../types";
+import { FormulaSettings, SupplyLog, Supplier, SupplierPayment, Order } from "../types";
 import { 
   Weight, 
   Unlock, 
@@ -22,6 +22,7 @@ interface SupplierPortalProps {
   supplyLogs: SupplyLog[];
   suppliers: Supplier[];
   payments: SupplierPayment[];
+  orders: Order[];
   onAddLog: (log: Omit<SupplyLog, "id">) => Promise<string>;
   onUpdateLog: (id: string, log: Partial<SupplyLog>) => Promise<void>;
   onDeleteLog: (id: string) => Promise<void>;
@@ -40,6 +41,7 @@ export default function SupplierPortal({
   supplyLogs, 
   suppliers,
   payments,
+  orders,
   onAddLog, 
   onUpdateLog,
   onDeleteLog, 
@@ -583,7 +585,7 @@ export default function SupplierPortal({
             {/* Report Modal */}
             {showReport && (
               <div className="fixed inset-0 bg-bg/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in" onClick={() => setShowReport(false)}>
-                <div className="bg-surface border border-ink-faint rounded-xl p-5 w-full max-w-sm shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                <div className="bg-surface border border-ink-faint rounded-xl p-5 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent">Day / Week / Month Report</span>
                     <button onClick={() => setShowReport(false)} className="p-1 hover:bg-ink-faint rounded transition-colors">
@@ -593,7 +595,11 @@ export default function SupplierPortal({
 
                   {/* Today */}
                   <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
-                    <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-ink/40">Today <span className="text-ink/20 normal-case font-normal">{date}</span></span>
+                    <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-sky-400">Today <span className="text-ink/20 normal-case font-normal">{date}</span></span>
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[8px] text-ink/40 uppercase">Daily Rate</span>
+                      <span className="font-mono text-xs font-bold text-accent">Rs.{getEffectiveRate ? getEffectiveRate(date) : settings.baseRawRate}/KG</span>
+                    </div>
                     <div className="flex justify-between items-center">
                       <span className="font-mono text-[8px] text-ink/40 uppercase">Supplied</span>
                       <span className="font-mono text-xs md:text-sm font-bold text-ink">{totalTodayCost.toLocaleString()}</span>
@@ -606,11 +612,45 @@ export default function SupplierPortal({
                       <span className="font-mono text-[8px] text-ink/40 uppercase">Balance</span>
                       <span className={`font-mono text-sm md:text-base font-black ${(totalTodayCost - totalTodayPayments) >= 0 ? "text-red-400" : "text-emerald-400"}`}>{(totalTodayCost - totalTodayPayments).toLocaleString()}</span>
                     </div>
+                    {/* Today Supplies Detail */}
+                    {relevantLogs.filter(s => s.date === date).length > 0 && (
+                      <details className="mt-1">
+                        <summary className="font-mono text-[7px] font-bold uppercase tracking-widest text-sky-400/60 cursor-pointer hover:text-sky-400">Supplies ({relevantLogs.filter(s => s.date === date).length})</summary>
+                        <div className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+                          {relevantLogs.filter(s => s.date === date).map(s => (
+                            <div key={s.id} className="flex justify-between items-center text-[10px] font-mono border-b border-ink-faint/10 pb-0.5">
+                              <span className="text-sky-400/80 truncate max-w-[40%]">{s.category || "CHICKEN"}</span>
+                              <span className="text-ink/50">{s.weightKg}kg × Rs.{s.supplyRatePerKg}</span>
+                              <span className="font-bold text-sky-400">Rs.{s.totalCost.toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                    {/* Today Orders Detail */}
+                    {orders.filter(o => o.date === date).length > 0 && (
+                      <details className="mt-1">
+                        <summary className="font-mono text-[7px] font-bold uppercase tracking-widest text-emerald-400/60 cursor-pointer hover:text-emerald-400">Orders ({orders.filter(o => o.date === date).length})</summary>
+                        <div className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+                          {orders.filter(o => o.date === date).map(o => (
+                            <div key={o.id} className="border-b border-ink-faint/10 pb-1">
+                              <div className="flex justify-between items-center text-[9px] font-mono">
+                                <span className="text-ink/60 truncate max-w-[50%]">{o.customerName}</span>
+                                <span className="font-bold text-emerald-400">Rs.{o.totalAmount.toLocaleString()}</span>
+                              </div>
+                              <div className="text-[7px] font-mono text-ink/30 pl-2">
+                                {o.items.map(it => `${it.name}(${it.quantity}×Rs.{it.price})`).join(", ")}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
                   </div>
 
                   {/* This Week */}
                   <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
-                    <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-ink/40">This Week <span className="text-ink/20 normal-case font-normal">{last7FromSelected[0]} – {date}</span></span>
+                    <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-sky-400">This Week <span className="text-ink/20 normal-case font-normal">{last7FromSelected[0]} – {date}</span></span>
                     <div className="flex justify-between items-center">
                       <span className="font-mono text-[8px] text-ink/40 uppercase">Supplied</span>
                       <span className="font-mono text-xs md:text-sm font-bold text-ink">{weekSupplied.toLocaleString()}</span>
@@ -623,11 +663,49 @@ export default function SupplierPortal({
                       <span className="font-mono text-[8px] text-ink/40 uppercase">Balance</span>
                       <span className={`font-mono text-sm md:text-base font-black ${weekBalance >= 0 ? "text-red-400" : "text-emerald-400"}`}>{weekBalance.toLocaleString()}</span>
                     </div>
+                    {/* Week Supplies Detail */}
+                    {(() => {
+                      const ws = relevantLogs.filter(s => last7FromSelected.includes(s.date));
+                      return ws.length > 0 ? (
+                        <details className="mt-1">
+                          <summary className="font-mono text-[7px] font-bold uppercase tracking-widest text-sky-400/60 cursor-pointer hover:text-sky-400">Supplies ({ws.length})</summary>
+                          <div className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+                            {ws.map(s => (
+                              <div key={s.id} className="flex justify-between items-center text-[10px] font-mono border-b border-ink-faint/10 pb-0.5">
+                                <span className="text-sky-400/80 truncate max-w-[35%]">{s.category || "CHICKEN"}</span>
+                                <span className="text-ink/50 text-[8px]">{s.date}</span>
+                                <span className="font-bold text-sky-400">Rs.{s.totalCost.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      ) : null;
+                    })()}
+                    {/* Week Orders Detail */}
+                    {(() => {
+                      const wo = orders.filter(o => last7FromSelected.includes(o.date));
+                      return wo.length > 0 ? (
+                        <details className="mt-1">
+                          <summary className="font-mono text-[7px] font-bold uppercase tracking-widest text-emerald-400/60 cursor-pointer hover:text-emerald-400">Orders ({wo.length})</summary>
+                          <div className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+                            {wo.map(o => (
+                              <div key={o.id} className="border-b border-ink-faint/10 pb-1">
+                                <div className="flex justify-between items-center text-[9px] font-mono">
+                                  <span className="text-ink/60 truncate max-w-[40%]">{o.customerName}</span>
+                                  <span className="text-ink/50 text-[8px]">{o.date}</span>
+                                  <span className="font-bold text-emerald-400">Rs.{o.totalAmount.toLocaleString()}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      ) : null;
+                    })()}
                   </div>
 
                   {/* This Month */}
                   <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
-                    <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-ink/40">This Month <span className="text-ink/20 normal-case font-normal">{reportDateObj.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span></span>
+                    <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-sky-400">This Month <span className="text-ink/20 normal-case font-normal">{reportDateObj.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span></span>
                     <div className="flex justify-between items-center">
                       <span className="font-mono text-[8px] text-ink/40 uppercase">Supplied</span>
                       <span className="font-mono text-xs md:text-sm font-bold text-ink">{monthSupplied.toLocaleString()}</span>
@@ -640,6 +718,47 @@ export default function SupplierPortal({
                       <span className="font-mono text-[8px] text-ink/40 uppercase">Balance</span>
                       <span className={`font-mono text-sm md:text-base font-black ${monthBalance >= 0 ? "text-red-400" : "text-emerald-400"}`}>{monthBalance.toLocaleString()}</span>
                     </div>
+                    {/* Month Supplies Detail */}
+                    {(() => {
+                      const ms = monthSupplies;
+                      return ms.length > 0 ? (
+                        <details className="mt-1">
+                          <summary className="font-mono text-[7px] font-bold uppercase tracking-widest text-sky-400/60 cursor-pointer hover:text-sky-400">Supplies ({ms.length})</summary>
+                          <div className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+                            {ms.map(s => (
+                              <div key={s.id} className="flex justify-between items-center text-[10px] font-mono border-b border-ink-faint/10 pb-0.5">
+                                <span className="text-sky-400/80 truncate max-w-[35%]">{s.category || "CHICKEN"}</span>
+                                <span className="text-ink/50 text-[8px]">{s.date}</span>
+                                <span className="font-bold text-sky-400">Rs.{s.totalCost.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      ) : null;
+                    })()}
+                    {/* Month Orders Detail */}
+                    {(() => {
+                      const mo = orders.filter(o => {
+                        const d = new Date(o.date + "T00:00:00");
+                        return d.getMonth() === reportMonth && d.getFullYear() === reportYear;
+                      });
+                      return mo.length > 0 ? (
+                        <details className="mt-1">
+                          <summary className="font-mono text-[7px] font-bold uppercase tracking-widest text-emerald-400/60 cursor-pointer hover:text-emerald-400">Orders ({mo.length})</summary>
+                          <div className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+                            {mo.map(o => (
+                              <div key={o.id} className="border-b border-ink-faint/10 pb-1">
+                                <div className="flex justify-between items-center text-[9px] font-mono">
+                                  <span className="text-ink/60 truncate max-w-[40%]">{o.customerName}</span>
+                                  <span className="text-ink/50 text-[8px]">{o.date}</span>
+                                  <span className="font-bold text-emerald-400">Rs.{o.totalAmount.toLocaleString()}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      ) : null;
+                    })()}
                   </div>
 
                   <button onClick={() => setShowReport(false)} className="w-full py-2.5 bg-accent text-bg font-mono text-[9px] font-bold uppercase tracking-widest rounded hover:brightness-110 transition-all">

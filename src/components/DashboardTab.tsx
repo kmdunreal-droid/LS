@@ -894,7 +894,7 @@ export default function DashboardTab({
       {/* Report Modal */}
       {showReport && (
         <div className="fixed inset-0 bg-bg/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in" onClick={() => setShowReport(false)}>
-          <div className="bg-surface border border-ink-faint rounded-xl p-5 w-full max-w-sm shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="bg-surface border border-ink-faint rounded-xl p-5 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent">Day / Week / Month Report</span>
               <button onClick={() => setShowReport(false)} className="p-1 hover:bg-ink-faint rounded transition-colors">
@@ -904,7 +904,11 @@ export default function DashboardTab({
 
             {/* Today */}
             <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
-              <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-ink/40">Today <span className="text-ink/20 normal-case font-normal">{selectedDate}</span></span>
+              <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-sky-400">Today <span className="text-ink/20 normal-case font-normal">{selectedDate}</span></span>
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[8px] text-ink/40 uppercase">Daily Rate</span>
+                <span className="font-mono text-xs font-bold text-accent">Rs.{getEffectiveRate ? getEffectiveRate(selectedDate) : settings.baseRawRate}/KG</span>
+              </div>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[8px] text-ink/40 uppercase">Sales</span>
                  <span className="font-mono text-xs md:text-sm font-bold text-ink">Rs.{todaySales.toLocaleString()}</span>
@@ -921,11 +925,45 @@ export default function DashboardTab({
                 <span className="font-mono text-[8px] text-ink/40 uppercase">Profit</span>
                  <span className={`font-mono text-sm md:text-base font-black ${todayNetProfit >= 0 ? "text-emerald-400" : "text-red-400"}`}>Rs.{todayNetProfit.toLocaleString()}</span>
               </div>
+              {/* Today Supplies Detail */}
+              {supplyLogs.filter(s => s.date === selectedDate).length > 0 && (
+                <details className="mt-1">
+                  <summary className="font-mono text-[7px] font-bold uppercase tracking-widest text-sky-400/60 cursor-pointer hover:text-sky-400">Supplies ({supplyLogs.filter(s => s.date === selectedDate).length})</summary>
+                  <div className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+                    {supplyLogs.filter(s => s.date === selectedDate).map(s => (
+                      <div key={s.id} className="flex justify-between items-center text-[10px] font-mono border-b border-ink-faint/10 pb-0.5">
+                        <span className="text-sky-400/80 truncate max-w-[40%]">{s.category || "CHICKEN"}</span>
+                        <span className="text-ink/50">{s.weightKg}kg × Rs.{s.supplyRatePerKg}</span>
+                        <span className="font-bold text-sky-400">Rs.{s.totalCost.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+              {/* Today Orders Detail */}
+              {orders.filter(o => o.date === selectedDate).length > 0 && (
+                <details className="mt-1">
+                  <summary className="font-mono text-[7px] font-bold uppercase tracking-widest text-emerald-400/60 cursor-pointer hover:text-emerald-400">Orders ({orders.filter(o => o.date === selectedDate).length})</summary>
+                  <div className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+                    {orders.filter(o => o.date === selectedDate).map(o => (
+                      <div key={o.id} className="border-b border-ink-faint/10 pb-1">
+                        <div className="flex justify-between items-center text-[9px] font-mono">
+                          <span className="text-ink/60 truncate max-w-[50%]">{o.customerName}</span>
+                          <span className="font-bold text-emerald-400">Rs.{o.totalAmount.toLocaleString()}</span>
+                        </div>
+                        <div className="text-[7px] font-mono text-ink/30 pl-2">
+                          {o.items.map(it => `${it.name}(${it.quantity}×Rs.{it.price})`).join(", ")}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
             </div>
 
             {/* This Week */}
             <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
-              <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-ink/40">This Week <span className="text-ink/20 normal-case font-normal">{last7FromSelected[0]} – {selectedDate}</span></span>
+              <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-sky-400">This Week <span className="text-ink/20 normal-case font-normal">{last7FromSelected[0]} – {selectedDate}</span></span>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[8px] text-ink/40 uppercase">Sales</span>
                  <span className="font-mono text-xs md:text-sm font-bold text-ink">Rs.{weekSales.toLocaleString()}</span>
@@ -942,11 +980,49 @@ export default function DashboardTab({
                 <span className="font-mono text-[8px] text-ink/40 uppercase">Profit</span>
                  <span className={`font-mono text-sm md:text-base font-black ${weekProfit >= 0 ? "text-emerald-400" : "text-red-400"}`}>Rs.{weekProfit.toLocaleString()}</span>
               </div>
+              {/* Week Supplies Detail */}
+              {(() => {
+                const weekSupplies = supplyLogs.filter(s => last7FromSelected.includes(s.date));
+                return weekSupplies.length > 0 ? (
+                  <details className="mt-1">
+                    <summary className="font-mono text-[7px] font-bold uppercase tracking-widest text-sky-400/60 cursor-pointer hover:text-sky-400">Supplies ({weekSupplies.length})</summary>
+                    <div className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+                      {weekSupplies.map(s => (
+                        <div key={s.id} className="flex justify-between items-center text-[10px] font-mono border-b border-ink-faint/10 pb-0.5">
+                          <span className="text-sky-400/80 truncate max-w-[35%]">{s.category || "CHICKEN"}</span>
+                          <span className="text-ink/50 text-[8px]">{s.date}</span>
+                          <span className="font-bold text-sky-400">Rs.{s.totalCost.toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                ) : null;
+              })()}
+              {/* Week Orders Detail */}
+              {(() => {
+                const weekOrders = orders.filter(o => last7FromSelected.includes(o.date));
+                return weekOrders.length > 0 ? (
+                  <details className="mt-1">
+                    <summary className="font-mono text-[7px] font-bold uppercase tracking-widest text-emerald-400/60 cursor-pointer hover:text-emerald-400">Orders ({weekOrders.length})</summary>
+                    <div className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+                      {weekOrders.map(o => (
+                        <div key={o.id} className="border-b border-ink-faint/10 pb-1">
+                          <div className="flex justify-between items-center text-[9px] font-mono">
+                            <span className="text-ink/60 truncate max-w-[40%]">{o.customerName}</span>
+                            <span className="text-ink/50 text-[8px]">{o.date}</span>
+                            <span className="font-bold text-emerald-400">Rs.{o.totalAmount.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                ) : null;
+              })()}
             </div>
 
             {/* This Month */}
             <div className="bg-bg/60 border border-ink-faint p-3 rounded-xl space-y-1.5">
-              <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-ink/40">This Month <span className="text-ink/20 normal-case font-normal">{selectedDateObj.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span></span>
+              <span className="font-mono text-[8px] font-bold uppercase tracking-widest text-sky-400">This Month <span className="text-ink/20 normal-case font-normal">{selectedDateObj.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span></span>
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[8px] text-ink/40 uppercase">Sales</span>
                  <span className="font-mono text-xs md:text-sm font-bold text-ink">Rs.{monthSales.toLocaleString()}</span>
@@ -963,6 +1039,50 @@ export default function DashboardTab({
                 <span className="font-mono text-[8px] text-ink/40 uppercase">Profit</span>
                  <span className={`font-mono text-sm md:text-base font-black ${monthProfit >= 0 ? "text-emerald-400" : "text-red-400"}`}>Rs.{monthProfit.toLocaleString()}</span>
               </div>
+              {/* Month Supplies Detail */}
+              {(() => {
+                const monthSupplies = supplyLogs.filter(l => {
+                  const d = new Date(l.date + "T00:00:00");
+                  return d.getMonth() === selectedDateObj.getMonth() && d.getFullYear() === selectedDateObj.getFullYear();
+                });
+                return monthSupplies.length > 0 ? (
+                  <details className="mt-1">
+                    <summary className="font-mono text-[7px] font-bold uppercase tracking-widest text-sky-400/60 cursor-pointer hover:text-sky-400">Supplies ({monthSupplies.length})</summary>
+                    <div className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+                      {monthSupplies.map(s => (
+                        <div key={s.id} className="flex justify-between items-center text-[10px] font-mono border-b border-ink-faint/10 pb-0.5">
+                          <span className="text-sky-400/80 truncate max-w-[35%]">{s.category || "CHICKEN"}</span>
+                          <span className="text-ink/50 text-[8px]">{s.date}</span>
+                          <span className="font-bold text-sky-400">Rs.{s.totalCost.toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                ) : null;
+              })()}
+              {/* Month Orders Detail */}
+              {(() => {
+                const monthOrders = orders.filter(o => {
+                  const d = new Date(o.date + "T00:00:00");
+                  return d.getMonth() === selectedDateObj.getMonth() && d.getFullYear() === selectedDateObj.getFullYear();
+                });
+                return monthOrders.length > 0 ? (
+                  <details className="mt-1">
+                    <summary className="font-mono text-[7px] font-bold uppercase tracking-widest text-emerald-400/60 cursor-pointer hover:text-emerald-400">Orders ({monthOrders.length})</summary>
+                    <div className="mt-1 space-y-1 max-h-32 overflow-y-auto">
+                      {monthOrders.map(o => (
+                        <div key={o.id} className="border-b border-ink-faint/10 pb-1">
+                          <div className="flex justify-between items-center text-[9px] font-mono">
+                            <span className="text-ink/60 truncate max-w-[40%]">{o.customerName}</span>
+                            <span className="text-ink/50 text-[8px]">{o.date}</span>
+                            <span className="font-bold text-emerald-400">Rs.{o.totalAmount.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                ) : null;
+              })()}
             </div>
 
             <button onClick={() => setShowReport(false)} className="w-full py-2.5 bg-accent text-bg font-mono text-[9px] font-bold uppercase tracking-widest rounded hover:brightness-110 transition-all">
